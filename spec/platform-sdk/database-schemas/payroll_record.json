@@ -1,0 +1,226 @@
+{
+  "id": "102019b46b636497b558139632d1c0c8def",
+  "version": "102019b46b63649785993ecd62a04b5d5cc",
+  "schema": {
+    "name": "payroll_record",
+    "description": "Records of payment for workers based on hours worked",
+    "fields": [
+      {
+        "name": "id",
+        "description": "Unique identifier for each data of this entity.",
+        "type": 1,
+        "compliance": {
+          "confidentiality": 1,
+          "reason": "System identifier"
+        }
+      },
+      {
+        "name": "data_creator",
+        "description": "id of the user who creates the record",
+        "type": 1,
+        "compliance": {
+          "confidentiality": 2,
+          "reason": "Audit trail"
+        }
+      },
+      {
+        "name": "data_updater",
+        "description": "id of the user who updates the record",
+        "type": 1,
+        "compliance": {
+          "confidentiality": 2,
+          "reason": "Audit trail"
+        }
+      },
+      {
+        "name": "create_time",
+        "description": "create time in timestamp unix",
+        "type": 1,
+        "compliance": {
+          "confidentiality": 1,
+          "reason": "System metadata"
+        },
+        "format": "timestamp"
+      },
+      {
+        "name": "update_time",
+        "description": "update time in timestamp unix",
+        "type": 1,
+        "compliance": {
+          "confidentiality": 1,
+          "reason": "System metadata"
+        },
+        "format": "timestamp"
+      },
+      {
+        "name": "worker_id",
+        "description": "ID of the worker being paid",
+        "type": 1,
+        "compliance": {
+          "confidentiality": 2,
+          "reason": "Internal linking"
+        }
+      },
+      {
+        "name": "company_id",
+        "description": "ID of the company issuing payroll",
+        "type": 1,
+        "compliance": {
+          "confidentiality": 2,
+          "reason": "Tenant isolation"
+        }
+      },
+      {
+        "name": "pay_period_start",
+        "description": "Start date of the pay period",
+        "type": 1,
+        "compliance": {
+          "confidentiality": 2,
+          "reason": "Financial period"
+        },
+        "format": "timestamp"
+      },
+      {
+        "name": "pay_period_end",
+        "description": "End date of the pay period",
+        "type": 1,
+        "compliance": {
+          "confidentiality": 2,
+          "reason": "Financial period"
+        },
+        "format": "timestamp"
+      },
+      {
+        "name": "hourly_wage",
+        "description": "Hourly rate for this period",
+        "type": 2,
+        "compliance": {
+          "confidentiality": 3,
+          "reason": "Compensation data"
+        },
+        "numeric": "float"
+      },
+      {
+        "name": "hours_worked",
+        "description": "Total hours worked in this period",
+        "type": 2,
+        "compliance": {
+          "confidentiality": 2,
+          "reason": "Operational data"
+        },
+        "numeric": "float"
+      },
+      {
+        "name": "total_pay",
+        "description": "Total payment amount",
+        "type": 2,
+        "compliance": {
+          "confidentiality": 3,
+          "reason": "Compensation data"
+        },
+        "numeric": "float"
+      },
+      {
+        "name": "status",
+        "description": "Status of the payroll record",
+        "type": 100,
+        "compliance": {
+          "confidentiality": 2,
+          "reason": "Workflow status"
+        },
+        "enumeration": [
+          {
+            "value": "Unspecified"
+          },
+          {
+            "number": 1,
+            "value": "Draft"
+          },
+          {
+            "number": 2,
+            "value": "Approved"
+          },
+          {
+            "number": 3,
+            "value": "Paid"
+          }
+        ]
+      }
+    ],
+    "indexes": [
+      {
+        "fields": [
+          "id"
+        ],
+        "unique": true,
+        "primary": true,
+        "order": false
+      },
+      {
+        "fields": [
+          "company_id",
+          "worker_id"
+        ],
+        "order": false
+      },
+      {
+        "fields": [
+          "company_id",
+          "pay_period_start"
+        ],
+        "order": false
+      },
+      {
+        "fields": [
+          "data_creator"
+        ],
+        "order": false
+      },
+      {
+        "fields": [
+          "data_updater"
+        ],
+        "order": false
+      }
+    ],
+    "relations": [
+      {
+        "referencing_fields": [
+          "worker_id"
+        ],
+        "referenced_entity": {
+          "name": "worker"
+        },
+        "referenced_fields": [
+          "id"
+        ],
+        "cascade": true
+      },
+      {
+        "referencing_fields": [
+          "company_id"
+        ],
+        "referenced_entity": {
+          "name": "company"
+        },
+        "referenced_fields": [
+          "id"
+        ],
+        "cascade": true
+      }
+    ]
+  },
+  "task": {
+    "id": "694964e9424ce9326ca7b3ba",
+    "root": "6945719feb5090bdee671a86",
+    "project": "6945719feb5090bdee671a85",
+    "user": "a8615310-4071-70cf-378b-2f1588a4eda7"
+  },
+  "namespace": {
+    "id": "01987547fc6c72ecb453bd2736bd4ea0",
+    "tenant": 2,
+    "name": "global-1",
+    "default": true
+  },
+  "revision": 1
+}
