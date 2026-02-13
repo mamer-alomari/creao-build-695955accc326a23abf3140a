@@ -16,7 +16,7 @@
     "lint:radix": "grep -l -r '<SelectItem' src | xargs eslint --config config/eslint/eslint.radix.config.js",
     "lint:mcp": "eslint src --config config/eslint/eslint.mcp.config.js",
     "lint:validate": "node config/eslint/validate-configs.js",
-    "deploy": "npm run build && npx -y firebase-tools@latest deploy --only hosting",
+    "deploy": "npm run build && npx -y firebase-tools@latest deploy",
     "prepare": "if [ -f ./bin/setup-githooks.sh ]; then ./bin/setup-githooks.sh; fi"
   },
   "dependencies": {
