@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useRoleAuth } from "@/lib/auth-roles";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { LayoutDashboard, Calendar, Users, Package, Truck, DollarSign, Clock } from "lucide-react";
 import { CompanyORM, type CompanyModel } from "@/sdk/database/orm/orm_company";
@@ -116,6 +117,23 @@ function App() {
 
 	const activeWorkers = workers.filter((w) => w.status === WorkerStatus.Active);
 	const upcomingJobs = jobs.filter((j) => j.status === JobStatus.Booked || j.status === JobStatus.InProgress);
+
+	const { isAuthenticated, isLoading } = useRoleAuth();
+	const navigate = useNavigate();
+
+	useEffect(() => {
+		if (!isLoading && !isAuthenticated) {
+			navigate({ to: "/login" });
+		}
+	}, [isLoading, isAuthenticated, navigate]);
+
+	if (isLoading) {
+		return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
+	}
+
+	if (!isAuthenticated) {
+		return null; // Will redirect
+	}
 
 	return (
 		<div className="flex min-h-[calc(100vh-3.5rem)]">
