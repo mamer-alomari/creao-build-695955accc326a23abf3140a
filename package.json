@@ -16,7 +16,7 @@
     "lint:radix": "grep -l -r '<SelectItem' src | xargs eslint --config config/eslint/eslint.radix.config.js",
     "lint:mcp": "eslint src --config config/eslint/eslint.mcp.config.js",
     "lint:validate": "node config/eslint/validate-configs.js",
-    "deploy": "npm run build && npx firebase deploy",
+    "deploy": "npm run build && npx firebase deploy --only hosting",
     "prepare": "if [ -f ./bin/setup-githooks.sh ]; then ./bin/setup-githooks.sh; fi"
   },
   "dependencies": {
@@ -63,6 +63,7 @@
     "date-fns": "^3.6.0",
     "dayjs": "^1.11.19",
     "embla-carousel-react": "^8.6.0",
+    "firebase": "^12.9.0",
     "input-otp": "^1.4.2",
     "lodash": "^4.17.21",
     "lucide-react": "^0.476.0",

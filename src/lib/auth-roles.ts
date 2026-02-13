@@ -5,18 +5,8 @@
  * Roles are extracted from JWT token payload.
  */
 
-import { getAuthToken, getUserId, useCreaoAuth } from "@/sdk/core/auth";
-
-/**
- * User roles for access control
- */
-export enum UserRole {
-  Unspecified = "unspecified",
-  Customer = "customer",
-  Worker = "worker",
-  Manager = "manager",
-  Admin = "admin",
-}
+import { getAuthToken, getUserId, useCreaoAuth, UserRole } from "@/sdk/core/auth";
+export { UserRole };
 
 /**
  * Permission definitions by role

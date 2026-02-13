@@ -56,8 +56,6 @@ export function FloatingBanner({
 		switch (status) {
 			case "authenticated":
 				return "bg-green-500 shadow-green-500/50";
-			case "invalid_token":
-				return "bg-red-500 shadow-red-500/50";
 			case "loading":
 				return "bg-yellow-500 shadow-yellow-500/50";
 			default:

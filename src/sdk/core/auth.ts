@@ -1,526 +1,205 @@
 /**
- * Authentication Integration Utilities with Zustand
- *
- * This file provides utilities for built pages to receive and handle
- * authentication tokens from the parent Build Studio application.
- *
- * Usage in built pages:
- * 1. Include this file in your built application
- * 3. Use await getAuthTokenAsync() to get the current token for API calls
- * 4. Or use the useCreaoAuth() hook in React components
+ * Authentication Integration Utilities with Firebase
  */
 
 import { create } from "zustand";
+import { auth, db } from "@/lib/firebase";
+import {
+	onAuthStateChanged,
+	signOut,
+	type User,
+	type NextOrObserver
+} from "firebase/auth";
+import { doc, getDoc, setDoc } from "firebase/firestore";
 
-interface AuthMessage {
-	type: "CREAO_AUTH_TOKEN";
-	token: string;
-	origin: string;
+// Enum definition moved here to avoid circular dependencies
+export enum UserRole {
+	Unspecified = "unspecified",
+	Customer = "customer",
+	Worker = "worker",
+	Manager = "manager",
+	Admin = "admin",
 }
 
-type AuthStatus =
-	| "authenticated"
-	| "unauthenticated"
-	| "invalid_token"
-	| "loading";
-
-export type UserRole = 'admin' | 'manager' | 'worker';
-
 interface AuthState {
+	user: User | null;
 	token: string | null;
-	status: AuthStatus;
-	parentOrigin: string | null;
+	status: "authenticated" | "unauthenticated" | "loading";
 	role: UserRole;
 }
 
 interface AuthStore extends AuthState {
-	// Internal state
-	initializationPromise: Promise<void> | null;
-	validationPromise: Promise<boolean> | null;
-
 	// Actions
-	setToken: (token: string, origin?: string) => Promise<void>;
-	setStatus: (status: AuthStatus) => void;
-	setState: (state: Partial<AuthState>) => void;
-	clearAuth: () => Promise<void>;
-	refreshAuth: () => Promise<boolean>;
-	initialize: () => Promise<void>;
-	validateToken: (token: string) => Promise<boolean>;
+	setUser: (user: User | null) => void;
+	setToken: (token: string | null) => void;
 	setRole: (role: UserRole) => void;
+	logout: () => Promise<void>;
 }
-
-// Configuration for token validation
-const API_BASE_PATH = import.meta.env.VITE_API_BASE_PATH;
 
 /**
  * Zustand store for authentication state management
  */
-const useAuthStore = create<AuthStore>(
-	(set, get): AuthStore => ({
-		// Initial state
-		token: null,
-		status: "loading",
-		parentOrigin: null,
-		role: 'admin', // Default role
-		initializationPromise: null,
-		validationPromise: null,
+const useAuthStore = create<AuthStore>((set) => ({
+	user: null,
+	token: null,
+	status: "loading",
+	role: UserRole.Unspecified,
 
-		// Set status
-		setStatus: (status: AuthStatus) => {
-			set({ status });
-		},
+	setUser: (user) => set({ user, status: user ? "authenticated" : "unauthenticated" }),
+	setToken: (token) => set({ token }),
+	setRole: (role) => set({ role }),
 
-		// Set partial state
-		setState: (newState: Partial<AuthState>) => {
-			set(newState);
-		},
-
-		setRole: (role: UserRole) => {
-			set({ role });
-		},
-
-		// Validate token by making a request to the /me endpoint
-		validateToken: async (token: string): Promise<boolean> => {
-			console.log("Validating token...", { API_BASE_PATH: API_BASE_PATH });
-
-			if (!API_BASE_PATH) {
-				console.error("API_BASE_PATH is not set");
-				return false;
-			}
-
-			try {
-				const response = await fetch(`${API_BASE_PATH}/me`, {
-					method: "GET",
-					headers: {
-						Authorization: `Bearer ${token}`,
-						"Content-Type": "application/json",
-					},
-				});
-
-				console.log("Token validation response:", response.status, response.ok);
-				return response.ok;
-			} catch (error) {
-				console.warn("Token validation failed:", error);
-				return false;
-			}
-		},
-
-		// Set the authentication token (async to validate)
-		setToken: async (token: string, origin?: string): Promise<void> => {
-			const { validateToken } = get();
-			const isValid = await validateToken(token);
-
-			if (isValid) {
-				set({
-					token,
-					status: "authenticated",
-					parentOrigin: origin || get().parentOrigin,
-				});
-
-				// Store in localStorage for persistence
-				localStorage.setItem("creao_auth_token", token);
-			} else {
-				// Token is invalid, clear it
-				set({
-					token: null,
-					status: "invalid_token",
-					parentOrigin: origin || get().parentOrigin,
-				});
-				localStorage.removeItem("creao_auth_token");
-			}
-		},
-
-		// Clear authentication
-		clearAuth: async (): Promise<void> => {
-			set({
-				token: null,
-				status: "unauthenticated",
-				parentOrigin: null,
-			});
-			localStorage.removeItem("creao_auth_token");
-		},
-
-		// Refresh authentication state by re-validating the current token
-		refreshAuth: async (): Promise<boolean> => {
-			const { token, validateToken } = get();
-
-			if (!token) {
-				return false;
-			}
-
-			const isValid = await validateToken(token);
-			if (!isValid) {
-				set({ status: "invalid_token" });
-				localStorage.removeItem("creao_auth_token");
-				return false;
-			}
-
-			set({ status: "authenticated" });
-			return true;
-		},
-
-		// Initialize the authentication system
-		initialize: async (): Promise<void> => {
-			console.log("Auth initialization started");
-			try {
-				// Initialize from storage
-				await initializeFromStorage(get, set);
-
-				// Initialize from URL
-				await initializeFromUrl(get);
-
-				// Setup message listener
-				setupMessageListener(get);
-
-				// If still loading after initialization, set to unauthenticated
-				const currentStatus = get().status;
-				if (currentStatus === "loading") {
-					console.log(
-						"Auth initialization complete - setting to unauthenticated",
-					);
-					set({ status: "unauthenticated" });
-				} else {
-					console.log("Auth initialization complete - status:", currentStatus);
-				}
-			} catch (error) {
-				console.error("Auth initialization failed:", error);
-				set({ status: "unauthenticated" });
-			}
-		},
-	}),
-);
-
-/**
- * Initialize authentication from localStorage
- */
-async function initializeFromStorage(
-	get: () => AuthStore,
-	set: (state: Partial<AuthStore>) => void,
-): Promise<void> {
-	console.log("Initializing auth from storage...");
-	const storedToken = localStorage.getItem("creao_auth_token");
-	if (storedToken) {
-		console.log("Found stored token, validating...");
-		const { validateToken } = get();
-		const isValid = await validateToken(storedToken);
-		if (isValid) {
-			console.log("Stored token is valid");
-			set({
-				token: storedToken,
-				status: "authenticated",
-			});
-		} else {
-			console.log("Stored token is invalid, clearing...");
-			localStorage.removeItem("creao_auth_token");
-			set({ status: "invalid_token" });
-		}
-	} else {
-		console.log("No stored token found");
-		set({ status: "unauthenticated" });
+	logout: async () => {
+		await signOut(auth);
+		set({ user: null, token: null, status: "unauthenticated", role: UserRole.Unspecified });
 	}
-}
+}));
 
-/**
- * Initialize authentication from URL parameters
- */
-async function initializeFromUrl(get: () => AuthStore): Promise<void> {
-	const urlParams = new URLSearchParams(window.location.search);
-	const authToken = urlParams.get("auth_token");
+// Initialize Auth Listener
+onAuthStateChanged(auth, async (user) => {
+	const { setUser, setToken, setRole } = useAuthStore.getState();
 
-	if (authToken) {
-		const { setToken } = get();
-		await setToken(authToken);
-		// Clean up URL to remove token
-		cleanupUrl();
-	}
-}
+	if (user) {
+		const token = await user.getIdToken();
+		setUser(user);
+		setToken(token);
 
-/**
- * Setup listener for postMessage from parent window
- */
-function setupMessageListener(get: () => AuthStore): void {
-	window.addEventListener("message", async (event: MessageEvent) => {
+		// Fetch role from Firestore
 		try {
-			const data = event.data as AuthMessage;
+			const userDocRef = doc(db, "users", user.uid);
+			const userDoc = await getDoc(userDocRef);
 
-			if (data?.type === "CREAO_AUTH_TOKEN" && data.token) {
-				const { setToken } = get();
-				await setToken(data.token, event.origin);
+			if (userDoc.exists()) {
+				const userData = userDoc.data();
+				if (userData.role) {
+					// Map string role to Enum if necessary
+					const roleStr = userData.role as string;
+					let roleEnum = UserRole.Unspecified;
+
+					if (roleStr === 'admin') roleEnum = UserRole.Admin;
+					else if (roleStr === 'manager') roleEnum = UserRole.Manager;
+					else if (roleStr === 'worker') roleEnum = UserRole.Worker;
+					else if (roleStr === 'customer') roleEnum = UserRole.Customer;
+					else if (Object.values(UserRole).includes(roleStr as UserRole)) roleEnum = roleStr as UserRole;
+
+					setRole(roleEnum);
+				}
+			} else {
+				// Create user doc with default role if it doesn't exist
+				await setDoc(userDocRef, {
+					email: user.email,
+					role: UserRole.Unspecified, // Default to Unspecified
+					createdAt: new Date().toISOString()
+				});
 			}
 		} catch (error) {
-			console.warn("Error processing auth message:", error);
+			console.error("Error fetching user role:", error);
 		}
-	});
-}
-
-/**
- * Clean up URL parameters
- */
-function cleanupUrl(): void {
-	const url = new URL(window.location.href);
-	url.searchParams.delete("auth_token");
-	window.history.replaceState({}, document.title, url.toString());
-}
-
-// Initialize on module load
-const initPromise = (async () => {
-	const { initialize } = useAuthStore.getState();
-	await initialize();
-})();
-
-/**
- * Ensure initialization is complete
- */
-async function ensureInitialized(): Promise<void> {
-	await initPromise;
-}
+	} else {
+		setUser(null);
+		setToken(null);
+	}
+});
 
 /**
  * React hook for using authentication state
- * @returns Authentication state and helper methods
  */
 export function useCreaoAuth() {
-	const token = useAuthStore((state) => state.token);
-	const status = useAuthStore((state) => state.status);
-	const parentOrigin = useAuthStore((state) => state.parentOrigin);
-	const role = useAuthStore((state) => state.role);
-	const clearAuth = useAuthStore((state) => state.clearAuth);
-	const refreshAuth = useAuthStore((state) => state.refreshAuth);
-	const setRole = useAuthStore((state) => state.setRole);
+	const store = useAuthStore();
 
 	return {
-		token,
-		status,
-		parentOrigin,
-		role,
-		isAuthenticated: status === "authenticated" && !!token,
-		isLoading: status === "loading",
-		hasInvalidToken: status === "invalid_token",
-		hasNoToken: status === "unauthenticated",
-		clearAuth,
-		refreshAuth,
-		setRole,
+		...store,
+		isAuthenticated: store.status === "authenticated",
+		isLoading: store.status === "loading",
+		// Compatibility aliases for existing code
+		parentOrigin: null,
+		hasInvalidToken: false,
+		hasNoToken: store.status === "unauthenticated",
+		clearAuth: store.logout,
+		refreshAuth: async () => true, // Auto-handled by Firebase
 	};
 }
 
 /**
- * Initialize authentication integration for built pages
- * Call this when your built application starts
- */
-export async function initializeAuthIntegration(): Promise<void> {
-	await ensureInitialized();
-	console.log("Auth integration initialized");
-}
-
-/**
- * Get the current authentication token
- */
-export function getAuthToken(): string | null {
-	return useAuthStore.getState().token;
-}
-
-/**
- * Get the current authentication token (async - ensures initialization)
+ * Get current auth token (async) - mainly for legacy compatibility
  */
 export async function getAuthTokenAsync(): Promise<string | null> {
-	await ensureInitialized();
-	return useAuthStore.getState().token;
+	const user = auth.currentUser;
+	if (user) {
+		return user.getIdToken();
+	}
+	return null;
 }
 
 /**
- * Check if user is authenticated (async - validates token)
+ * Check if authenticated
  */
 export async function isAuthenticated(): Promise<boolean> {
-	await ensureInitialized();
+	return !!auth.currentUser;
+}
 
-	const { token, status, validateToken, clearAuth } = useAuthStore.getState();
+// Compatibility Functions for auth-integration.ts
 
-	// If we already know we're not authenticated, return false
-	if (!token) {
-		return false;
-	}
+export const isAuthenticatedSync = (): boolean => {
+	return !!useAuthStore.getState().user;
+};
 
-	// If we think we're authenticated, return true
-	if (status === "authenticated") {
-		return true;
-	}
+export const getUserId = (): string | null => {
+	return useAuthStore.getState().user?.uid || null;
+};
 
-	// If we have a token but haven't validated it, validate now
-	if (token) {
-		const isValid = await validateToken(token);
+export const getAuthToken = (): string | null => {
+	return useAuthStore.getState().token;
+};
 
-		if (isValid) {
-			useAuthStore.setState({ status: "authenticated" });
-			return true;
-		}
-		// Clear invalid token
-		await clearAuth();
-		return false;
-	}
+export const getAuthStatus = (): string => {
+	return useAuthStore.getState().status;
+};
 
-	// Default case - if we get here, return false
+export const getAuthStatusAsync = async (): Promise<string> => {
+	return useAuthStore.getState().status;
+};
+
+export const hasInvalidToken = (): boolean => {
+	return false; // Firebase handles token validity
+};
+
+export const hasInvalidTokenAsync = async (): Promise<boolean> => {
 	return false;
-}
+};
 
-/**
- * Check if user is authenticated (sync - returns current state without validation)
- */
-export function isAuthenticatedSync(): boolean {
-	const { status, token } = useAuthStore.getState();
-	return status === "authenticated" && !!token;
-}
+export const hasNoToken = (): boolean => {
+	return !useAuthStore.getState().token;
+};
 
-/**
- * Get the current auth status
- */
-export function getAuthStatus(): AuthStatus {
-	return useAuthStore.getState().status;
-}
+export const hasNoTokenAsync = async (): Promise<boolean> => {
+	return !useAuthStore.getState().token;
+};
 
-/**
- * Get the current auth status (async - ensures initialization)
- */
-export async function getAuthStatusAsync(): Promise<AuthStatus> {
-	await ensureInitialized();
-	return useAuthStore.getState().status;
-}
-
-/**
- * Check if token is invalid
- */
-export function hasInvalidToken(): boolean {
-	return useAuthStore.getState().status === "invalid_token";
-}
-
-/**
- * Check if token is invalid (async - ensures initialization)
- */
-export async function hasInvalidTokenAsync(): Promise<boolean> {
-	await ensureInitialized();
-	return useAuthStore.getState().status === "invalid_token";
-}
-
-/**
- * Check if no token is provided
- */
-export function hasNoToken(): boolean {
-	return useAuthStore.getState().status === "unauthenticated";
-}
-
-/**
- * Check if no token is provided (async - ensures initialization)
- */
-export async function hasNoTokenAsync(): Promise<boolean> {
-	await ensureInitialized();
-	return useAuthStore.getState().status === "unauthenticated";
-}
-
-/**
- * Check if auth is still loading
- */
-export function isAuthenticating(): boolean {
+export const isAuthenticating = (): boolean => {
 	return useAuthStore.getState().status === "loading";
-}
+};
 
-/**
- * Get the current auth state
- */
-export function getAuthState(): AuthState {
-	const { token, status, parentOrigin, role } = useAuthStore.getState();
-	return { token, status, parentOrigin, role };
-}
+export const getAuthState = () => {
+	return useAuthStore.getState();
+};
 
-/**
- * Add a listener for auth state changes
- */
-export function addAuthStateListener(
-	listener: (state: AuthState) => void,
-): () => void {
-	// Immediately notify with current state
-	const currentState = getAuthState();
-	listener(currentState);
+export const addAuthStateListener = (callback: (state: any) => void) => {
+	return useAuthStore.subscribe(callback);
+};
 
-	// Subscribe to store changes
-	const unsubscribe = useAuthStore.subscribe((state) => {
-		const { token, status, parentOrigin, role } = state;
-		listener({ token, status, parentOrigin, role });
-	});
+export const clearAuth = async () => {
+	await useAuthStore.getState().logout();
+};
 
-	// Return cleanup function
-	return unsubscribe;
-}
-
-/**
- * Clear authentication
- */
-export async function clearAuth(): Promise<void> {
-	return useAuthStore.getState().clearAuth();
-}
-
-/**
- * Refresh authentication state by re-validating the current token
- */
-export async function refreshAuth(): Promise<boolean> {
-	return useAuthStore.getState().refreshAuth();
-}
-
-/**
- * Decode JWT token payload
- * @param token - JWT token string
- * @returns Decoded payload object or null if decoding fails
- */
-function decodeJwtPayload(token: string): Record<string, any> | null {
-	try {
-		// JWT format: header.payload.signature
-		const parts = token.split(".");
-		if (parts.length !== 3) {
-			console.warn("Invalid JWT token format");
-			return null;
-		}
-
-		// Decode the payload (second part)
-		const payload = parts[1];
-		// Replace URL-safe characters and add padding if needed
-		const base64 = payload.replace(/-/g, "+").replace(/_/g, "/");
-		const paddedBase64 =
-			base64 + "=".repeat((4 - (base64.length % 4)) % 4);
-
-		// Decode base64 and parse JSON
-		const decodedPayload = atob(paddedBase64);
-		return JSON.parse(decodedPayload);
-	} catch (error) {
-		console.warn("Failed to decode JWT token:", error);
-		return null;
+export const refreshAuth = async () => {
+	const user = auth.currentUser;
+	if (user) {
+		await user.getIdToken(true);
 	}
-}
+	return true;
+};
 
-/**
- * Get user ID from the current authentication token
- * Extracts userId or sub field from JWT token payload
- * @returns User ID string or null if not available
- */
-export function getUserId(): string | null {
-	const token = useAuthStore.getState().token;
+// Export for backward compatibility if needed
+export const initializeAuthIntegration = async () => { };
 
-	if (!token) {
-		return null;
-	}
-
-	const payload = decodeJwtPayload(token);
-	if (!payload) {
-		return null;
-	}
-
-	// Try to get userId first, then fall back to sub
-	return payload.userId || payload.sub || null;
-}
-
-/**
- * Get user ID from the current authentication token (async - ensures initialization)
- * Extracts userId or sub field from JWT token payload
- * @returns User ID string or null if not available
- */
-export async function getUserIdAsync(): Promise<string | null> {
-	await ensureInitialized();
-	return getUserId();
-}
