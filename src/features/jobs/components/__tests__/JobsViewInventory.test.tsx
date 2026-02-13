@@ -95,8 +95,10 @@ describe("JobsView Inventory Persistence", () => {
         expect(await screen.findByText("Inventory & Images")).toBeInTheDocument();
 
         // Check if room name and item are displayed
-        expect(screen.getByText("Living Room")).toBeInTheDocument();
-        expect(screen.getByText("Sofa")).toBeInTheDocument();
+        // We might have multiple "Living Room" texts (one in list, one in dialog)
+        // so we scope to the dialog or use getAllByText
+        expect(screen.getAllByText("Living Room")[0]).toBeInTheDocument();
+        expect(screen.getAllByText("Sofa")[0]).toBeInTheDocument();
     });
 
     it("does not display inventory section when inventory_data is missing", async () => {
