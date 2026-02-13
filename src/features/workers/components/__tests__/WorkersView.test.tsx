@@ -18,6 +18,10 @@ const mockWorkers = [
         role: WorkerRole.Driver,
         status: WorkerStatus.Active,
         company_id: "company-1",
+        data_creator: "user-1",
+        data_updater: "user-1",
+        create_time: "1234567890",
+        update_time: "1234567890",
     }
 ];
 

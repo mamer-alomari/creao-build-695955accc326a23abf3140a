@@ -24,10 +24,13 @@ type AuthStatus =
 	| "invalid_token"
 	| "loading";
 
+export type UserRole = 'admin' | 'manager' | 'worker';
+
 interface AuthState {
 	token: string | null;
 	status: AuthStatus;
 	parentOrigin: string | null;
+	role: UserRole;
 }
 
 interface AuthStore extends AuthState {
@@ -43,6 +46,7 @@ interface AuthStore extends AuthState {
 	refreshAuth: () => Promise<boolean>;
 	initialize: () => Promise<void>;
 	validateToken: (token: string) => Promise<boolean>;
+	setRole: (role: UserRole) => void;
 }
 
 // Configuration for token validation
@@ -57,6 +61,7 @@ const useAuthStore = create<AuthStore>(
 		token: null,
 		status: "loading",
 		parentOrigin: null,
+		role: 'admin', // Default role
 		initializationPromise: null,
 		validationPromise: null,
 
@@ -68,6 +73,10 @@ const useAuthStore = create<AuthStore>(
 		// Set partial state
 		setState: (newState: Partial<AuthState>) => {
 			set(newState);
+		},
+
+		setRole: (role: UserRole) => {
+			set({ role });
 		},
 
 		// Validate token by making a request to the /me endpoint
@@ -274,19 +283,23 @@ export function useCreaoAuth() {
 	const token = useAuthStore((state) => state.token);
 	const status = useAuthStore((state) => state.status);
 	const parentOrigin = useAuthStore((state) => state.parentOrigin);
+	const role = useAuthStore((state) => state.role);
 	const clearAuth = useAuthStore((state) => state.clearAuth);
 	const refreshAuth = useAuthStore((state) => state.refreshAuth);
+	const setRole = useAuthStore((state) => state.setRole);
 
 	return {
 		token,
 		status,
 		parentOrigin,
+		role,
 		isAuthenticated: status === "authenticated" && !!token,
 		isLoading: status === "loading",
 		hasInvalidToken: status === "invalid_token",
 		hasNoToken: status === "unauthenticated",
 		clearAuth,
 		refreshAuth,
+		setRole,
 	};
 }
 
@@ -413,8 +426,8 @@ export function isAuthenticating(): boolean {
  * Get the current auth state
  */
 export function getAuthState(): AuthState {
-	const { token, status, parentOrigin } = useAuthStore.getState();
-	return { token, status, parentOrigin };
+	const { token, status, parentOrigin, role } = useAuthStore.getState();
+	return { token, status, parentOrigin, role };
 }
 
 /**
@@ -429,8 +442,8 @@ export function addAuthStateListener(
 
 	// Subscribe to store changes
 	const unsubscribe = useAuthStore.subscribe((state) => {
-		const { token, status, parentOrigin } = state;
-		listener({ token, status, parentOrigin });
+		const { token, status, parentOrigin, role } = state;
+		listener({ token, status, parentOrigin, role });
 	});
 
 	// Return cleanup function

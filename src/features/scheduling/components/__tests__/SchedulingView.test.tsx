@@ -22,6 +22,10 @@ const mockJobs = [
         dropoff_address: "B",
         scheduled_date: (Date.now() / 1000).toString(),
         company_id: "company-1",
+        data_creator: "user-1",
+        data_updater: "user-1",
+        create_time: "1234567890",
+        update_time: "1234567890",
     }
 ];
 
@@ -32,6 +36,10 @@ const mockWorkers = [
         role: WorkerRole.Mover,
         status: WorkerStatus.Active,
         company_id: "company-1",
+        data_creator: "user-1",
+        data_updater: "user-1",
+        create_time: "1234567890",
+        update_time: "1234567890",
     }
 ];
 
@@ -42,6 +50,10 @@ const mockVehicles = [
         type: VehicleType.BoxTruck16ft,
         license_plate: "123",
         company_id: "company-1",
+        data_creator: "user-1",
+        data_updater: "user-1",
+        create_time: "1234567890",
+        update_time: "1234567890",
     }
 ];
 
@@ -51,6 +63,10 @@ const mockAssignments = [
         job_id: "job-1",
         worker_id: "worker-1",
         company_id: "company-1",
+        data_creator: "user-1",
+        data_updater: "user-1",
+        create_time: "1234567890",
+        update_time: "1234567890",
     }
 ];
 

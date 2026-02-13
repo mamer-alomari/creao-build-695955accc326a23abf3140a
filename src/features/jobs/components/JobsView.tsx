@@ -333,7 +333,7 @@ export function JobsView({ jobs, workers, vehicles, equipment, companyId }: Jobs
                                     onInventoryChange={(inventory) => {
                                         setQuoteData({ ...quoteData, inventory_data: JSON.stringify(inventory) });
                                     }}
-                                    initialInventory={quoteData.inventory_data ? JSON.parse(quoteData.inventory_data) : []}
+                                    initialRooms={quoteData.inventory_data ? JSON.parse(quoteData.inventory_data) : []}
                                 />
                             </div>
                         )}
@@ -445,7 +445,7 @@ export function JobsView({ jobs, workers, vehicles, equipment, companyId }: Jobs
                                     <div className="border rounded-md p-4">
                                         <RoomInventoryManager
                                             onInventoryChange={() => { }}
-                                            initialInventory={JSON.parse(selectedJob.inventory_data)}
+                                            initialRooms={JSON.parse(selectedJob.inventory_data)}
                                         />
                                     </div>
                                 </div>
