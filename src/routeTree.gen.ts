@@ -8,127 +8,183 @@
 // You should NOT make any changes in this file as it will be overwritten.
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
-// Import Routes
+import { Route as rootRouteImport } from './routes/__root'
+import { Route as PortalRouteImport } from './routes/portal'
+import { Route as OnboardingRouteImport } from './routes/onboarding'
+import { Route as LoginRouteImport } from './routes/login'
+import { Route as GetQuoteRouteImport } from './routes/get-quote'
+import { Route as IndexRouteImport } from './routes/index'
+import { Route as PortalIndexRouteImport } from './routes/portal.index'
+import { Route as JobsJobIdRouteImport } from './routes/jobs.$jobId'
 
-import { Route as rootRoute } from './routes/__root'
-import { Route as LoginImport } from './routes/login'
-import { Route as IndexImport } from './routes/index'
-import { Route as JobsJobIdImport } from './routes/jobs.$jobId'
-
-// Create/Update Routes
-
-const LoginRoute = LoginImport.update({
+const PortalRoute = PortalRouteImport.update({
+  id: '/portal',
+  path: '/portal',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OnboardingRoute = OnboardingRouteImport.update({
+  id: '/onboarding',
+  path: '/onboarding',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => rootRouteImport,
 } as any)
-
-const IndexRoute = IndexImport.update({
+const GetQuoteRoute = GetQuoteRouteImport.update({
+  id: '/get-quote',
+  path: '/get-quote',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => rootRouteImport,
 } as any)
-
-const JobsJobIdRoute = JobsJobIdImport.update({
+const PortalIndexRoute = PortalIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => PortalRoute,
+} as any)
+const JobsJobIdRoute = JobsJobIdRouteImport.update({
   id: '/jobs/$jobId',
   path: '/jobs/$jobId',
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => rootRouteImport,
 } as any)
 
-// Populate the FileRoutesByPath interface
+export interface FileRoutesByFullPath {
+  '/': typeof IndexRoute
+  '/get-quote': typeof GetQuoteRoute
+  '/login': typeof LoginRoute
+  '/onboarding': typeof OnboardingRoute
+  '/portal': typeof PortalRouteWithChildren
+  '/jobs/$jobId': typeof JobsJobIdRoute
+  '/portal/': typeof PortalIndexRoute
+}
+export interface FileRoutesByTo {
+  '/': typeof IndexRoute
+  '/get-quote': typeof GetQuoteRoute
+  '/login': typeof LoginRoute
+  '/onboarding': typeof OnboardingRoute
+  '/jobs/$jobId': typeof JobsJobIdRoute
+  '/portal': typeof PortalIndexRoute
+}
+export interface FileRoutesById {
+  __root__: typeof rootRouteImport
+  '/': typeof IndexRoute
+  '/get-quote': typeof GetQuoteRoute
+  '/login': typeof LoginRoute
+  '/onboarding': typeof OnboardingRoute
+  '/portal': typeof PortalRouteWithChildren
+  '/jobs/$jobId': typeof JobsJobIdRoute
+  '/portal/': typeof PortalIndexRoute
+}
+export interface FileRouteTypes {
+  fileRoutesByFullPath: FileRoutesByFullPath
+  fullPaths:
+    | '/'
+    | '/get-quote'
+    | '/login'
+    | '/onboarding'
+    | '/portal'
+    | '/jobs/$jobId'
+    | '/portal/'
+  fileRoutesByTo: FileRoutesByTo
+  to: '/' | '/get-quote' | '/login' | '/onboarding' | '/jobs/$jobId' | '/portal'
+  id:
+    | '__root__'
+    | '/'
+    | '/get-quote'
+    | '/login'
+    | '/onboarding'
+    | '/portal'
+    | '/jobs/$jobId'
+    | '/portal/'
+  fileRoutesById: FileRoutesById
+}
+export interface RootRouteChildren {
+  IndexRoute: typeof IndexRoute
+  GetQuoteRoute: typeof GetQuoteRoute
+  LoginRoute: typeof LoginRoute
+  OnboardingRoute: typeof OnboardingRoute
+  PortalRoute: typeof PortalRouteWithChildren
+  JobsJobIdRoute: typeof JobsJobIdRoute
+}
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexImport
-      parentRoute: typeof rootRoute
+    '/portal': {
+      id: '/portal'
+      path: '/portal'
+      fullPath: '/portal'
+      preLoaderRoute: typeof PortalRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/onboarding': {
+      id: '/onboarding'
+      path: '/onboarding'
+      fullPath: '/onboarding'
+      preLoaderRoute: typeof OnboardingRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/login': {
       id: '/login'
       path: '/login'
       fullPath: '/login'
-      preLoaderRoute: typeof LoginImport
-      parentRoute: typeof rootRoute
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/get-quote': {
+      id: '/get-quote'
+      path: '/get-quote'
+      fullPath: '/get-quote'
+      preLoaderRoute: typeof GetQuoteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/portal/': {
+      id: '/portal/'
+      path: '/'
+      fullPath: '/portal/'
+      preLoaderRoute: typeof PortalIndexRouteImport
+      parentRoute: typeof PortalRoute
     }
     '/jobs/$jobId': {
       id: '/jobs/$jobId'
       path: '/jobs/$jobId'
       fullPath: '/jobs/$jobId'
-      preLoaderRoute: typeof JobsJobIdImport
-      parentRoute: typeof rootRoute
+      preLoaderRoute: typeof JobsJobIdRouteImport
+      parentRoute: typeof rootRouteImport
     }
   }
 }
 
-// Create and export the route tree
-
-export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute
-  '/login': typeof LoginRoute
-  '/jobs/$jobId': typeof JobsJobIdRoute
+interface PortalRouteChildren {
+  PortalIndexRoute: typeof PortalIndexRoute
 }
 
-export interface FileRoutesByTo {
-  '/': typeof IndexRoute
-  '/login': typeof LoginRoute
-  '/jobs/$jobId': typeof JobsJobIdRoute
+const PortalRouteChildren: PortalRouteChildren = {
+  PortalIndexRoute: PortalIndexRoute,
 }
 
-export interface FileRoutesById {
-  __root__: typeof rootRoute
-  '/': typeof IndexRoute
-  '/login': typeof LoginRoute
-  '/jobs/$jobId': typeof JobsJobIdRoute
-}
-
-export interface FileRouteTypes {
-  fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/login' | '/jobs/$jobId'
-  fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/login' | '/jobs/$jobId'
-  id: '__root__' | '/' | '/login' | '/jobs/$jobId'
-  fileRoutesById: FileRoutesById
-}
-
-export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute
-  LoginRoute: typeof LoginRoute
-  JobsJobIdRoute: typeof JobsJobIdRoute
-}
+const PortalRouteWithChildren =
+  PortalRoute._addFileChildren(PortalRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  GetQuoteRoute: GetQuoteRoute,
   LoginRoute: LoginRoute,
+  OnboardingRoute: OnboardingRoute,
+  PortalRoute: PortalRouteWithChildren,
   JobsJobIdRoute: JobsJobIdRoute,
 }
-
-export const routeTree = rootRoute
+export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-/* ROUTE_MANIFEST_START
-{
-  "routes": {
-    "__root__": {
-      "filePath": "__root.tsx",
-      "children": [
-        "/",
-        "/login",
-        "/jobs/$jobId"
-      ]
-    },
-    "/": {
-      "filePath": "index.tsx"
-    },
-    "/login": {
-      "filePath": "login.tsx"
-    },
-    "/jobs/$jobId": {
-      "filePath": "jobs.$jobId.tsx"
-    }
-  }
-}
-ROUTE_MANIFEST_END */
