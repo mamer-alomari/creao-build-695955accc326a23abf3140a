@@ -48,6 +48,7 @@ export interface WorkerModel {
   role: WorkerRole;
   status: WorkerStatus;
   company_id: string;
+  hourly_rate?: number;
 }
 
 // Re-export common types for compatibility

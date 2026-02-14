@@ -101,6 +101,26 @@ export function WorkersView({ workers, companyId }: { workers: WorkerModel[]; co
                                     />
                                 </div>
                                 <div className="grid gap-2">
+                                    <Label htmlFor="hourly_rate">Hourly Rate ($)</Label>
+                                    <Input
+                                        id="hourly_rate"
+                                        type="number"
+                                        value={newWorker.hourly_rate || ""}
+                                        onChange={(e) => setNewWorker({ ...newWorker, hourly_rate: parseFloat(e.target.value) })}
+                                        placeholder="20.00"
+                                    />
+                                </div>
+                                <div className="grid gap-2">
+                                    <Label htmlFor="hourly_rate">Hourly Rate ($)</Label>
+                                    <Input
+                                        id="hourly_rate"
+                                        type="number"
+                                        value={newWorker.hourly_rate || ""}
+                                        onChange={(e) => setNewWorker({ ...newWorker, hourly_rate: parseFloat(e.target.value) })}
+                                        placeholder="20.00"
+                                    />
+                                </div>
+                                <div className="grid gap-2">
                                     <Label htmlFor="role">Role</Label>
                                     <Select
                                         value={newWorker.role?.toString()}

@@ -11,7 +11,7 @@ export default defineConfig(({ mode }) => {
 	console.log("DEBUG: Loaded ENV keys:", Object.keys(env));
 	console.log("DEBUG: VITE_FIREBASE_API_KEY:", env.VITE_FIREBASE_API_KEY);
 	return {
-		base: process.env.TENANT_ID ? `/${process.env.TENANT_ID}/` : "./",
+		base: process.env.TENANT_ID ? `/${process.env.TENANT_ID}/` : "/",
 		define: {
 			"import.meta.env.TENANT_ID": JSON.stringify(process.env.TENANT_ID || ""),
 			"import.meta.env.VITE_FIREBASE_API_KEY": JSON.stringify(

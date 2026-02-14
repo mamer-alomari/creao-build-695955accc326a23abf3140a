@@ -249,7 +249,17 @@ export function JobsView({ jobs, workers, vehicles, equipment, companyId }: Jobs
                             {jobs.map((job) => (
                                 <TableRow key={job.id} onClick={() => handleOpenDetails(job)} className="cursor-pointer hover:bg-muted/50">
                                     <TableCell className="font-medium">{job.customer_name}</TableCell>
-                                    <TableCell>{new Date(parseInt(job.scheduled_date) * 1000).toLocaleDateString() || job.scheduled_date}</TableCell>
+                                    <TableCell>
+                                        {(() => {
+                                            const dateStr = job.scheduled_date;
+                                            const asNum = parseInt(dateStr);
+                                            // Check for timestamp (seconds)
+                                            if (!isNaN(asNum) && asNum > 315360000 && /^\d+$/.test(dateStr)) {
+                                                return new Date(asNum * 1000).toLocaleDateString();
+                                            }
+                                            return new Date(dateStr).toLocaleDateString();
+                                        })()}
+                                    </TableCell>
                                     <TableCell className="truncate max-w-[150px]" title={job.pickup_address}>{job.pickup_address}</TableCell>
                                     <TableCell className="truncate max-w-[150px]" title={job.dropoff_address}>{job.dropoff_address}</TableCell>
                                     <TableCell>${job.estimated_cost?.toFixed(2) || "0.00"}</TableCell>
@@ -416,7 +426,19 @@ export function JobsView({ jobs, workers, vehicles, equipment, companyId }: Jobs
                                     </div>
                                     <div>
                                         <Label>Date</Label>
-                                        <div className="mt-1 font-medium">{new Date(parseInt(selectedJob.scheduled_date) * 1000).toLocaleDateString() || selectedJob.scheduled_date}</div>
+                                        <div className="mt-1 font-medium">
+                                            {(() => {
+                                                const dateStr = selectedJob.scheduled_date;
+                                                // Check if it's a timestamp (seconds) or ISO string
+                                                const asNum = parseInt(dateStr);
+                                                // If it's a large number (likely timestamp > 1980) and looks like an integer
+                                                if (!isNaN(asNum) && asNum > 315360000 && /^\d+$/.test(dateStr)) {
+                                                    return new Date(asNum * 1000).toLocaleDateString();
+                                                }
+                                                // Otherwise treat as string date
+                                                return new Date(dateStr).toLocaleDateString();
+                                            })()}
+                                        </div>
                                     </div>
                                     <div>
                                         <Label>Pickup</Label>
@@ -456,8 +478,10 @@ export function JobsView({ jobs, workers, vehicles, equipment, companyId }: Jobs
                                 <h3 className="text-lg font-semibold mb-4">Job QR Code</h3>
                                 <p className="text-sm text-muted-foreground mb-4">Scan to access job details on mobile</p>
                                 <div className="flex flex-col items-center justify-center p-4 bg-white border rounded-lg max-w-xs mx-auto" data-testid="qr-code-container">
-                                    <QRCode value={selectedJob.id} />
-                                    <p className="mt-2 font-mono text-xs text-muted-foreground">{selectedJob.id}</p>
+                                    <QRCode value={`${window.location.origin}/jobs/${selectedJob.id}`} />
+                                    <p className="mt-2 font-mono text-xs text-muted-foreground break-all text-center">
+                                        {`${window.location.host}/jobs/${selectedJob.id}`}
+                                    </p>
                                 </div>
                             </div>
                         </div>
