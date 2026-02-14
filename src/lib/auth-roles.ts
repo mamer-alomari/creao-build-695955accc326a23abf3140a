@@ -26,6 +26,24 @@ export const RolePermissions: Record<UserRole, string[]> = {
     "upload_job_photos",
     "view_own_schedule",
   ],
+  [UserRole.Foreman]: [
+    "view_assigned_jobs",
+    "manage_jobs",
+    "assign_resources",
+    "create_quote_request",
+    "update_job_status",
+    "upload_job_photos",
+    "view_reports"
+  ],
+  [UserRole.Foreman]: [
+    "view_assigned_jobs",
+    "manage_jobs",
+    "assign_resources",
+    "create_quote_request",
+    "update_job_status",
+    "upload_job_photos",
+    "view_reports"
+  ],
   [UserRole.Manager]: [
     "manage_jobs",
     "manage_workers",

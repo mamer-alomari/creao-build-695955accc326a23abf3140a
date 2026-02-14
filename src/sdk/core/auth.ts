@@ -17,6 +17,7 @@ export enum UserRole {
 	Unspecified = "unspecified",
 	Customer = "customer",
 	Worker = "worker",
+	Foreman = "foreman",
 	Manager = "manager",
 	Admin = "admin",
 }
@@ -82,6 +83,7 @@ onAuthStateChanged(auth, async (user) => {
 
 					if (roleStr === 'admin') roleEnum = UserRole.Admin;
 					else if (roleStr === 'manager') roleEnum = UserRole.Manager;
+					else if (roleStr === 'foreman') roleEnum = UserRole.Foreman;
 					else if (roleStr === 'worker') roleEnum = UserRole.Worker;
 					else if (roleStr === 'customer') roleEnum = UserRole.Customer;
 					else if (Object.values(UserRole).includes(roleStr as UserRole)) roleEnum = roleStr as UserRole;

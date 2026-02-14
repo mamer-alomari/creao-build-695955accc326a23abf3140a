@@ -28,6 +28,11 @@ export enum JobStatus {
   InProgress = 3,
   Completed = 4,
   Canceled = 5,
+  EnRoute = 6,
+  Arrived = 7,
+  Loading = 8,
+  onWayToDropoff = 9,
+  Unloading = 10,
 }
 
 /**
@@ -47,6 +52,30 @@ export interface JobModel {
   dropoff_address: string;
   estimated_cost?: number | null;
   inventory_data?: string;
+  customer_id?: string;
+
+  // Foreman Workflow Fields
+  actual_start_time?: string;
+  actual_end_time?: string;
+  vehicle_id?: string;
+  equipment_ids?: string[];
+
+  // On-Site Updates
+  final_inventory_data?: string;
+  final_quote_amount?: number;
+
+  // Contract & Payment
+  signatures?: {
+    customer_sign: string;
+    foreman_sign: string;
+    timestamp: string;
+  };
+  payment_status?: "pending" | "deposit_paid" | "fully_paid";
+  deposit_amount?: number;
+
+  // Proof of Work
+  loading_photos?: string[];
+  closing_notes?: string;
 }
 
 // Re-export common types for compatibility if needed, though we won't use them internally
@@ -122,6 +151,15 @@ export class JobORM {
    */
   async getJobsByCompanyId(companyId: string): Promise<JobModel[]> {
     const q = query(collection(db, this.collectionName), where("company_id", "==", companyId));
+    const querySnapshot = await getDocs(q);
+    return querySnapshot.docs.map(doc => doc.data() as JobModel);
+  }
+
+  /**
+   * Get all Job records for a specific customer
+   */
+  async getJobsByCustomerId(customerId: string): Promise<JobModel[]> {
+    const q = query(collection(db, this.collectionName), where("customer_id", "==", customerId));
     const querySnapshot = await getDocs(q);
     return querySnapshot.docs.map(doc => doc.data() as JobModel);
   }

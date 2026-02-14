@@ -9,14 +9,34 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as WorkerRouteImport } from './routes/worker'
+import { Route as TeamRouteImport } from './routes/team'
 import { Route as PortalRouteImport } from './routes/portal'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as InviteRouteImport } from './routes/invite'
 import { Route as GetQuoteRouteImport } from './routes/get-quote'
+import { Route as ForemanRouteImport } from './routes/foreman'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as WorkerIndexRouteImport } from './routes/worker.index'
+import { Route as TeamIndexRouteImport } from './routes/team.index'
 import { Route as PortalIndexRouteImport } from './routes/portal.index'
+import { Route as ForemanIndexRouteImport } from './routes/foreman.index'
+import { Route as WorkerReportIncidentRouteImport } from './routes/worker.report-incident'
 import { Route as JobsJobIdRouteImport } from './routes/jobs.$jobId'
+import { Route as WorkerJobsJobIdRouteImport } from './routes/worker.jobs.$jobId'
+import { Route as ForemanJobsJobIdRouteImport } from './routes/foreman.jobs.$jobId'
 
+const WorkerRoute = WorkerRouteImport.update({
+  id: '/worker',
+  path: '/worker',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TeamRoute = TeamRouteImport.update({
+  id: '/team',
+  path: '/team',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PortalRoute = PortalRouteImport.update({
   id: '/portal',
   path: '/portal',
@@ -32,9 +52,19 @@ const LoginRoute = LoginRouteImport.update({
   path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
+const InviteRoute = InviteRouteImport.update({
+  id: '/invite',
+  path: '/invite',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const GetQuoteRoute = GetQuoteRouteImport.update({
   id: '/get-quote',
   path: '/get-quote',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ForemanRoute = ForemanRouteImport.update({
+  id: '/foreman',
+  path: '/foreman',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -42,78 +72,186 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const WorkerIndexRoute = WorkerIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => WorkerRoute,
+} as any)
+const TeamIndexRoute = TeamIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => TeamRoute,
+} as any)
 const PortalIndexRoute = PortalIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => PortalRoute,
+} as any)
+const ForemanIndexRoute = ForemanIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => ForemanRoute,
+} as any)
+const WorkerReportIncidentRoute = WorkerReportIncidentRouteImport.update({
+  id: '/report-incident',
+  path: '/report-incident',
+  getParentRoute: () => WorkerRoute,
 } as any)
 const JobsJobIdRoute = JobsJobIdRouteImport.update({
   id: '/jobs/$jobId',
   path: '/jobs/$jobId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const WorkerJobsJobIdRoute = WorkerJobsJobIdRouteImport.update({
+  id: '/jobs/$jobId',
+  path: '/jobs/$jobId',
+  getParentRoute: () => WorkerRoute,
+} as any)
+const ForemanJobsJobIdRoute = ForemanJobsJobIdRouteImport.update({
+  id: '/jobs/$jobId',
+  path: '/jobs/$jobId',
+  getParentRoute: () => ForemanRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/foreman': typeof ForemanRouteWithChildren
   '/get-quote': typeof GetQuoteRoute
+  '/invite': typeof InviteRoute
   '/login': typeof LoginRoute
   '/onboarding': typeof OnboardingRoute
   '/portal': typeof PortalRouteWithChildren
+  '/team': typeof TeamRouteWithChildren
+  '/worker': typeof WorkerRouteWithChildren
   '/jobs/$jobId': typeof JobsJobIdRoute
+  '/worker/report-incident': typeof WorkerReportIncidentRoute
+  '/foreman/': typeof ForemanIndexRoute
   '/portal/': typeof PortalIndexRoute
+  '/team/': typeof TeamIndexRoute
+  '/worker/': typeof WorkerIndexRoute
+  '/foreman/jobs/$jobId': typeof ForemanJobsJobIdRoute
+  '/worker/jobs/$jobId': typeof WorkerJobsJobIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/get-quote': typeof GetQuoteRoute
+  '/invite': typeof InviteRoute
   '/login': typeof LoginRoute
   '/onboarding': typeof OnboardingRoute
   '/jobs/$jobId': typeof JobsJobIdRoute
+  '/worker/report-incident': typeof WorkerReportIncidentRoute
+  '/foreman': typeof ForemanIndexRoute
   '/portal': typeof PortalIndexRoute
+  '/team': typeof TeamIndexRoute
+  '/worker': typeof WorkerIndexRoute
+  '/foreman/jobs/$jobId': typeof ForemanJobsJobIdRoute
+  '/worker/jobs/$jobId': typeof WorkerJobsJobIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/foreman': typeof ForemanRouteWithChildren
   '/get-quote': typeof GetQuoteRoute
+  '/invite': typeof InviteRoute
   '/login': typeof LoginRoute
   '/onboarding': typeof OnboardingRoute
   '/portal': typeof PortalRouteWithChildren
+  '/team': typeof TeamRouteWithChildren
+  '/worker': typeof WorkerRouteWithChildren
   '/jobs/$jobId': typeof JobsJobIdRoute
+  '/worker/report-incident': typeof WorkerReportIncidentRoute
+  '/foreman/': typeof ForemanIndexRoute
   '/portal/': typeof PortalIndexRoute
+  '/team/': typeof TeamIndexRoute
+  '/worker/': typeof WorkerIndexRoute
+  '/foreman/jobs/$jobId': typeof ForemanJobsJobIdRoute
+  '/worker/jobs/$jobId': typeof WorkerJobsJobIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/foreman'
     | '/get-quote'
+    | '/invite'
     | '/login'
     | '/onboarding'
     | '/portal'
+    | '/team'
+    | '/worker'
     | '/jobs/$jobId'
+    | '/worker/report-incident'
+    | '/foreman/'
     | '/portal/'
+    | '/team/'
+    | '/worker/'
+    | '/foreman/jobs/$jobId'
+    | '/worker/jobs/$jobId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/get-quote' | '/login' | '/onboarding' | '/jobs/$jobId' | '/portal'
+  to:
+    | '/'
+    | '/get-quote'
+    | '/invite'
+    | '/login'
+    | '/onboarding'
+    | '/jobs/$jobId'
+    | '/worker/report-incident'
+    | '/foreman'
+    | '/portal'
+    | '/team'
+    | '/worker'
+    | '/foreman/jobs/$jobId'
+    | '/worker/jobs/$jobId'
   id:
     | '__root__'
     | '/'
+    | '/foreman'
     | '/get-quote'
+    | '/invite'
     | '/login'
     | '/onboarding'
     | '/portal'
+    | '/team'
+    | '/worker'
     | '/jobs/$jobId'
+    | '/worker/report-incident'
+    | '/foreman/'
     | '/portal/'
+    | '/team/'
+    | '/worker/'
+    | '/foreman/jobs/$jobId'
+    | '/worker/jobs/$jobId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ForemanRoute: typeof ForemanRouteWithChildren
   GetQuoteRoute: typeof GetQuoteRoute
+  InviteRoute: typeof InviteRoute
   LoginRoute: typeof LoginRoute
   OnboardingRoute: typeof OnboardingRoute
   PortalRoute: typeof PortalRouteWithChildren
+  TeamRoute: typeof TeamRouteWithChildren
+  WorkerRoute: typeof WorkerRouteWithChildren
   JobsJobIdRoute: typeof JobsJobIdRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/worker': {
+      id: '/worker'
+      path: '/worker'
+      fullPath: '/worker'
+      preLoaderRoute: typeof WorkerRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/team': {
+      id: '/team'
+      path: '/team'
+      fullPath: '/team'
+      preLoaderRoute: typeof TeamRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/portal': {
       id: '/portal'
       path: '/portal'
@@ -135,11 +273,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/invite': {
+      id: '/invite'
+      path: '/invite'
+      fullPath: '/invite'
+      preLoaderRoute: typeof InviteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/get-quote': {
       id: '/get-quote'
       path: '/get-quote'
       fullPath: '/get-quote'
       preLoaderRoute: typeof GetQuoteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/foreman': {
+      id: '/foreman'
+      path: '/foreman'
+      fullPath: '/foreman'
+      preLoaderRoute: typeof ForemanRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -149,12 +301,40 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/worker/': {
+      id: '/worker/'
+      path: '/'
+      fullPath: '/worker/'
+      preLoaderRoute: typeof WorkerIndexRouteImport
+      parentRoute: typeof WorkerRoute
+    }
+    '/team/': {
+      id: '/team/'
+      path: '/'
+      fullPath: '/team/'
+      preLoaderRoute: typeof TeamIndexRouteImport
+      parentRoute: typeof TeamRoute
+    }
     '/portal/': {
       id: '/portal/'
       path: '/'
       fullPath: '/portal/'
       preLoaderRoute: typeof PortalIndexRouteImport
       parentRoute: typeof PortalRoute
+    }
+    '/foreman/': {
+      id: '/foreman/'
+      path: '/'
+      fullPath: '/foreman/'
+      preLoaderRoute: typeof ForemanIndexRouteImport
+      parentRoute: typeof ForemanRoute
+    }
+    '/worker/report-incident': {
+      id: '/worker/report-incident'
+      path: '/report-incident'
+      fullPath: '/worker/report-incident'
+      preLoaderRoute: typeof WorkerReportIncidentRouteImport
+      parentRoute: typeof WorkerRoute
     }
     '/jobs/$jobId': {
       id: '/jobs/$jobId'
@@ -163,8 +343,35 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof JobsJobIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/worker/jobs/$jobId': {
+      id: '/worker/jobs/$jobId'
+      path: '/jobs/$jobId'
+      fullPath: '/worker/jobs/$jobId'
+      preLoaderRoute: typeof WorkerJobsJobIdRouteImport
+      parentRoute: typeof WorkerRoute
+    }
+    '/foreman/jobs/$jobId': {
+      id: '/foreman/jobs/$jobId'
+      path: '/jobs/$jobId'
+      fullPath: '/foreman/jobs/$jobId'
+      preLoaderRoute: typeof ForemanJobsJobIdRouteImport
+      parentRoute: typeof ForemanRoute
+    }
   }
 }
+
+interface ForemanRouteChildren {
+  ForemanIndexRoute: typeof ForemanIndexRoute
+  ForemanJobsJobIdRoute: typeof ForemanJobsJobIdRoute
+}
+
+const ForemanRouteChildren: ForemanRouteChildren = {
+  ForemanIndexRoute: ForemanIndexRoute,
+  ForemanJobsJobIdRoute: ForemanJobsJobIdRoute,
+}
+
+const ForemanRouteWithChildren =
+  ForemanRoute._addFileChildren(ForemanRouteChildren)
 
 interface PortalRouteChildren {
   PortalIndexRoute: typeof PortalIndexRoute
@@ -177,12 +384,41 @@ const PortalRouteChildren: PortalRouteChildren = {
 const PortalRouteWithChildren =
   PortalRoute._addFileChildren(PortalRouteChildren)
 
+interface TeamRouteChildren {
+  TeamIndexRoute: typeof TeamIndexRoute
+}
+
+const TeamRouteChildren: TeamRouteChildren = {
+  TeamIndexRoute: TeamIndexRoute,
+}
+
+const TeamRouteWithChildren = TeamRoute._addFileChildren(TeamRouteChildren)
+
+interface WorkerRouteChildren {
+  WorkerReportIncidentRoute: typeof WorkerReportIncidentRoute
+  WorkerIndexRoute: typeof WorkerIndexRoute
+  WorkerJobsJobIdRoute: typeof WorkerJobsJobIdRoute
+}
+
+const WorkerRouteChildren: WorkerRouteChildren = {
+  WorkerReportIncidentRoute: WorkerReportIncidentRoute,
+  WorkerIndexRoute: WorkerIndexRoute,
+  WorkerJobsJobIdRoute: WorkerJobsJobIdRoute,
+}
+
+const WorkerRouteWithChildren =
+  WorkerRoute._addFileChildren(WorkerRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ForemanRoute: ForemanRouteWithChildren,
   GetQuoteRoute: GetQuoteRoute,
+  InviteRoute: InviteRoute,
   LoginRoute: LoginRoute,
   OnboardingRoute: OnboardingRoute,
   PortalRoute: PortalRouteWithChildren,
+  TeamRoute: TeamRouteWithChildren,
+  WorkerRoute: WorkerRouteWithChildren,
   JobsJobIdRoute: JobsJobIdRoute,
 }
 export const routeTree = rootRouteImport
