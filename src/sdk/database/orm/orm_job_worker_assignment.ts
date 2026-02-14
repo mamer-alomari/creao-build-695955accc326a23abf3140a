@@ -96,6 +96,15 @@ export class JobWorkerAssignmentORM {
   }
 
   /**
+   * Get all JobWorkerAssignment records for a specific company
+   */
+  async getJobWorkerAssignmentByCompanyId(companyId: string): Promise<JobWorkerAssignmentModel[]> {
+    const q = query(collection(db, this.collectionName), where("company_id", "==", companyId));
+    const querySnapshot = await getDocs(q);
+    return querySnapshot.docs.map(doc => doc.data() as JobWorkerAssignmentModel);
+  }
+
+  /**
    * Insert (create) new JobWorkerAssignment record(s)
    */
   async insertJobWorkerAssignment(data: JobWorkerAssignmentModel[]): Promise<JobWorkerAssignmentModel[]> {

@@ -116,6 +116,15 @@ export class WorkerORM {
   }
 
   /**
+   * Get all Worker records for a specific company
+   */
+  async getWorkersByCompanyId(companyId: string): Promise<WorkerModel[]> {
+    const q = query(collection(db, this.collectionName), where("company_id", "==", companyId));
+    const querySnapshot = await getDocs(q);
+    return querySnapshot.docs.map(doc => doc.data() as WorkerModel);
+  }
+
+  /**
    * Insert (create) new Worker record(s)
    */
   async insertWorker(data: WorkerModel[]): Promise<WorkerModel[]> {

@@ -111,6 +111,15 @@ export class PayrollRecordORM {
   }
 
   /**
+   * Get all Payroll records for a specific company
+   */
+  async getPayrollRecordsByCompanyId(companyId: string): Promise<PayrollRecordModel[]> {
+    const q = query(collection(db, this.collectionName), where("company_id", "==", companyId));
+    const querySnapshot = await getDocs(q);
+    return querySnapshot.docs.map(doc => doc.data() as PayrollRecordModel);
+  }
+
+  /**
    * Insert (create) new PayrollRecord record(s)
    */
   async insertPayrollRecord(data: PayrollRecordModel[]): Promise<PayrollRecordModel[]> {

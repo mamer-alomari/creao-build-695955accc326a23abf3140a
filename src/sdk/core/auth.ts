@@ -26,6 +26,7 @@ interface AuthState {
 	token: string | null;
 	status: "authenticated" | "unauthenticated" | "loading";
 	role: UserRole;
+	companyId: string | null;
 }
 
 interface AuthStore extends AuthState {
@@ -33,6 +34,7 @@ interface AuthStore extends AuthState {
 	setUser: (user: User | null) => void;
 	setToken: (token: string | null) => void;
 	setRole: (role: UserRole) => void;
+	setCompanyId: (companyId: string | null) => void;
 	logout: () => Promise<void>;
 }
 
@@ -44,27 +46,29 @@ const useAuthStore = create<AuthStore>((set) => ({
 	token: null,
 	status: "loading",
 	role: UserRole.Unspecified,
+	companyId: null,
 
 	setUser: (user) => set({ user, status: user ? "authenticated" : "unauthenticated" }),
 	setToken: (token) => set({ token }),
 	setRole: (role) => set({ role }),
+	setCompanyId: (companyId) => set({ companyId }),
 
 	logout: async () => {
 		await signOut(auth);
-		set({ user: null, token: null, status: "unauthenticated", role: UserRole.Unspecified });
+		set({ user: null, token: null, status: "unauthenticated", role: UserRole.Unspecified, companyId: null });
 	}
 }));
 
 // Initialize Auth Listener
 onAuthStateChanged(auth, async (user) => {
-	const { setUser, setToken, setRole } = useAuthStore.getState();
+	const { setUser, setToken, setRole, setCompanyId } = useAuthStore.getState();
 
 	if (user) {
 		const token = await user.getIdToken();
 		setUser(user);
 		setToken(token);
 
-		// Fetch role from Firestore
+		// Fetch role and companyId from Firestore
 		try {
 			const userDocRef = doc(db, "users", user.uid);
 			const userDoc = await getDoc(userDocRef);
@@ -84,6 +88,9 @@ onAuthStateChanged(auth, async (user) => {
 
 					setRole(roleEnum);
 				}
+				if (userData.companyId) {
+					setCompanyId(userData.companyId);
+				}
 			} else {
 				// Create user doc with default role if it doesn't exist
 				await setDoc(userDocRef, {
@@ -91,6 +98,7 @@ onAuthStateChanged(auth, async (user) => {
 					role: UserRole.Unspecified, // Default to Unspecified
 					createdAt: new Date().toISOString()
 				});
+				// No companyId for new users until they onboard
 			}
 		} catch (error) {
 			console.error("Error fetching user role:", error);
@@ -98,6 +106,8 @@ onAuthStateChanged(auth, async (user) => {
 	} else {
 		setUser(null);
 		setToken(null);
+		setRole(UserRole.Unspecified);
+		setCompanyId(null);
 	}
 });
 

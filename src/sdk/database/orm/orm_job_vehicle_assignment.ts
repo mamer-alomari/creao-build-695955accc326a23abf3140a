@@ -96,6 +96,15 @@ export class JobVehicleAssignmentORM {
   }
 
   /**
+   * Get all JobVehicleAssignment records for a specific company
+   */
+  async getJobVehicleAssignmentByCompanyId(companyId: string): Promise<JobVehicleAssignmentModel[]> {
+    const q = query(collection(db, this.collectionName), where("company_id", "==", companyId));
+    const querySnapshot = await getDocs(q);
+    return querySnapshot.docs.map(doc => doc.data() as JobVehicleAssignmentModel);
+  }
+
+  /**
    * Insert (create) new JobVehicleAssignment record(s)
    */
   async insertJobVehicleAssignment(data: JobVehicleAssignmentModel[]): Promise<JobVehicleAssignmentModel[]> {

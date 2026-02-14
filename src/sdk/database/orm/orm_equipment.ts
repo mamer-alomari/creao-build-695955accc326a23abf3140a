@@ -97,6 +97,15 @@ export class EquipmentORM {
   }
 
   /**
+   * Get all Equipment records for a specific company
+   */
+  async getEquipmentByCompanyId(companyId: string): Promise<EquipmentModel[]> {
+    const q = query(collection(db, this.collectionName), where("company_id", "==", companyId));
+    const querySnapshot = await getDocs(q);
+    return querySnapshot.docs.map(doc => doc.data() as EquipmentModel);
+  }
+
+  /**
    * Insert (create) new Equipment record(s)
    */
   async insertEquipment(data: EquipmentModel[]): Promise<EquipmentModel[]> {

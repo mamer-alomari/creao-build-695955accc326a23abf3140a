@@ -118,6 +118,15 @@ export class JobORM {
   }
 
   /**
+   * Get all Job records for a specific company
+   */
+  async getJobsByCompanyId(companyId: string): Promise<JobModel[]> {
+    const q = query(collection(db, this.collectionName), where("company_id", "==", companyId));
+    const querySnapshot = await getDocs(q);
+    return querySnapshot.docs.map(doc => doc.data() as JobModel);
+  }
+
+  /**
    * Insert (create) new Job record(s)
    */
   async insertJob(data: JobModel[]): Promise<JobModel[]> {

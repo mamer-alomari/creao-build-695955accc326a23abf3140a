@@ -109,6 +109,15 @@ export class VehicleORM {
   }
 
   /**
+   * Get all Vehicle records for a specific company
+   */
+  async getVehiclesByCompanyId(companyId: string): Promise<VehicleModel[]> {
+    const q = query(collection(db, this.collectionName), where("company_id", "==", companyId));
+    const querySnapshot = await getDocs(q);
+    return querySnapshot.docs.map(doc => doc.data() as VehicleModel);
+  }
+
+  /**
    * Insert (create) new Vehicle record(s)
    */
   async insertVehicle(data: VehicleModel[]): Promise<VehicleModel[]> {

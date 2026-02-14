@@ -97,6 +97,15 @@ export class JobEquipmentAllocationORM {
   }
 
   /**
+   * Get all JobEquipmentAllocation records for a specific company
+   */
+  async getJobEquipmentAllocationByCompanyId(companyId: string): Promise<JobEquipmentAllocationModel[]> {
+    const q = query(collection(db, this.collectionName), where("company_id", "==", companyId));
+    const querySnapshot = await getDocs(q);
+    return querySnapshot.docs.map(doc => doc.data() as JobEquipmentAllocationModel);
+  }
+
+  /**
    * Insert (create) new JobEquipmentAllocation record(s)
    */
   async insertJobEquipmentAllocation(data: JobEquipmentAllocationModel[]): Promise<JobEquipmentAllocationModel[]> {

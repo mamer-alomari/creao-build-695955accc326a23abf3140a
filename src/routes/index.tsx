@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useRoleAuth } from "@/lib/auth-roles";
+import { useCreaoAuth } from "@/sdk/core/auth";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { LayoutDashboard, Calendar, Users, Package, Truck, DollarSign, Clock } from "lucide-react";
+import { Button } from "@/components/ui/button";
+
 import { CompanyORM, type CompanyModel } from "@/sdk/database/orm/orm_company";
 import { JobORM, type JobModel, JobStatus } from "@/sdk/database/orm/orm_job";
 import { WorkerORM, type WorkerModel, WorkerStatus } from "@/sdk/database/orm/orm_worker";
@@ -26,114 +28,125 @@ export const Route = createFileRoute("/")({
 	component: App,
 });
 
-const DEMO_COMPANY_ID = "demo-company-id";
-
 function App() {
 	const [activeTab, setActiveTab] = useState("dashboard");
 	const queryClient = useQueryClient();
+	const { isAuthenticated, isLoading, companyId, role } = useCreaoAuth();
+	const navigate = useNavigate();
+
+	useEffect(() => {
+		if (!isLoading) {
+			if (!isAuthenticated) {
+				navigate({ to: "/login" });
+			} else if (role === "customer") {
+				navigate({ to: "/portal" });
+			} else if (!companyId) {
+				// If authenticated but no company, go to onboarding
+				navigate({ to: "/onboarding" });
+			}
+		}
+	}, [isLoading, isAuthenticated, companyId, role, navigate]);
 
 	const { data: company } = useQuery({
-		queryKey: ["company", DEMO_COMPANY_ID],
+		queryKey: ["company", companyId],
+		enabled: !!companyId,
 		queryFn: async () => {
+			if (!companyId) return null;
 			const companyOrm = CompanyORM.getInstance();
-			let companies = await companyOrm.getAllCompany();
-			if (companies.length === 0) {
-				const newCompanies = await companyOrm.insertCompany([
-					{
-						name: "Swift Movers LLC",
-						contact_email: "contact@swiftmovers.com",
-						license_number: "MV-2024-001",
-					} as CompanyModel,
-				]);
-				return newCompanies[0];
-			}
-			return companies[0];
+			const result = await companyOrm.getCompanyById(companyId);
+			return result[0] || null;
 		},
 	});
 
 	const { data: jobs = [] } = useQuery({
-		queryKey: ["jobs"],
+		queryKey: ["jobs", companyId],
+		enabled: !!companyId,
 		queryFn: async () => {
+			if (!companyId) return [];
 			const jobOrm = JobORM.getInstance();
-			return await jobOrm.getAllJob();
+			return await jobOrm.getJobsByCompanyId(companyId);
 		},
 	});
 
 	const { data: workers = [] } = useQuery({
-		queryKey: ["workers"],
+		queryKey: ["workers", companyId],
+		enabled: !!companyId,
 		queryFn: async () => {
+			if (!companyId) return [];
 			const workerOrm = WorkerORM.getInstance();
-			return await workerOrm.getAllWorker();
+			return await workerOrm.getWorkersByCompanyId(companyId);
 		},
 	});
 
 	const { data: equipment = [] } = useQuery({
-		queryKey: ["equipment"],
+		queryKey: ["equipment", companyId],
+		enabled: !!companyId,
 		queryFn: async () => {
+			if (!companyId) return [];
 			const equipmentOrm = EquipmentORM.getInstance();
-			return await equipmentOrm.getAllEquipment();
+			return await equipmentOrm.getEquipmentByCompanyId(companyId);
 		},
 	});
 
 	const { data: vehicles = [] } = useQuery({
-		queryKey: ["vehicles"],
+		queryKey: ["vehicles", companyId],
+		enabled: !!companyId,
 		queryFn: async () => {
+			if (!companyId) return [];
 			const vehicleOrm = VehicleORM.getInstance();
-			return await vehicleOrm.getAllVehicle();
+			return await vehicleOrm.getVehiclesByCompanyId(companyId);
 		},
 	});
 
 	const { data: payrollRecords = [] } = useQuery({
-		queryKey: ["payrollRecords"],
+		queryKey: ["payrollRecords", companyId],
+		enabled: !!companyId,
 		queryFn: async () => {
+			if (!companyId) return [];
 			const payrollOrm = PayrollRecordORM.getInstance();
-			return await payrollOrm.getAllPayrollRecord();
+			return await payrollOrm.getPayrollRecordsByCompanyId(companyId);
 		},
 	});
 
 	const { data: jobAssignments = [] } = useQuery({
-		queryKey: ["jobAssignments"],
+		queryKey: ["jobAssignments", companyId],
+		enabled: !!companyId,
 		queryFn: async () => {
+			if (!companyId) return [];
 			const assignmentOrm = JobWorkerAssignmentORM.getInstance();
-			return await assignmentOrm.getAllJobWorkerAssignment();
+			return await assignmentOrm.getJobWorkerAssignmentByCompanyId(companyId);
 		},
 	});
 
 	const { data: vehicleAssignments = [] } = useQuery({
-		queryKey: ["vehicleAssignments"],
+		queryKey: ["vehicleAssignments", companyId],
+		enabled: !!companyId,
 		queryFn: async () => {
+			if (!companyId) return [];
 			const assignmentOrm = JobVehicleAssignmentORM.getInstance();
-			return await assignmentOrm.getAllJobVehicleAssignment();
+			return await assignmentOrm.getJobVehicleAssignmentByCompanyId(companyId);
 		},
 	});
 
 	const { data: equipmentAllocations = [] } = useQuery({
-		queryKey: ["equipmentAllocations"],
+		queryKey: ["equipmentAllocations", companyId],
+		enabled: !!companyId,
 		queryFn: async () => {
+			if (!companyId) return [];
 			const allocationOrm = JobEquipmentAllocationORM.getInstance();
-			return await allocationOrm.getAllJobEquipmentAllocation();
+			return await allocationOrm.getJobEquipmentAllocationByCompanyId(companyId);
 		},
 	});
 
 	const activeWorkers = workers.filter((w) => w.status === WorkerStatus.Active);
 	const upcomingJobs = jobs.filter((j) => j.status === JobStatus.Booked || j.status === JobStatus.InProgress);
 
-	const { isAuthenticated, isLoading } = useRoleAuth();
-	const navigate = useNavigate();
-
-	useEffect(() => {
-		if (!isLoading && !isAuthenticated) {
-			navigate({ to: "/login" });
-		}
-	}, [isLoading, isAuthenticated, navigate]);
-
 	if (isLoading) {
 		return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
 	}
 
-	if (!isAuthenticated) {
-		return null; // Will redirect
-	}
+	// Auth check is handled by useEffect, but render nothing if not auth
+	if (!isAuthenticated && !isLoading) return null;
 
 	return (
 		<div className="flex min-h-[calc(100vh-3.5rem)]">
@@ -273,6 +286,3 @@ function App() {
 		</div>
 	);
 }
-
-// Add Button component import needed for sidebar
-import { Button } from "@/components/ui/button";
