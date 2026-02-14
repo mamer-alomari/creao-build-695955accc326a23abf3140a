@@ -236,7 +236,7 @@ function App() {
 							workers={workers}
 							vehicles={vehicles}
 							equipment={equipment}
-							companyId={company?.id || ""}
+							companyId={companyId || ""}
 						/>
 					</TabsContent>
 
@@ -249,28 +249,28 @@ function App() {
 							jobAssignments={jobAssignments}
 							vehicleAssignments={vehicleAssignments}
 							equipmentAllocations={equipmentAllocations}
-							companyId={company?.id || ""}
+							companyId={companyId || ""}
 						/>
 					</TabsContent>
 
 					<TabsContent value="workers" className="m-0">
 						<WorkersView
 							workers={workers}
-							companyId={company?.id || ""}
+							companyId={companyId || ""}
 						/>
 					</TabsContent>
 
 					<TabsContent value="equipment" className="m-0">
 						<EquipmentView
 							equipment={equipment}
-							companyId={company?.id || ""}
+							companyId={companyId || ""}
 						/>
 					</TabsContent>
 
 					<TabsContent value="vehicles" className="m-0">
 						<VehiclesView
 							vehicles={vehicles}
-							companyId={company?.id || ""}
+							companyId={companyId || ""}
 						/>
 					</TabsContent>
 
@@ -278,7 +278,7 @@ function App() {
 						<PayrollView
 							payrollRecords={payrollRecords}
 							workers={workers}
-							companyId={company?.id || ""}
+							companyId={companyId || ""}
 						/>
 					</TabsContent>
 				</Tabs>

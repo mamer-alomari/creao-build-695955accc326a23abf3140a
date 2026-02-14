@@ -212,6 +212,11 @@ function JobStatusBadge({ status }: { status: JobStatus }) {
         [JobStatus.Quote]: "bg-blue-100 text-blue-800",
         [JobStatus.Booked]: "bg-purple-100 text-purple-800",
         [JobStatus.InProgress]: "bg-yellow-100 text-yellow-800",
+        [JobStatus.EnRoute]: "bg-yellow-100 text-yellow-800",
+        [JobStatus.Arrived]: "bg-yellow-100 text-yellow-800",
+        [JobStatus.Loading]: "bg-yellow-100 text-yellow-800",
+        [JobStatus.onWayToDropoff]: "bg-yellow-100 text-yellow-800",
+        [JobStatus.Unloading]: "bg-yellow-100 text-yellow-800",
         [JobStatus.Completed]: "bg-green-100 text-green-800",
         [JobStatus.Canceled]: "bg-red-100 text-red-800",
     };

@@ -126,11 +126,16 @@ export function WorkerDashboard() {
 }
 
 function JobStatusBadge({ status }: { status: JobStatus }) {
-    const labels = {
+    const labels: Record<JobStatus, string> = {
         [JobStatus.Unspecified]: "Wait",
         [JobStatus.Quote]: "Quote",
         [JobStatus.Booked]: "Scheduled",
         [JobStatus.InProgress]: "Active",
+        [JobStatus.EnRoute]: "En Route",
+        [JobStatus.Arrived]: "Arrived",
+        [JobStatus.Loading]: "Loading",
+        [JobStatus.onWayToDropoff]: "Driving",
+        [JobStatus.Unloading]: "Unloading",
         [JobStatus.Completed]: "Done",
         [JobStatus.Canceled]: "Canceled",
     };

@@ -20,6 +20,11 @@ export function DashboardView({ jobs, workers, equipment, vehicles, activeWorker
 			[JobStatus.Quote]: { variant: "secondary", label: "Quote" },
 			[JobStatus.Booked]: { variant: "default", label: "Booked" },
 			[JobStatus.InProgress]: { variant: "default", label: "In Progress" },
+			[JobStatus.EnRoute]: { variant: "default", label: "En Route" },
+			[JobStatus.Arrived]: { variant: "default", label: "Arrived" },
+			[JobStatus.Loading]: { variant: "default", label: "Loading" },
+			[JobStatus.onWayToDropoff]: { variant: "default", label: "Driving" },
+			[JobStatus.Unloading]: { variant: "default", label: "Unloading" },
 			[JobStatus.Completed]: { variant: "outline", label: "Completed" },
 			[JobStatus.Canceled]: { variant: "destructive", label: "Canceled" },
 		};

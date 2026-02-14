@@ -28,7 +28,7 @@ export function TeamManager() {
         enabled: !!companyId,
         queryFn: async () => {
             if (!companyId) return [];
-            return await WorkerORM.getInstance().getWorkerByCompanyId(companyId);
+            return await WorkerORM.getInstance().getWorkersByCompanyId(companyId);
         }
     });
 
@@ -132,7 +132,7 @@ export function TeamManager() {
                                 </div>
                                 <div className="flex items-center gap-2">
                                     <Input value={generatedLink} readOnly />
-                                    <Button size="icon" variants="outline" onClick={copyLink}>
+                                    <Button size="icon" variant="outline" onClick={copyLink}>
                                         <Copy className="h-4 w-4" />
                                     </Button>
                                 </div>
@@ -199,7 +199,7 @@ export function TeamManager() {
                             <TableBody>
                                 {workers.map(worker => (
                                     <TableRow key={worker.id}>
-                                        <TableCell className="font-medium">{worker.name}</TableCell>
+                                        <TableCell className="font-medium">{worker.full_name}</TableCell>
                                         <TableCell><Badge variant="outline">{worker.role}</Badge></TableCell>
                                         <TableCell><Badge className="bg-green-500">Active</Badge></TableCell>
                                     </TableRow>

@@ -36,6 +36,7 @@ interface AuthStore extends AuthState {
 	setToken: (token: string | null) => void;
 	setRole: (role: UserRole) => void;
 	setCompanyId: (companyId: string | null) => void;
+	setStatus: (status: "authenticated" | "unauthenticated" | "loading") => void;
 	logout: () => Promise<void>;
 }
 
@@ -49,10 +50,11 @@ const useAuthStore = create<AuthStore>((set) => ({
 	role: UserRole.Unspecified,
 	companyId: null,
 
-	setUser: (user) => set({ user, status: user ? "authenticated" : "unauthenticated" }),
+	setUser: (user) => set({ user }),
 	setToken: (token) => set({ token }),
 	setRole: (role) => set({ role }),
 	setCompanyId: (companyId) => set({ companyId }),
+	setStatus: (status) => set({ status }),
 
 	logout: async () => {
 		await signOut(auth);
@@ -62,7 +64,7 @@ const useAuthStore = create<AuthStore>((set) => ({
 
 // Initialize Auth Listener
 onAuthStateChanged(auth, async (user) => {
-	const { setUser, setToken, setRole, setCompanyId } = useAuthStore.getState();
+	const { setUser, setToken, setRole, setCompanyId, setStatus } = useAuthStore.getState();
 
 	if (user) {
 		const token = await user.getIdToken();
@@ -104,12 +106,16 @@ onAuthStateChanged(auth, async (user) => {
 			}
 		} catch (error) {
 			console.error("Error fetching user role:", error);
+		} finally {
+			// Only set authenticated AFTER we've attempted to load the profile
+			setStatus("authenticated");
 		}
 	} else {
 		setUser(null);
 		setToken(null);
 		setRole(UserRole.Unspecified);
 		setCompanyId(null);
+		setStatus("unauthenticated");
 	}
 });
 

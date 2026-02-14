@@ -75,6 +75,10 @@ export function JobsView({ jobs, workers, vehicles, equipment, companyId }: Jobs
             setIsQuoteWizardOpen(false);
             resetForms();
         },
+        onError: (error) => {
+            console.error("Failed to create job/quote:", error);
+            alert(`Failed to save quote: ${error instanceof Error ? error.message : "Unknown error"}`);
+        },
     });
 
     const deleteJobMutation = useMutation({
@@ -146,6 +150,11 @@ export function JobsView({ jobs, workers, vehicles, equipment, companyId }: Jobs
             [JobStatus.Quote]: { variant: "secondary", label: "Quote" },
             [JobStatus.Booked]: { variant: "default", label: "Booked" },
             [JobStatus.InProgress]: { variant: "default", label: "In Progress" },
+            [JobStatus.EnRoute]: { variant: "default", label: "En Route" },
+            [JobStatus.Arrived]: { variant: "default", label: "Arrived" },
+            [JobStatus.Loading]: { variant: "default", label: "Loading" },
+            [JobStatus.onWayToDropoff]: { variant: "default", label: "Driving" },
+            [JobStatus.Unloading]: { variant: "default", label: "Unloading" },
             [JobStatus.Completed]: { variant: "outline", label: "Completed" },
             [JobStatus.Canceled]: { variant: "destructive", label: "Canceled" },
         };
@@ -400,7 +409,7 @@ export function JobsView({ jobs, workers, vehicles, equipment, companyId }: Jobs
                         {wizardStep === 'review' && (
                             <div className="flex gap-2">
                                 <Button variant="outline" onClick={() => setWizardStep('inventory')}>Back</Button>
-                                <Button onClick={() => createJobMutation.mutate(quoteData)}>Save Quote</Button>
+                                <Button onClick={() => createJobMutation.mutate(quoteData)} disabled={!companyId}>Save Quote</Button>
                             </div>
                         )}
                     </DialogFooter>

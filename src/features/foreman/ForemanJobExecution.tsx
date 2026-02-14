@@ -2,7 +2,7 @@
 import { useParams, useNavigate } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { JobORM, JobStatus, type JobModel } from "@/sdk/database/orm/orm_job";
-import { RoomInventory } from "@/hooks/use-google-vision";
+import { type RoomInventory } from "@/hooks/use-google-vision";
 import { useWorkerLocationTracker } from "@/hooks/use-worker-location";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
@@ -83,7 +83,7 @@ export function ForemanJobExecution() {
                 foreman_sign: "mock_signature_base64",
                 timestamp: new Date().toISOString()
             },
-            final_quote_amount: job.estimated_cost // Allow edit in real UI
+            final_quote_amount: job.estimated_cost ?? undefined // Allow edit in real UI
         });
         setStep("payment");
     };
@@ -92,7 +92,7 @@ export function ForemanJobExecution() {
     const handlePaymentCollect = () => {
         updateJobMutation.mutate({
             payment_status: "deposit_paid",
-            deposit_amount: job.estimated_cost * 0.5
+            deposit_amount: (job.estimated_cost || 0) * 0.5
         });
         setStep("loading");
     };
@@ -257,7 +257,7 @@ export function ForemanJobExecution() {
                     <CardHeader><CardTitle className="flex items-center gap-2"><CreditCard className="h-5 w-5" /> 5. Deposit Collection</CardTitle></CardHeader>
                     <CardContent className="space-y-4">
                         <div className="p-4 bg-blue-50 text-blue-800 rounded">
-                            Please collect 50% Deposit: <strong>${(job.estimated_cost * 0.5).toFixed(2)}</strong>
+                            Please collect 50% Deposit: <strong>${((job.estimated_cost || 0) * 0.5).toFixed(2)}</strong>
                         </div>
                         <Button variant="outline" className="w-full">
                             <CreditCard className="mr-2 h-4 w-4" /> Charge Card (Stripe)

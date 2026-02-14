@@ -62,14 +62,7 @@ function WorkerLayout() {
                     <Truck className="h-6 w-6 mb-1" />
                     <span className="text-xs font-medium">My Jobs</span>
                 </Link>
-                <Link
-                    to="/worker/profile"
-                    activeProps={{ className: "text-primary" }}
-                    className="flex flex-col items-center justify-center w-full h-full text-muted-foreground"
-                >
-                    <MapPin className="h-6 w-6 mb-1" />
-                    <span className="text-xs font-medium">Map</span>
-                </Link>
+                {/* Removed Profile/Map Link as route does not exist yet */}
             </nav>
         </div>
     );
