@@ -15,6 +15,7 @@ vi.mock("@/lib/firebase", () => ({
 
 vi.mock("@tanstack/react-router", () => ({
     useNavigate: () => vi.fn(),
+    useSearch: vi.fn(() => ({})),
     createRouter: vi.fn(),
 }));
 

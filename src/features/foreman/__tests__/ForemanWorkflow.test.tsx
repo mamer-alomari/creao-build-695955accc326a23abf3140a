@@ -57,7 +57,7 @@ describe("ForemanWorkflow", () => {
     });
 
     it("renders 'Arrived' button when status is EN_ROUTE", () => {
-        (useQuery as jest.Mock).mockReturnValue({
+        (useQuery as unknown as Mock).mockReturnValue({
             data: {
                 id: "job-123",
                 status: JobStatus.EnRoute, // 6
@@ -77,7 +77,7 @@ describe("ForemanWorkflow", () => {
     });
 
     it("shows Equipment Check after Arrival", () => {
-        (useQuery as jest.Mock).mockReturnValue({
+        (useQuery as unknown as Mock).mockReturnValue({
             data: {
                 id: "job-123",
                 status: JobStatus.Arrived, // 7

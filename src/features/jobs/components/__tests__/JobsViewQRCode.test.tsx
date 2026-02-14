@@ -73,7 +73,7 @@ describe("JobsView QR Code", () => {
         expect(await screen.findByText("Job QR Code")).toBeInTheDocument();
 
         // Check for Job ID display which is part of the QR section
-        const jobIds = screen.getAllByText("job-qr-123");
+        const jobIds = screen.getAllByText(/job-qr-123/);
         expect(jobIds.length).toBeGreaterThanOrEqual(1);
 
         // Check if SVG (QR code) is present
