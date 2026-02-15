@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { useNavigate } from "@tanstack/react-router";
 import { doc, updateDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import { validateCompanyName } from "@/lib/validation-schemas";
+import { validateCompanyName } from "../../lib/schemas";
 
 export function OnboardingView() {
     const { user, setCompanyId, setRole } = useCreaoAuth();

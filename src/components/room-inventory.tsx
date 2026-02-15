@@ -711,7 +711,7 @@ function AddManualItemDialog({
   onAdd: (item: DetectedItem) => void;
 }) {
   const [name, setName] = useState("");
-  const [category, setCategory] = useState("other");
+  const [category, setCategory] = useState<DetectedItem["category"]>("other");
   const [quantity, setQuantity] = useState(1);
   const [size, setSize] = useState<"small" | "medium" | "large" | "extra-large">("medium");
   const [fragile, setFragile] = useState(false);
@@ -764,7 +764,7 @@ function AddManualItemDialog({
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="category">Category</Label>
-              <Select value={category} onValueChange={setCategory}>
+              <Select value={category} onValueChange={(val) => setCategory(val as DetectedItem["category"])}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select category" />
                 </SelectTrigger>

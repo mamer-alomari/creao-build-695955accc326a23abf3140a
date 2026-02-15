@@ -6,7 +6,7 @@
  */
 
 import { useMutation } from "@tanstack/react-query";
-import { validateDetectedItems } from "@/lib/validation-schemas";
+import { validateDetectedItems, type DetectedItem as AIResponseItem } from "../lib/schemas";
 
 // Constants from the original file to maintain compatibility
 export const ROOM_TYPES = [
@@ -46,17 +46,9 @@ export const ITEM_CATEGORIES = [
 /**
  * Detected item from image analysis
  */
-export interface DetectedItem {
+export type DetectedItem = AIResponseItem & {
     id: string;
-    name: string;
-    category: string;
-    quantity: number;
-    description?: string;
-    estimatedSize?: "small" | "medium" | "large" | "extra-large";
-    estimatedWeight?: "light" | "medium" | "heavy";
-    fragile?: boolean;
-    specialHandling?: string;
-}
+};
 
 /**
  * Room inventory with detected items
@@ -228,7 +220,8 @@ Example format:
         const validatedItems = validateDetectedItems(parsed);
 
         // Add unique IDs to each validated item
-        return validatedItems.map((item, index) => ({
+        // Add unique IDs to each validated item
+        return validatedItems.map((item: AIResponseItem, index: number) => ({
             ...item,
             id: `item-${Date.now()}-${index}`,
         }));
