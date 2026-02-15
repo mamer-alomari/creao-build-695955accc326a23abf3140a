@@ -66,11 +66,11 @@ export const DetectedItemSchema = z.object({
 		'other',
 	]),
 	quantity: z.number().int().positive('Quantity must be positive').max(1000, 'Quantity too high'),
-	description: z.string().optional(),
-	estimatedSize: z.enum(['small', 'medium', 'large', 'extra-large']).optional(),
-	estimatedWeight: z.enum(['light', 'medium', 'heavy']).optional(),
-	fragile: z.boolean().optional().default(false),
-	specialHandling: z.string().optional(),
+	description: z.string().nullable().optional(),
+	estimatedSize: z.enum(['small', 'medium', 'large', 'extra-large']).nullable().optional(),
+	estimatedWeight: z.enum(['light', 'medium', 'heavy']).nullable().optional(),
+	fragile: z.boolean().nullable().optional().default(false),
+	specialHandling: z.string().nullable().optional(),
 });
 
 export type DetectedItem = z.infer<typeof DetectedItemSchema>;

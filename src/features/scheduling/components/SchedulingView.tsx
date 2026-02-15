@@ -1,19 +1,21 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { type JobModel, JobStatus } from "@/sdk/database/orm/orm_job";
-import { type WorkerModel, WorkerStatus } from "@/sdk/database/orm/orm_worker";
+import { type WorkerModel, WorkerStatus, WorkerRole } from "@/sdk/database/orm/orm_worker";
 import { type EquipmentModel } from "@/sdk/database/orm/orm_equipment";
-import { type VehicleModel } from "@/sdk/database/orm/orm_vehicle";
+import { type VehicleModel, VehicleType } from "@/sdk/database/orm/orm_vehicle";
 import { JobWorkerAssignmentORM, type JobWorkerAssignmentModel } from "@/sdk/database/orm/orm_job_worker_assignment";
 import { JobVehicleAssignmentORM, type JobVehicleAssignmentModel } from "@/sdk/database/orm/orm_job_vehicle_assignment";
 import { JobEquipmentAllocationORM, type JobEquipmentAllocationModel } from "@/sdk/database/orm/orm_job_equipment_allocation";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Trash2, Clock } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Plus, Trash2, Clock, Truck, Hammer, Users, Calendar } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Separator } from "@/components/ui/separator";
 
 export function SchedulingView({ jobs, workers, equipment, vehicles, jobAssignments, vehicleAssignments, equipmentAllocations, companyId }: {
     jobs: JobModel[];
@@ -25,364 +27,342 @@ export function SchedulingView({ jobs, workers, equipment, vehicles, jobAssignme
     equipmentAllocations: JobEquipmentAllocationModel[];
     companyId: string;
 }) {
-    const [isAssignDialogOpen, setIsAssignDialogOpen] = useState(false);
-    const [selectedJobId, setSelectedJobId] = useState<string>("");
-    const [resourceType, setResourceType] = useState<"worker" | "equipment" | "vehicle">("worker");
-    const [selectedWorkerId, setSelectedWorkerId] = useState<string>("");
-    const [selectedEquipmentId, setSelectedEquipmentId] = useState<string>("");
-    const [selectedVehicleId, setSelectedVehicleId] = useState<string>("");
+    const [isDialogOpen, setIsDialogOpen] = useState(false);
+    const [editingJob, setEditingJob] = useState<JobModel | null>(null);
+
+    // Selection State
+    const [selectedWorkerIds, setSelectedWorkerIds] = useState<string[]>([]);
+    const [selectedVehicleIds, setSelectedVehicleIds] = useState<string[]>([]);
+    const [selectedEquipmentIds, setSelectedEquipmentIds] = useState<string[]>([]);
 
     const queryClient = useQueryClient();
 
-    const assignWorkerMutation = useMutation({
-        mutationFn: async ({ jobId, workerId }: { jobId: string; workerId: string }) => {
-            const assignmentOrm = JobWorkerAssignmentORM.getInstance();
-            await assignmentOrm.insertJobWorkerAssignment([{
-                job_id: jobId,
-                worker_id: workerId,
-                company_id: companyId,
-            } as JobWorkerAssignmentModel]);
+    // -- Mutations --
+
+    const updateAssignmentsMutation = useMutation({
+        mutationFn: async () => {
+            if (!editingJob) return;
+
+            const jobId = editingJob.id;
+
+            // 1. Workers
+            const currentWorkerAssignments = jobAssignments.filter(a => a.job_id === jobId);
+            const currentWorkerIds = currentWorkerAssignments.map(a => a.worker_id);
+
+            const workersToAdd = selectedWorkerIds.filter(id => !currentWorkerIds.includes(id));
+            const workersToRemove = currentWorkerAssignments.filter(a => !selectedWorkerIds.includes(a.worker_id));
+
+            if (workersToAdd.length > 0) {
+                await JobWorkerAssignmentORM.getInstance().insertJobWorkerAssignment(
+                    workersToAdd.map(workerId => ({ job_id: jobId, worker_id: workerId, company_id: companyId } as JobWorkerAssignmentModel))
+                );
+            }
+            if (workersToRemove.length > 0) {
+                await JobWorkerAssignmentORM.getInstance().deleteJobWorkerAssignmentByIDs(workersToRemove.map(a => a.id));
+            }
+
+            // 2. Vehicles
+            const currentVehicleAssignments = vehicleAssignments.filter(a => a.job_id === jobId);
+            const currentVehicleIds = currentVehicleAssignments.map(a => a.vehicle_id);
+
+            const vehiclesToAdd = selectedVehicleIds.filter(id => !currentVehicleIds.includes(id));
+            const vehiclesToRemove = currentVehicleAssignments.filter(a => !selectedVehicleIds.includes(a.vehicle_id));
+
+            if (vehiclesToAdd.length > 0) {
+                await JobVehicleAssignmentORM.getInstance().insertJobVehicleAssignment(
+                    vehiclesToAdd.map(vehicleId => ({ job_id: jobId, vehicle_id: vehicleId, company_id: companyId } as JobVehicleAssignmentModel))
+                );
+            }
+            if (vehiclesToRemove.length > 0) {
+                await JobVehicleAssignmentORM.getInstance().deleteJobVehicleAssignmentByIDs(vehiclesToRemove.map(a => a.id));
+            }
+
+            // 3. Equipment
+            const currentEquipmentAllocations = equipmentAllocations.filter(a => a.job_id === jobId);
+            const currentEquipmentIds = currentEquipmentAllocations.map(a => a.equipment_id);
+
+            const equipmentToAdd = selectedEquipmentIds.filter(id => !currentEquipmentIds.includes(id));
+            const equipmentToRemove = currentEquipmentAllocations.filter(a => !selectedEquipmentIds.includes(a.equipment_id));
+
+            if (equipmentToAdd.length > 0) {
+                await JobEquipmentAllocationORM.getInstance().insertJobEquipmentAllocation(
+                    equipmentToAdd.map(equipId => ({ job_id: jobId, equipment_id: equipId, company_id: companyId } as JobEquipmentAllocationModel))
+                );
+            }
+            if (equipmentToRemove.length > 0) {
+                await JobEquipmentAllocationORM.getInstance().deleteJobEquipmentAllocationByIDs(equipmentToRemove.map(a => a.id));
+            }
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["jobAssignments"] });
-            resetDialog();
-        },
-    });
-
-    const assignVehicleMutation = useMutation({
-        mutationFn: async ({ jobId, vehicleId }: { jobId: string; vehicleId: string }) => {
-            const assignmentOrm = JobVehicleAssignmentORM.getInstance();
-            await assignmentOrm.insertJobVehicleAssignment([{
-                job_id: jobId,
-                vehicle_id: vehicleId,
-                company_id: companyId,
-            } as JobVehicleAssignmentModel]);
-        },
-        onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["vehicleAssignments"] });
-            resetDialog();
-        },
-    });
-
-    const assignEquipmentMutation = useMutation({
-        mutationFn: async ({ jobId, equipmentId }: { jobId: string; equipmentId: string }) => {
-            const allocationOrm = JobEquipmentAllocationORM.getInstance();
-            await allocationOrm.insertJobEquipmentAllocation([{
-                job_id: jobId,
-                equipment_id: equipmentId,
-                company_id: companyId,
-            } as JobEquipmentAllocationModel]);
-        },
-        onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["equipmentAllocations"] });
-            resetDialog();
+            setIsDialogOpen(false);
+            setEditingJob(null);
         },
     });
 
-    const removeWorkerAssignmentMutation = useMutation({
-        mutationFn: async (assignmentId: string) => {
-            const assignmentOrm = JobWorkerAssignmentORM.getInstance();
-            await assignmentOrm.deleteJobWorkerAssignmentByIDs([assignmentId]);
-        },
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ["jobAssignments"] });
-        },
-    });
+    const handleOpenDialog = (job: JobModel) => {
+        setEditingJob(job);
 
-    const removeVehicleAssignmentMutation = useMutation({
-        mutationFn: async (assignmentId: string) => {
-            const assignmentOrm = JobVehicleAssignmentORM.getInstance();
-            await assignmentOrm.deleteJobVehicleAssignmentByIDs([assignmentId]);
-        },
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ["vehicleAssignments"] });
-        },
-    });
+        // Pre-fill selections
+        const jobWorkerIds = jobAssignments
+            .filter(a => a.job_id === job.id)
+            .map(a => a.worker_id);
+        setSelectedWorkerIds(jobWorkerIds);
 
-    const removeEquipmentAllocationMutation = useMutation({
-        mutationFn: async (allocationId: string) => {
-            const allocationOrm = JobEquipmentAllocationORM.getInstance();
-            await allocationOrm.deleteJobEquipmentAllocationByIDs([allocationId]);
-        },
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ["equipmentAllocations"] });
-        },
-    });
+        const jobVehicleIds = vehicleAssignments
+            .filter(a => a.job_id === job.id)
+            .map(a => a.vehicle_id);
+        setSelectedVehicleIds(jobVehicleIds);
 
-    const resetDialog = () => {
-        setIsAssignDialogOpen(false);
-        setSelectedJobId("");
-        setSelectedWorkerId("");
-        setSelectedEquipmentId("");
-        setSelectedVehicleId("");
+        const jobEquipmentIds = equipmentAllocations
+            .filter(a => a.job_id === job.id)
+            .map(a => a.equipment_id);
+        setSelectedEquipmentIds(jobEquipmentIds);
+
+        setIsDialogOpen(true);
     };
 
-    const handleAssign = () => {
-        if (!selectedJobId) return;
-
-        if (resourceType === "worker" && selectedWorkerId) {
-            assignWorkerMutation.mutate({ jobId: selectedJobId, workerId: selectedWorkerId });
-        } else if (resourceType === "vehicle" && selectedVehicleId) {
-            assignVehicleMutation.mutate({ jobId: selectedJobId, vehicleId: selectedVehicleId });
-        } else if (resourceType === "equipment" && selectedEquipmentId) {
-            assignEquipmentMutation.mutate({ jobId: selectedJobId, equipmentId: selectedEquipmentId });
-        }
+    const handleToggleWorker = (workerId: string) => {
+        setSelectedWorkerIds(prev =>
+            prev.includes(workerId) ? prev.filter(id => id !== workerId) : [...prev, workerId]
+        );
     };
 
-    const getWorkerName = (workerId: string) => {
-        const worker = workers.find(w => w.id === workerId);
-        return worker?.full_name || "Unknown Worker";
+    const handleToggleVehicle = (vehicleId: string) => {
+        setSelectedVehicleIds(prev =>
+            prev.includes(vehicleId) ? prev.filter(id => id !== vehicleId) : [...prev, vehicleId]
+        );
     };
 
-    const getAssignedWorkers = (jobId: string) => {
-        return jobAssignments.filter((a: JobWorkerAssignmentModel) => a.job_id === jobId);
-    };
-
-    const getAssignedVehicles = (jobId: string) => {
-        return vehicleAssignments.filter((a: JobVehicleAssignmentModel) => a.job_id === jobId);
-    };
-
-    const getAssignedEquipment = (jobId: string) => {
-        return equipmentAllocations.filter((a: JobEquipmentAllocationModel) => a.job_id === jobId);
-    };
-
-    const getVehicleName = (vehicleId: string) => {
-        const vehicle = vehicles.find((v: VehicleModel) => v.id === vehicleId);
-        return vehicle?.vehicle_name || "Unknown Vehicle";
-    };
-
-    const getEquipmentName = (equipmentId: string) => {
-        const equip = equipment.find((e: EquipmentModel) => e.id === equipmentId);
-        return equip?.name || "Unknown Equipment";
+    const handleToggleEquipment = (equipmentId: string) => {
+        setSelectedEquipmentIds(prev =>
+            prev.includes(equipmentId) ? prev.filter(id => id !== equipmentId) : [...prev, equipmentId]
+        );
     };
 
     const activeJobs = jobs.filter((j: JobModel) => j.status === JobStatus.Booked || j.status === JobStatus.InProgress);
 
-    return (
-        <Card>
-            <CardHeader>
-                <div className="flex items-center justify-between">
-                    <div>
-                        <CardTitle>Job Scheduling</CardTitle>
-                        <CardDescription>Assign workers, equipment, and vehicles to jobs</CardDescription>
-                    </div>
-                    <Dialog open={isAssignDialogOpen} onOpenChange={setIsAssignDialogOpen}>
-                        <DialogTrigger asChild>
-                            <Button>
-                                <Plus className="h-4 w-4 mr-2" />
-                                Assign Resources
-                            </Button>
-                        </DialogTrigger>
-                        <DialogContent>
-                            <DialogHeader>
-                                <DialogTitle>Assign Resources to Job</DialogTitle>
-                                <DialogDescription>Select a job and resources to create assignments</DialogDescription>
-                            </DialogHeader>
-                            <div className="grid gap-4 py-4">
-                                <div className="grid gap-2">
-                                    <Label htmlFor="job">Job</Label>
-                                    <Select
-                                        value={selectedJobId}
-                                        onValueChange={setSelectedJobId}
-                                    >
-                                        <SelectTrigger>
-                                            <SelectValue placeholder="Select job" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {activeJobs.map((job) => (
-                                                <SelectItem key={job.id} value={job.id}>
-                                                    {job.customer_name} - {new Date(parseInt(job.scheduled_date) * 1000).toLocaleDateString()}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                                <div className="grid gap-2">
-                                    <Label htmlFor="resourceType">Resource Type</Label>
-                                    <Select
-                                        value={resourceType}
-                                        onValueChange={(value) => setResourceType(value as "worker" | "equipment" | "vehicle")}
-                                    >
-                                        <SelectTrigger>
-                                            <SelectValue placeholder="Select resource type" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="worker">Worker</SelectItem>
-                                            <SelectItem value="equipment">Equipment</SelectItem>
-                                            <SelectItem value="vehicle">Vehicle</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                                {resourceType === "worker" && (
-                                    <div className="grid gap-2">
-                                        <Label htmlFor="worker">Worker</Label>
-                                        <Select
-                                            value={selectedWorkerId}
-                                            onValueChange={setSelectedWorkerId}
-                                        >
-                                            <SelectTrigger>
-                                                <SelectValue placeholder="Select worker" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                {workers.filter((w: WorkerModel) => w.status === WorkerStatus.Active).map((worker) => (
-                                                    <SelectItem key={worker.id} value={worker.id}>
-                                                        {worker.full_name}
-                                                    </SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
-                                )}
-                                {resourceType === "equipment" && (
-                                    <div className="grid gap-2">
-                                        <Label htmlFor="equipment">Equipment</Label>
-                                        <Select
-                                            value={selectedEquipmentId}
-                                            onValueChange={setSelectedEquipmentId}
-                                        >
-                                            <SelectTrigger>
-                                                <SelectValue placeholder="Select equipment" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                {equipment.map((equip) => (
-                                                    <SelectItem key={equip.id} value={equip.id}>
-                                                        {equip.name}
-                                                    </SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
-                                )}
-                                {resourceType === "vehicle" && (
-                                    <div className="grid gap-2">
-                                        <Label htmlFor="vehicle">Vehicle</Label>
-                                        <Select
-                                            value={selectedVehicleId}
-                                            onValueChange={setSelectedVehicleId}
-                                        >
-                                            <SelectTrigger>
-                                                <SelectValue placeholder="Select vehicle" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                {vehicles.map((vehicle) => (
-                                                    <SelectItem key={vehicle.id} value={vehicle.id}>
-                                                        {vehicle.vehicle_name}
-                                                    </SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
-                                )}
-                            </div>
-                            <DialogFooter>
-                                <Button variant="outline" onClick={resetDialog}>Cancel</Button>
-                                <Button onClick={handleAssign}>Assign Resource</Button>
-                            </DialogFooter>
-                        </DialogContent>
-                    </Dialog>
-                </div>
-            </CardHeader>
-            <CardContent>
-                {activeJobs.length === 0 ? (
-                    <div className="text-center py-12">
-                        <Clock className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                        <p className="text-muted-foreground">No active jobs to schedule. Create or book a job first.</p>
-                    </div>
-                ) : (
-                    <div className="grid gap-4">
-                        {activeJobs.map((job) => {
-                            const assignedWorkers = getAssignedWorkers(job.id);
-                            const assignedVehicles = getAssignedVehicles(job.id);
-                            const assignedEquipment = getAssignedEquipment(job.id);
-                            const hasNoAssignments = assignedWorkers.length === 0 && assignedVehicles.length === 0 && assignedEquipment.length === 0;
+    // Helpers for display
+    const getWorkerName = (id: string) => workers.find(w => w.id === id)?.full_name || "Unknown";
+    const getVehicleName = (id: string) => vehicles.find(v => v.id === id)?.vehicle_name || "Unknown";
+    const getEquipmentName = (id: string) => equipment.find(e => e.id === id)?.name || "Unknown";
 
-                            return (
-                                <Card key={job.id}>
-                                    <CardHeader>
-                                        <div className="flex items-center justify-between">
-                                            <div>
-                                                <CardTitle className="text-lg">{job.customer_name}</CardTitle>
-                                                <CardDescription>
-                                                    {new Date(parseInt(job.scheduled_date) * 1000).toLocaleDateString()} - {job.pickup_address} → {job.dropoff_address}
-                                                </CardDescription>
+    return (
+        <div className="space-y-6">
+            <Card>
+                <CardHeader>
+                    <CardTitle>Job Scheduling</CardTitle>
+                    <CardDescription>Manage daily job assignments</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    {activeJobs.length === 0 ? (
+                        <div className="text-center py-12">
+                            <Clock className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                            <p className="text-muted-foreground">No active jobs to schedule.</p>
+                        </div>
+                    ) : (
+                        <div className="grid gap-6">
+                            {activeJobs.map(job => {
+                                const myWorkers = jobAssignments.filter(a => a.job_id === job.id);
+                                const myVehicles = vehicleAssignments.filter(a => a.job_id === job.id);
+                                const myEquipment = equipmentAllocations.filter(a => a.job_id === job.id);
+
+                                return (
+                                    <Card key={job.id} className="overflow-hidden">
+                                        <CardHeader className="bg-muted/30 pb-4">
+                                            <div className="flex items-start justify-between">
+                                                <div className="space-y-1">
+                                                    <CardTitle className="text-lg flex items-center gap-2">
+                                                        {job.customer_name}
+                                                        <Badge variant={job.status === JobStatus.Booked ? "default" : "secondary"}>
+                                                            {job.status === JobStatus.Booked ? "Booked" : "In Progress"}
+                                                        </Badge>
+                                                    </CardTitle>
+                                                    <div className="flex items-center text-sm text-muted-foreground gap-4">
+                                                        <span className="flex items-center gap-1">
+                                                            <Calendar className="h-3 w-3" />
+                                                            {new Date(parseInt(job.scheduled_date) * 1000).toLocaleDateString()}
+                                                        </span>
+                                                        <span>
+                                                            {job.pickup_address} <span className="text-muted-foreground/50">→</span> {job.dropoff_address}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                                <Button onClick={() => handleOpenDialog(job)}>
+                                                    Manage Resources
+                                                </Button>
                                             </div>
-                                            <Badge>{job.status === JobStatus.Booked ? "Booked" : "In Progress"}</Badge>
-                                        </div>
-                                    </CardHeader>
-                                    <CardContent>
-                                        {hasNoAssignments ? (
-                                            <p className="text-muted-foreground text-sm">No resources assigned yet</p>
-                                        ) : (
-                                            <div className="space-y-4">
-                                                {assignedWorkers.length > 0 && (
-                                                    <div className="space-y-2">
-                                                        <p className="text-sm font-medium">Workers:</p>
+                                        </CardHeader>
+                                        <CardContent className="pt-6">
+                                            <div className="grid md:grid-cols-3 gap-6">
+                                                {/* Workers Section */}
+                                                <div>
+                                                    <h4 className="text-sm font-medium mb-2 flex items-center gap-2">
+                                                        <Users className="h-4 w-4 text-muted-foreground" />
+                                                        Workers
+                                                    </h4>
+                                                    {myWorkers.length === 0 ? (
+                                                        <p className="text-sm text-muted-foreground italic">None assigned</p>
+                                                    ) : (
                                                         <div className="flex flex-wrap gap-2">
-                                                            {assignedWorkers.map((assignment) => (
-                                                                <Badge key={assignment.id} variant="outline" className="flex items-center gap-2">
-                                                                    {getWorkerName(assignment.worker_id)}
-                                                                    <Button
-                                                                        variant="ghost"
-                                                                        size="sm"
-                                                                        className="h-4 w-4 p-0 hover:bg-transparent"
-                                                                        onClick={() => removeWorkerAssignmentMutation.mutate(assignment.id)}
-                                                                    >
-                                                                        <Trash2 className="h-3 w-3" />
-                                                                    </Button>
-                                                                </Badge>
+                                                            {myWorkers.map(a => (
+                                                                <Badge key={a.id} variant="outline">{getWorkerName(a.worker_id)}</Badge>
                                                             ))}
                                                         </div>
-                                                    </div>
-                                                )}
-                                                {assignedVehicles.length > 0 && (
-                                                    <div className="space-y-2">
-                                                        <p className="text-sm font-medium">Vehicles:</p>
+                                                    )}
+                                                </div>
+
+                                                {/* Vehicles Section */}
+                                                <div>
+                                                    <h4 className="text-sm font-medium mb-2 flex items-center gap-2">
+                                                        <Truck className="h-4 w-4 text-muted-foreground" />
+                                                        Vehicles
+                                                    </h4>
+                                                    {myVehicles.length === 0 ? (
+                                                        <p className="text-sm text-muted-foreground italic">None assigned</p>
+                                                    ) : (
                                                         <div className="flex flex-wrap gap-2">
-                                                            {assignedVehicles.map((assignment) => (
-                                                                <Badge key={assignment.id} variant="secondary" className="flex items-center gap-2">
-                                                                    {getVehicleName(assignment.vehicle_id)}
-                                                                    <Button
-                                                                        variant="ghost"
-                                                                        size="sm"
-                                                                        className="h-4 w-4 p-0 hover:bg-transparent"
-                                                                        onClick={() => removeVehicleAssignmentMutation.mutate(assignment.id)}
-                                                                    >
-                                                                        <Trash2 className="h-3 w-3" />
-                                                                    </Button>
-                                                                </Badge>
+                                                            {myVehicles.map(a => (
+                                                                <Badge key={a.id} variant="secondary">{getVehicleName(a.vehicle_id)}</Badge>
                                                             ))}
                                                         </div>
-                                                    </div>
-                                                )}
-                                                {assignedEquipment.length > 0 && (
-                                                    <div className="space-y-2">
-                                                        <p className="text-sm font-medium">Equipment:</p>
+                                                    )}
+                                                </div>
+
+                                                {/* Equipment Section */}
+                                                <div>
+                                                    <h4 className="text-sm font-medium mb-2 flex items-center gap-2">
+                                                        <Hammer className="h-4 w-4 text-muted-foreground" />
+                                                        Equipment
+                                                    </h4>
+                                                    {myEquipment.length === 0 ? (
+                                                        <p className="text-sm text-muted-foreground italic">None assigned</p>
+                                                    ) : (
                                                         <div className="flex flex-wrap gap-2">
-                                                            {assignedEquipment.map((allocation) => (
-                                                                <Badge key={allocation.id} variant="default" className="flex items-center gap-2">
-                                                                    {getEquipmentName(allocation.equipment_id)}
-                                                                    <Button
-                                                                        variant="ghost"
-                                                                        size="sm"
-                                                                        className="h-4 w-4 p-0 hover:bg-transparent"
-                                                                        onClick={() => removeEquipmentAllocationMutation.mutate(allocation.id)}
-                                                                    >
-                                                                        <Trash2 className="h-3 w-3" />
-                                                                    </Button>
-                                                                </Badge>
+                                                            {myEquipment.map(a => (
+                                                                <Badge key={a.id} variant="outline" className="border-dashed">{getEquipmentName(a.equipment_id)}</Badge>
                                                             ))}
                                                         </div>
-                                                    </div>
-                                                )}
+                                                    )}
+                                                </div>
                                             </div>
-                                        )}
-                                    </CardContent>
-                                </Card>
-                            );
-                        })}
+                                        </CardContent>
+                                    </Card>
+                                );
+                            })}
+                        </div>
+                    )}
+                </CardContent>
+            </Card>
+
+            <Dialog open={isDialogOpen} onOpenChange={(open) => {
+                if (!open) {
+                    setIsDialogOpen(false);
+                    setEditingJob(null);
+                }
+            }}>
+                <DialogContent className="max-w-4xl max-h-[85vh] flex flex-col">
+                    <DialogHeader>
+                        <DialogTitle>Manage Resources</DialogTitle>
+                        <DialogDescription>
+                            Assign workers, vehicles, and equipment for {editingJob?.customer_name}
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    <div className="flex-1 overflow-hidden">
+                        <ScrollArea className="h-[500px] pr-4">
+                            <div className="grid md:grid-cols-3 gap-6">
+                                {/* Workers Column */}
+                                <div className="space-y-4">
+                                    <div className="flex items-center gap-2 font-medium pb-2 border-b">
+                                        <Users className="h-4 w-4" />
+                                        Workers
+                                        <Badge variant="secondary" className="ml-auto">{selectedWorkerIds.length}</Badge>
+                                    </div>
+                                    <div className="space-y-2">
+                                        {workers.filter(w => w.status === WorkerStatus.Active).map(worker => (
+                                            <div key={worker.id} className="flex items-start space-x-3 p-2 hover:bg-muted/50 rounded-md">
+                                                <Checkbox
+                                                    id={`w-${worker.id}`}
+                                                    checked={selectedWorkerIds.includes(worker.id)}
+                                                    onCheckedChange={() => handleToggleWorker(worker.id)}
+                                                />
+                                                <div className="grid gap-1.5 leading-none">
+                                                    <Label htmlFor={`w-${worker.id}`} className="cursor-pointer font-medium">
+                                                        {worker.full_name}
+                                                    </Label>
+                                                    <p className="text-xs text-muted-foreground">{WorkerRole[worker.role]}</p>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* Vehicles Column */}
+                                <div className="space-y-4">
+                                    <div className="flex items-center gap-2 font-medium pb-2 border-b">
+                                        <Truck className="h-4 w-4" />
+                                        Vehicles
+                                        <Badge variant="secondary" className="ml-auto">{selectedVehicleIds.length}</Badge>
+                                    </div>
+                                    <div className="space-y-2">
+                                        {vehicles.map(vehicle => (
+                                            <div key={vehicle.id} className="flex items-start space-x-3 p-2 hover:bg-muted/50 rounded-md">
+                                                <Checkbox
+                                                    id={`v-${vehicle.id}`}
+                                                    checked={selectedVehicleIds.includes(vehicle.id)}
+                                                    onCheckedChange={() => handleToggleVehicle(vehicle.id)}
+                                                />
+                                                <div className="grid gap-1.5 leading-none">
+                                                    <Label htmlFor={`v-${vehicle.id}`} className="cursor-pointer font-medium">
+                                                        {vehicle.vehicle_name}
+                                                    </Label>
+                                                    <p className="text-xs text-muted-foreground">{VehicleType[vehicle.type]}</p>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* Equipment Column */}
+                                <div className="space-y-4">
+                                    <div className="flex items-center gap-2 font-medium pb-2 border-b">
+                                        <Hammer className="h-4 w-4" />
+                                        Equipment
+                                        <Badge variant="secondary" className="ml-auto">{selectedEquipmentIds.length}</Badge>
+                                    </div>
+                                    <div className="space-y-2">
+                                        {equipment.map(equip => (
+                                            <div key={equip.id} className="flex items-start space-x-3 p-2 hover:bg-muted/50 rounded-md">
+                                                <Checkbox
+                                                    id={`e-${equip.id}`}
+                                                    checked={selectedEquipmentIds.includes(equip.id)}
+                                                    onCheckedChange={() => handleToggleEquipment(equip.id)}
+                                                />
+                                                <div className="grid gap-1.5 leading-none">
+                                                    <Label htmlFor={`e-${equip.id}`} className="cursor-pointer font-medium">
+                                                        {equip.name}
+                                                    </Label>
+                                                    <p className="text-xs text-muted-foreground">Qty: {equip.total_quantity}</p>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+                        </ScrollArea>
                     </div>
-                )}
-            </CardContent>
-        </Card>
+
+                    <DialogFooter className="pt-4 border-t">
+                        <Button variant="outline" onClick={() => setIsDialogOpen(false)}>Cancel</Button>
+                        <Button onClick={() => updateAssignmentsMutation.mutate()} disabled={updateAssignmentsMutation.isPending}>
+                            {updateAssignmentsMutation.isPending ? "Saving..." : "Save Assignments"}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+        </div>
     );
 }
