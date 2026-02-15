@@ -12,6 +12,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
 import { Plus, Trash2, Clock, Truck, Hammer, Users, Calendar } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -33,7 +34,8 @@ export function SchedulingView({ jobs, workers, equipment, vehicles, jobAssignme
     // Selection State
     const [selectedWorkerIds, setSelectedWorkerIds] = useState<string[]>([]);
     const [selectedVehicleIds, setSelectedVehicleIds] = useState<string[]>([]);
-    const [selectedEquipmentIds, setSelectedEquipmentIds] = useState<string[]>([]);
+    // Equipment is now a record of ID -> Quantity
+    const [selectedEquipment, setSelectedEquipment] = useState<Record<string, number>>({});
 
     const queryClient = useQueryClient();
 
@@ -79,18 +81,42 @@ export function SchedulingView({ jobs, workers, equipment, vehicles, jobAssignme
 
             // 3. Equipment
             const currentEquipmentAllocations = equipmentAllocations.filter(a => a.job_id === jobId);
-            const currentEquipmentIds = currentEquipmentAllocations.map(a => a.equipment_id);
+            const currentAllocationMap = new Map(currentEquipmentAllocations.map(a => [a.equipment_id, a]));
 
-            const equipmentToAdd = selectedEquipmentIds.filter(id => !currentEquipmentIds.includes(id));
-            const equipmentToRemove = currentEquipmentAllocations.filter(a => !selectedEquipmentIds.includes(a.equipment_id));
+            const newEquipmentIds = Object.keys(selectedEquipment);
 
-            if (equipmentToAdd.length > 0) {
+            const equipmentToInsert = newEquipmentIds.filter(id => !currentAllocationMap.has(id));
+            // Update if quantity changed
+            const equipmentToUpdate = newEquipmentIds.filter(id => {
+                const current = currentAllocationMap.get(id);
+                return current && current.quantity_assigned !== selectedEquipment[id];
+            });
+            // Delete if not in new selection
+            const equipmentToDelete = currentEquipmentAllocations.filter(a => !selectedEquipment[a.equipment_id]);
+
+            if (equipmentToInsert.length > 0) {
                 await JobEquipmentAllocationORM.getInstance().insertJobEquipmentAllocation(
-                    equipmentToAdd.map(equipId => ({ job_id: jobId, equipment_id: equipId, company_id: companyId } as JobEquipmentAllocationModel))
+                    equipmentToInsert.map(equipId => ({
+                        job_id: jobId,
+                        equipment_id: equipId,
+                        quantity_assigned: selectedEquipment[equipId],
+                        company_id: companyId
+                    } as JobEquipmentAllocationModel))
                 );
             }
-            if (equipmentToRemove.length > 0) {
-                await JobEquipmentAllocationORM.getInstance().deleteJobEquipmentAllocationByIDs(equipmentToRemove.map(a => a.id));
+
+            if (equipmentToUpdate.length > 0) {
+                await Promise.all(equipmentToUpdate.map(equipId => {
+                    const allocation = currentAllocationMap.get(equipId)!;
+                    return JobEquipmentAllocationORM.getInstance().setJobEquipmentAllocationById(allocation.id, {
+                        ...allocation,
+                        quantity_assigned: selectedEquipment[equipId]
+                    });
+                }));
+            }
+
+            if (equipmentToDelete.length > 0) {
+                await JobEquipmentAllocationORM.getInstance().deleteJobEquipmentAllocationByIDs(equipmentToDelete.map(a => a.id));
             }
         },
         onSuccess: () => {
@@ -116,10 +142,12 @@ export function SchedulingView({ jobs, workers, equipment, vehicles, jobAssignme
             .map(a => a.vehicle_id);
         setSelectedVehicleIds(jobVehicleIds);
 
-        const jobEquipmentIds = equipmentAllocations
-            .filter(a => a.job_id === job.id)
-            .map(a => a.equipment_id);
-        setSelectedEquipmentIds(jobEquipmentIds);
+        const jobAllocations = equipmentAllocations.filter(a => a.job_id === job.id);
+        const equipMap: Record<string, number> = {};
+        jobAllocations.forEach(a => {
+            equipMap[a.equipment_id] = a.quantity_assigned;
+        });
+        setSelectedEquipment(equipMap);
 
         setIsDialogOpen(true);
     };
@@ -137,9 +165,25 @@ export function SchedulingView({ jobs, workers, equipment, vehicles, jobAssignme
     };
 
     const handleToggleEquipment = (equipmentId: string) => {
-        setSelectedEquipmentIds(prev =>
-            prev.includes(equipmentId) ? prev.filter(id => id !== equipmentId) : [...prev, equipmentId]
-        );
+        setSelectedEquipment(prev => {
+            const next = { ...prev };
+            if (next[equipmentId]) {
+                delete next[equipmentId];
+            } else {
+                next[equipmentId] = 1; // Default to 1
+            }
+            return next;
+        });
+    };
+
+    const handleQuantityChange = (equipmentId: string, quantity: number, max: number) => {
+        if (quantity < 1) quantity = 1;
+        if (quantity > max) quantity = max;
+
+        setSelectedEquipment(prev => ({
+            ...prev,
+            [equipmentId]: quantity
+        }));
     };
 
     const activeJobs = jobs.filter((j: JobModel) => j.status === JobStatus.Booked || j.status === JobStatus.InProgress);
@@ -242,7 +286,10 @@ export function SchedulingView({ jobs, workers, equipment, vehicles, jobAssignme
                                                     ) : (
                                                         <div className="flex flex-wrap gap-2">
                                                             {myEquipment.map(a => (
-                                                                <Badge key={a.id} variant="outline" className="border-dashed">{getEquipmentName(a.equipment_id)}</Badge>
+                                                                <Badge key={a.id} variant="outline" className="border-dashed">
+                                                                    {getEquipmentName(a.equipment_id)}
+                                                                    <span className="ml-1 text-muted-foreground border-l pl-1">x{a.quantity_assigned}</span>
+                                                                </Badge>
                                                             ))}
                                                         </div>
                                                     )}
@@ -331,24 +378,49 @@ export function SchedulingView({ jobs, workers, equipment, vehicles, jobAssignme
                                     <div className="flex items-center gap-2 font-medium pb-2 border-b">
                                         <Hammer className="h-4 w-4" />
                                         Equipment
-                                        <Badge variant="secondary" className="ml-auto">{selectedEquipmentIds.length}</Badge>
+                                        <Badge variant="secondary" className="ml-auto">{Object.keys(selectedEquipment).length}</Badge>
                                     </div>
                                     <div className="space-y-2">
-                                        {equipment.map(equip => (
-                                            <div key={equip.id} className="flex items-start space-x-3 p-2 hover:bg-muted/50 rounded-md">
-                                                <Checkbox
-                                                    id={`e-${equip.id}`}
-                                                    checked={selectedEquipmentIds.includes(equip.id)}
-                                                    onCheckedChange={() => handleToggleEquipment(equip.id)}
-                                                />
-                                                <div className="grid gap-1.5 leading-none">
-                                                    <Label htmlFor={`e-${equip.id}`} className="cursor-pointer font-medium">
-                                                        {equip.name}
-                                                    </Label>
-                                                    <p className="text-xs text-muted-foreground">Qty: {equip.total_quantity}</p>
+                                        {equipment.map(equip => {
+                                            const isSelected = !!selectedEquipment[equip.id];
+                                            const quantity = selectedEquipment[equip.id] || 0;
+
+                                            return (
+                                                <div key={equip.id} className="flex flex-col gap-2 p-2 hover:bg-muted/50 rounded-md">
+                                                    <div className="flex items-start space-x-3">
+                                                        <Checkbox
+                                                            id={`e-${equip.id}`}
+                                                            checked={isSelected}
+                                                            onCheckedChange={() => handleToggleEquipment(equip.id)}
+                                                        />
+                                                        <div className="grid gap-1.5 leading-none flex-1">
+                                                            <div className="flex justify-between">
+                                                                <Label htmlFor={`e-${equip.id}`} className="cursor-pointer font-medium">
+                                                                    {equip.name}
+                                                                </Label>
+                                                                <span className="text-xs text-muted-foreground">Max: {equip.total_quantity}</span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    {isSelected && (
+                                                        <div className="pl-7 mt-1 animate-in slide-in-from-top-2 fade-in">
+                                                            <div className="flex items-center gap-2">
+                                                                <span className="text-xs text-muted-foreground">Qty:</span>
+                                                                <Input
+                                                                    type="number"
+                                                                    value={quantity}
+                                                                    min={1}
+                                                                    max={equip.total_quantity}
+                                                                    onChange={(e) => handleQuantityChange(equip.id, parseInt(e.target.value) || 0, equip.total_quantity)}
+                                                                    className="h-8 w-20"
+                                                                />
+                                                            </div>
+                                                        </div>
+                                                    )}
                                                 </div>
-                                            </div>
-                                        ))}
+                                            );
+                                        })}
                                     </div>
                                 </div>
                             </div>
