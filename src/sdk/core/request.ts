@@ -1,5 +1,4 @@
 import { getAuthTokenAsync } from "./auth";
-import { reportToParentWindow } from "./internal/creao-shell";
 
 const MCP_API_BASE_PATH = import.meta.env.VITE_MCP_API_BASE_PATH;
 
@@ -32,15 +31,27 @@ export async function platformRequest(
 		headers,
 	});
 
-	// TODO: check response status and throw error if not 200
-	reportToParentWindow({
-		type: "platform-request",
-		timestamp: new Date().toISOString(),
-		url: response.url,
-		method,
-		status: response.status,
-		responseHeaders: Object.fromEntries(response.headers.entries()),
-	})
+	// Log API request in development
+	if (import.meta.env.MODE === 'development') {
+		console.log('[API Request]', {
+			url: response.url,
+			method,
+			status: response.status,
+			timestamp: new Date().toISOString(),
+		});
+	}
+
+	// Validate response status and throw error if not OK (200-299)
+	if (!response.ok) {
+		const errorBody = await response.text().catch(() => "Unable to parse error response");
+		const error = new Error(
+			`HTTP ${response.status}: ${response.statusText}${errorBody ? ` - ${errorBody}` : ""}`
+		);
+		(error as any).response = response;
+		(error as any).status = response.status;
+		(error as any).statusText = response.statusText;
+		throw error;
+	}
 
 	return response;
 }

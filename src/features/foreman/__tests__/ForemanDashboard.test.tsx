@@ -9,18 +9,17 @@ import '@testing-library/jest-dom';
 import { describe, it, expect, beforeEach, vi, type Mock } from 'vitest';
 
 // Mocks
-vi.mock("@/sdk/database/orm/orm_job", () => ({
-    JobORM: {
-        getInstance: vi.fn(() => ({
-            getJobsByCompanyId: vi.fn(),
-        }))
-    },
-    JobStatus: {
-        Booked: 2, // Using numeric enum values matching source
-        Completed: 4,
-        Canceled: 5
-    }
-}));
+vi.mock("@/sdk/database/orm/orm_job", async (importOriginal) => {
+    const actual = await importOriginal<typeof import("@/sdk/database/orm/orm_job")>();
+    return {
+        ...actual,
+        JobORM: {
+            getInstance: vi.fn(() => ({
+                getJobsByCompanyId: vi.fn(),
+            }))
+        }
+    };
+});
 
 vi.mock("@tanstack/react-query", () => ({
     useQuery: vi.fn(),

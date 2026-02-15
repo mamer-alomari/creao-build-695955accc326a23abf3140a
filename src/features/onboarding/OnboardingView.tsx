@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { useNavigate } from "@tanstack/react-router";
 import { doc, updateDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
+import { validateCompanyName } from "@/lib/validation-schemas";
 
 export function OnboardingView() {
     const { user, setCompanyId, setRole } = useCreaoAuth();
@@ -26,9 +27,12 @@ export function OnboardingView() {
         try {
             const companyOrm = CompanyORM.getInstance();
 
+            // Validate company name with Zod
+            const validatedName = validateCompanyName(companyName);
+
             // 1. Create Company
             const newCompanies = await companyOrm.insertCompany([{
-                name: companyName,
+                name: validatedName,
                 contact_email: user.email || "",
                 // IDs and timestamps are handled by ORM
             } as any]); // Cast to any to bypass strict checks if ORM types are partial

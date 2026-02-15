@@ -38,6 +38,20 @@ export function PortalDashboard() {
     // Book Quote Mutation
     const bookQuoteMutation = useMutation({
         mutationFn: async (quote: QuoteModel) => {
+            // Security: Verify customer owns this quote
+            if (quote.customer_id && quote.customer_id !== user!.uid) {
+                throw new Error('Unauthorized: You can only book your own quotes');
+            }
+
+            // Validate required fields
+            if (!quote.customer_name || quote.customer_name.trim().length === 0) {
+                throw new Error('Customer name is required');
+            }
+
+            if (!Array.isArray(quote.inventory_items)) {
+                throw new Error('Invalid inventory data');
+            }
+
             // 1. Create Job
             const jobData: JobModel = {
                 id: "", // Let ORM generate
@@ -46,7 +60,7 @@ export function PortalDashboard() {
                 create_time: new Date().toISOString(),
                 update_time: new Date().toISOString(),
                 company_id: quote.company_id || "PENDING_ASSIGNMENT", // If no company, mark for admin assignment
-                customer_name: quote.customer_name,
+                customer_name: quote.customer_name.trim(),
                 customer_id: user!.uid,
                 status: JobStatus.Quote, // Initial status as Booked/Quote
                 scheduled_date: quote.move_date,

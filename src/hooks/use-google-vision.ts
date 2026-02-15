@@ -6,6 +6,7 @@
  */
 
 import { useMutation } from "@tanstack/react-query";
+import { validateDetectedItems } from "@/lib/validation-schemas";
 
 // Constants from the original file to maintain compatibility
 export const ROOM_TYPES = [
@@ -104,17 +105,43 @@ interface GeminiPart {
     };
 }
 
+// Valid room types for security validation
+const VALID_ROOM_TYPES = ROOM_TYPES.map(rt => rt.value);
+
+/**
+ * Validate and sanitize room type to prevent prompt injection
+ */
+function validateRoomType(roomType: string): string {
+    // Normalize input
+    const normalized = roomType.toLowerCase().trim().replace(/\s+/g, '_');
+
+    // Check if valid room type
+    if (!VALID_ROOM_TYPES.includes(normalized as any)) {
+        throw new Error(
+            `Invalid room type: "${roomType}". Must be one of: ${ROOM_TYPES.map(rt => rt.label).join(', ')}`
+        );
+    }
+
+    // Return the label for display in prompt
+    const roomTypeObj = ROOM_TYPES.find(rt => rt.value === normalized);
+    return roomTypeObj?.label || normalized;
+}
+
 /**
  * Analyze an image to detect movable items using Gemini
  */
 export async function analyzeImageForItems(base64Image: string, roomType: string): Promise<DetectedItem[]> {
-    const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+    // Prefer specific Vision key, fallback to Maps key for backward compatibility
+    const apiKey = import.meta.env.VITE_GOOGLE_VISION_API_KEY || import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 
     if (!apiKey) {
-        throw new Error("Google Maps API Key (used for Gemini) is missing");
+        throw new Error("Google Vision API Key (or Maps Key fallback) is missing");
     }
 
-    const prompt = `You are an expert moving company inventory specialist. Analyze this image of a ${roomType} and identify all movable items that would need to be packed and transported during a home move.
+    // Validate room type to prevent prompt injection attacks
+    const validatedRoomType = validateRoomType(roomType);
+
+    const prompt = `You are an expert moving company inventory specialist. Analyze this image of a ${validatedRoomType} and identify all movable items that would need to be packed and transported during a home move.
 
 For each item you identify, provide the following information in a valid JSON array format:
 - name: The common name of the item
@@ -195,16 +222,20 @@ Example format:
         }
 
         const jsonString = cleanedContent.substring(jsonStartIndex, jsonEndIndex);
-        const items: Omit<DetectedItem, "id">[] = JSON.parse(jsonString);
+        const parsed = JSON.parse(jsonString);
 
-        // Add unique IDs to each item
-        return items.map((item, index) => ({
+        // Validate with Zod schema
+        const validatedItems = validateDetectedItems(parsed);
+
+        // Add unique IDs to each validated item
+        return validatedItems.map((item, index) => ({
             ...item,
             id: `item-${Date.now()}-${index}`,
         }));
     } catch (parseError) {
-        console.error("Failed to parse Gemini response:", content);
-        throw new Error("Failed to parse detected items from response");
+        console.error("Failed to parse or validate Gemini response:", content);
+        const errorMessage = parseError instanceof Error ? parseError.message : "Unknown error";
+        throw new Error(`Failed to process detected items: ${errorMessage}`);
     }
 }
 

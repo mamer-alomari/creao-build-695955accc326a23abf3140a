@@ -1,10 +1,17 @@
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
 import { EquipmentView } from "../EquipmentView";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import "@testing-library/jest-dom";
 
 const queryClient = new QueryClient();
+
+global.ResizeObserver = class ResizeObserver {
+    observe() { }
+    unobserve() { }
+    disconnect() { }
+};
 
 const Wrapper = ({ children }: { children: React.ReactNode }) => (
     <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
@@ -39,7 +46,8 @@ describe("EquipmentView", () => {
         expect(screen.getByText("5")).toBeInTheDocument();
     });
 
-    it("opens create equipment dialog", () => {
+    it("opens create equipment dialog", async () => {
+        const user = userEvent.setup();
         render(
             <Wrapper>
                 <EquipmentView
@@ -49,10 +57,13 @@ describe("EquipmentView", () => {
             </Wrapper>
         );
 
-        fireEvent.click(screen.getAllByRole("button", { name: "New Equipment" })[0]);
+        const newBtn = screen.getByRole("button", { name: /New Equipment/i });
+        await user.click(newBtn);
 
-        expect(screen.getByRole("heading", { name: "Create New Equipment" })).toBeInTheDocument();
-        expect(screen.getByLabelText("Equipment Name")).toBeInTheDocument();
+        await waitFor(() => {
+            expect(screen.getByRole("heading", { name: "Create New Equipment" })).toBeInTheDocument();
+            expect(screen.getByLabelText("Equipment Name")).toBeInTheDocument();
+        });
     });
 
     it("shows empty state when no equipment", () => {

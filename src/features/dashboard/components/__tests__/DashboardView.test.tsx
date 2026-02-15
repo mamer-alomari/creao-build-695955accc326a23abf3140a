@@ -12,7 +12,7 @@ const mockJobs = [
         customer_name: "John Doe",
         pickup_address: "123 Main St",
         dropoff_address: "456 Oak Ave",
-        scheduled_date: (Date.now() / 1000).toString(),
+        scheduled_date: new Date().toISOString(),
         status: JobStatus.Booked,
         company_id: "company-1",
         data_creator: "user-1",

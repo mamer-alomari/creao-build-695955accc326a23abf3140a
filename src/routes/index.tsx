@@ -142,11 +142,32 @@ function App() {
 	const upcomingJobs = jobs.filter((j) => j.status === JobStatus.Booked || j.status === JobStatus.InProgress);
 
 	if (isLoading) {
-		return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
+		return (
+			<div className="flex items-center justify-center min-h-screen">
+				<div className="text-center">
+					<div className="text-lg font-medium">Loading...</div>
+					<div className="text-sm text-muted-foreground mt-2">Please wait</div>
+				</div>
+			</div>
+		);
 	}
 
-	// Auth check is handled by useEffect, but render nothing if not auth
-	if (!isAuthenticated && !isLoading) return null;
+	// Show proper empty state for unauthenticated users
+	if (!isAuthenticated && !isLoading) {
+		return (
+			<div className="flex flex-col items-center justify-center min-h-screen gap-4 p-4">
+				<div className="text-center">
+					<h1 className="text-2xl font-bold mb-2">Authentication Required</h1>
+					<p className="text-muted-foreground mb-4">
+						You need to be signed in to access this page
+					</p>
+					<Button onClick={() => navigate({ to: "/login" })}>
+						Go to Login
+					</Button>
+				</div>
+			</div>
+		);
+	}
 
 	return (
 		<div className="flex min-h-[calc(100vh-3.5rem)]">

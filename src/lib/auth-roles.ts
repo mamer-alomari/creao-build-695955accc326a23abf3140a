@@ -57,22 +57,85 @@ export const RolePermissions: Record<UserRole, string[]> = {
 };
 
 /**
- * Decode JWT token payload
+ * JWT payload interface
  */
-function decodeJwtPayload(token: string): Record<string, any> | null {
+interface JWTPayload {
+  role?: string;
+  userRole?: string;
+  companyId?: string;
+  company_id?: string;
+  workerId?: string;
+  worker_id?: string;
+  email?: string;
+  sub?: string;
+  exp?: number;
+  iat?: number;
+  [key: string]: any;
+}
+
+/**
+ * Decode and validate JWT token payload
+ * @throws Error if token is invalid or expired
+ */
+function decodeJwtPayload(token: string): JWTPayload | null {
   try {
+    // Validate token format
     const parts = token.split(".");
     if (parts.length !== 3) {
+      console.error('[JWT] Invalid token format: expected 3 parts, got', parts.length);
       return null;
     }
 
-    const payload = parts[1];
+    const [header, payload, signature] = parts;
+
+    // Validate parts are not empty
+    if (!header || !payload || !signature) {
+      console.error('[JWT] Invalid token: one or more parts are empty');
+      return null;
+    }
+
+    // Decode payload
     const base64 = payload.replace(/-/g, "+").replace(/_/g, "/");
     const paddedBase64 = base64 + "=".repeat((4 - (base64.length % 4)) % 4);
-    const decodedPayload = atob(paddedBase64);
-    return JSON.parse(decodedPayload);
+
+    let decodedPayload: string;
+    try {
+      decodedPayload = atob(paddedBase64);
+    } catch (error) {
+      console.error('[JWT] Failed to decode base64 payload:', error);
+      return null;
+    }
+
+    // Parse JSON
+    let parsed: JWTPayload;
+    try {
+      parsed = JSON.parse(decodedPayload);
+    } catch (error) {
+      console.error('[JWT] Failed to parse JSON payload:', error);
+      return null;
+    }
+
+    // Validate token expiration
+    if (parsed.exp) {
+      const now = Math.floor(Date.now() / 1000);
+      if (parsed.exp < now) {
+        console.warn('[JWT] Token expired at', new Date(parsed.exp * 1000).toISOString());
+        return null;
+      }
+    }
+
+    // Log token info in development
+    if (import.meta.env.MODE === 'development') {
+      console.log('[JWT] Token decoded successfully', {
+        role: parsed.role || parsed.userRole,
+        exp: parsed.exp ? new Date(parsed.exp * 1000).toISOString() : 'no expiration',
+        iat: parsed.iat ? new Date(parsed.iat * 1000).toISOString() : 'no issued time',
+      });
+    }
+
+    return parsed;
   } catch (error) {
-    console.warn("Failed to decode JWT token:", error);
+    console.error('[JWT] Unexpected error decoding token:', error);
     return null;
   }
 }

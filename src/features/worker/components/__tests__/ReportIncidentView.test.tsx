@@ -1,5 +1,6 @@
 
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { ReportIncidentView } from "@/features/worker/components/ReportIncidentView";
 import { IncidentORM } from "@/sdk/database/orm/orm_incident";
 import { useCreaoAuth } from "@/sdk/core/auth";
@@ -8,25 +9,27 @@ import { useMutation } from "@tanstack/react-query";
 import '@testing-library/jest-dom';
 import { describe, it, expect, beforeEach, vi, type Mock } from 'vitest';
 
-// Mocks
-vi.mock("@/sdk/database/orm/orm_incident", () => ({
-    IncidentORM: {
-        getInstance: vi.fn(() => ({
-            createIncident: vi.fn(),
-        }))
-    }
-}));
-
-vi.mock("@/sdk/core/auth", () => ({
-    useCreaoAuth: vi.fn(),
-}));
-
+// Mock dependencies
 vi.mock("@tanstack/react-router", () => ({
     useNavigate: vi.fn(),
+    createFileRoute: vi.fn(() => () => null)
 }));
 
 vi.mock("@tanstack/react-query", () => ({
     useMutation: vi.fn(),
+    useQueryClient: vi.fn(() => ({
+        invalidateQueries: vi.fn()
+    }))
+}));
+
+vi.mock("@/sdk/database/orm/orm_incident", () => ({
+    IncidentORM: {
+        getInstance: vi.fn()
+    }
+}));
+
+vi.mock("@/sdk/core/auth", () => ({
+    useCreaoAuth: vi.fn()
 }));
 
 describe("ReportIncidentView", () => {
@@ -57,17 +60,18 @@ describe("ReportIncidentView", () => {
     });
 
     it("submits the form", async () => {
+        const user = userEvent.setup();
         render(<ReportIncidentView />);
 
         // Fill Description
         const descInput = screen.getByPlaceholderText("Describe what happened...");
-        fireEvent.change(descInput, { target: { value: "Flat tire on truck 2" } });
+        await user.type(descInput, "Flat tire on truck 2");
 
         // Submit
         const submitBtn = screen.getByText("Submit Report");
         expect(submitBtn).not.toBeDisabled();
 
-        fireEvent.click(submitBtn);
+        await user.click(submitBtn);
 
         expect(mockMutate).toHaveBeenCalled();
     });

@@ -230,7 +230,7 @@ export function PayrollView({ payrollRecords, workers, companyId }: {
                                     <TableCell>{getPayrollStatusBadge(record.status)}</TableCell>
                                     <TableCell className="text-right">
                                         <div className="flex gap-2 justify-end">
-                                            {record.status === PayrollRecordStatus.Draft && (
+                                            {(record.status === PayrollRecordStatus.Draft || record.status === PayrollRecordStatus.Unspecified) && (
                                                 <Button
                                                     variant="outline"
                                                     size="sm"

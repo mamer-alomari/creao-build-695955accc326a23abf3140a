@@ -41,7 +41,7 @@ const mockJob: JobModel = {
     customer_name: "QR User",
     pickup_address: "123 QR St",
     dropoff_address: "456 Code Ln",
-    scheduled_date: (Date.now() / 1000).toString(),
+    scheduled_date: new Date().toISOString(),
     status: JobStatus.Quote,
     estimated_cost: 100,
     company_id: "company-1",

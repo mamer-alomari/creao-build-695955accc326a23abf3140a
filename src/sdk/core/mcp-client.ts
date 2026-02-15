@@ -9,8 +9,6 @@
 import { MCP_SERVERS, type McpServerId } from "../constants/mcp-server";
 import { getAuthTokenAsync, isAuthenticatedSync } from "./auth";
 import { APP_CONFIG } from "./global";
-import { reportToParentWindow } from "./internal/creao-shell";
-import type { IFrameMessage } from "./internal/internal-types";
 import { platformRequest } from "./request";
 
 const MCP_API_BASE_PATH = import.meta.env.VITE_MCP_API_BASE_PATH;
@@ -93,20 +91,14 @@ async function internalCallService(
 
 		if (!response.ok) {
 			const errorMessage = `HTTP error! status: ${response.status}`;
-			// Report error response to parent window
-			reportToParentWindow({
-				type: "mcp",
-				subType: "http-error",
-				success: false,
-				payload: {
+			// Log error in development
+			if (import.meta.env.MODE === 'development') {
+				console.error('[MCP HTTP Error]', {
 					...baseReportData,
-					error: {
-						message: errorMessage,
-						type: "http",
-						status: response.status,
-					},
-				},
-			} as IFrameMessage);
+					status: response.status,
+					timestamp: new Date().toISOString(),
+				});
+			}
 			throw new Error(errorMessage);
 		}
 
@@ -114,51 +106,38 @@ async function internalCallService(
 
 		if (data.error) {
 			const errorMessage = data.error.message || "MCP request failed";
-			// Report MCP error to parent window
-			reportToParentWindow({
-				type: "mcp",
-				subType: "data-error",
-				success: false,
-				payload: {
+			// Log MCP error in development
+			if (import.meta.env.MODE === 'development') {
+				console.error('[MCP Data Error]', {
 					...baseReportData,
 					error: {
 						message: errorMessage,
-						type: "mcp-data",
 						code: data.error.code,
 						data: data.error.data,
 					},
-				},
-			} as IFrameMessage);
+					timestamp: new Date().toISOString(),
+				});
+			}
 			throw new Error(errorMessage);
 		}
 
-		// Report successful response to parent window
-		reportToParentWindow({
-			type: "mcp",
-			subType: "response-success",
-			success: true,
-			payload: {
+		// Log successful MCP call in development
+		if (import.meta.env.MODE === 'development') {
+			console.log('[MCP Success]', {
 				...baseReportData,
-				response: data,
-			},
-		} as IFrameMessage);
+				timestamp: new Date().toISOString(),
+			});
+		}
 
 		return data.result;
 	} catch (error) {
-		// Report any unexpected errors
-		if (error instanceof Error) {
-			reportToParentWindow({
-				type: "mcp",
-				subType: "runtime-error",
-				success: false,
-				payload: {
-					...baseReportData,
-					error: {
-						message: error.message,
-						type: "runtime",
-					},
-				},
-			} as IFrameMessage);
+		// Log runtime errors in development
+		if (import.meta.env.MODE === 'development' && error instanceof Error) {
+			console.error('[MCP Runtime Error]', {
+				...baseReportData,
+				error: error.message,
+				timestamp: new Date().toISOString(),
+			});
 		}
 		throw error;
 	}

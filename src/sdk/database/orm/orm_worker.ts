@@ -72,7 +72,13 @@ export class WorkerORM {
 
   /* Helper to get current user ID */
   private getCurrentUserId(): string {
-    return auth.currentUser?.uid || "system";
+    const userId = auth.currentUser?.uid;
+    if (!userId) {
+      throw new Error(
+        'Authentication required: Cannot perform database operation without authenticated user'
+      );
+    }
+    return userId;
   }
 
   /* Helper to get current timestamp ISO string */

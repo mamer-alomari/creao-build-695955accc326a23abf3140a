@@ -79,7 +79,13 @@ export class DataStoreClient {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      return response.json();
+      // Handle JSON parsing with error handling
+      try {
+        return await response.json();
+      } catch (jsonError) {
+        console.error('Failed to parse JSON response:', jsonError);
+        throw new Error(`Invalid JSON response from ${endpoint}: ${jsonError instanceof Error ? jsonError.message : String(jsonError)}`);
+      }
     } catch (error) {
       if (error instanceof Error && error.name === "AbortError") {
         console.error(`Request timeout after ${this.timeout} seconds`);

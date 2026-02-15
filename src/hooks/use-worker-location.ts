@@ -1,20 +1,26 @@
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useCreaoAuth } from "@/sdk/core/auth";
 import { WorkerLocationORM } from "@/sdk/database/orm/orm_worker_location";
 
 export function useWorkerLocationTracker() {
     const { user, companyId, role } = useCreaoAuth();
+    const isMountedRef = useRef(true);
 
     useEffect(() => {
+        isMountedRef.current = true;
+
         if (!user || !companyId || role !== "worker") return;
 
         // Check permission
         if (!("geolocation" in navigator)) return;
 
-        let watchId: number;
+        let watchId: number | null = null;
 
         const success = async (pos: GeolocationPosition) => {
+            // Guard against updates after unmount
+            if (!isMountedRef.current) return;
+
             try {
                 await WorkerLocationORM.getInstance().updateLocation({
                     id: user.uid,
@@ -31,20 +37,25 @@ export function useWorkerLocationTracker() {
         };
 
         const error = (err: GeolocationPositionError) => {
+            // Guard against updates after unmount
+            if (!isMountedRef.current) return;
             console.warn("Location error", err);
         };
 
-        // Start watching
+        // Start watching position
         watchId = navigator.geolocation.watchPosition(success, error, {
             enableHighAccuracy: true,
             timeout: 30000,
             maximumAge: 10000
         });
 
-        // Cleanup: Mark inactive? Or just stop watching. 
-        // For now just stop watching to save battery.
+        // Cleanup function
         return () => {
-            navigator.geolocation.clearWatch(watchId);
+            isMountedRef.current = false;
+            if (watchId !== null) {
+                navigator.geolocation.clearWatch(watchId);
+                watchId = null;
+            }
         };
 
     }, [user, companyId, role]);

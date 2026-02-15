@@ -13,7 +13,8 @@ import {
   limit,
   startAfter,
   QueryConstraint,
-  Timestamp
+  Timestamp,
+  runTransaction
 } from "firebase/firestore";
 import { db, auth } from "@/lib/firebase";
 import { UserRole } from "@/sdk/core/auth"; // Assuming this is where it's exported
@@ -99,7 +100,13 @@ export class JobORM {
 
   /* Helper to get current user ID */
   private getCurrentUserId(): string {
-    return auth.currentUser?.uid || "system";
+    const userId = auth.currentUser?.uid;
+    if (!userId) {
+      throw new Error(
+        'Authentication required: Cannot perform database operation without authenticated user'
+      );
+    }
+    return userId;
   }
 
   /* Helper to get current timestamp ISO string */
@@ -275,22 +282,27 @@ export class JobORM {
     const now = this.getCurrentTime();
     const userId = this.getCurrentUserId();
 
-    // We need to fetch existing to keep creator info if not provided?
-    // The spec says "Must keep id, data_creator, create_time unchanged".
-    const existing = await getDoc(docRef);
-    let existingData = existing.exists() ? existing.data() as JobModel : null;
+    // Use Firestore transaction for atomic read-modify-write to prevent race conditions
+    const updatedItem = await runTransaction(db, async (transaction) => {
+      // Read existing document within transaction
+      const existingDoc = await transaction.get(docRef);
+      const existingData = existingDoc.exists() ? existingDoc.data() as JobModel : null;
 
-    const updatedItem: JobModel = {
-      ...data,
-      id: id,
-      data_updater: userId,
-      update_time: now,
-      // Preserve original creation info if it exists
-      data_creator: existingData?.data_creator || data.data_creator || userId,
-      create_time: existingData?.create_time || data.create_time || now,
-    };
+      const updatedItem: JobModel = {
+        ...data,
+        id: id,
+        data_updater: userId,
+        update_time: now,
+        // Preserve original creation info if it exists
+        data_creator: existingData?.data_creator || data.data_creator || userId,
+        create_time: existingData?.create_time || data.create_time || now,
+      };
 
-    await setDoc(docRef, updatedItem);
+      // Write within transaction - ensures atomicity
+      transaction.set(docRef, updatedItem);
+      return updatedItem;
+    });
+
     return [updatedItem];
   }
 

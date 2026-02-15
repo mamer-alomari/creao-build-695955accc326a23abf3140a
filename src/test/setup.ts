@@ -21,3 +21,10 @@ const localStorageMock = (function () {
 Object.defineProperty(window, 'localStorage', {
     value: localStorageMock,
 });
+
+// Mock ResizeObserver for Radix UI
+global.ResizeObserver = class ResizeObserver {
+    observe() { }
+    unobserve() { }
+    disconnect() { }
+};

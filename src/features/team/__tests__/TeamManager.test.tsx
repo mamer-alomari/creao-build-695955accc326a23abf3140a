@@ -55,7 +55,7 @@ describe("TeamManager", () => {
     it("renders worker list", () => {
         // First usage of useQuery is for workers, second for invitations
         (useQuery as unknown as Mock).mockReturnValueOnce({
-            data: [{ id: "w1", name: "Worker One", role: "worker" }]
+            data: [{ id: "w1", full_name: "Worker One", role: "worker" }]
         }).mockReturnValueOnce({
             data: []
         });
