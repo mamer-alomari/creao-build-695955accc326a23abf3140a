@@ -611,7 +611,7 @@ function ItemSelectionList({
   };
 
   const groupedItems = items.reduce(
-    (acc, item) => {
+    (acc: Record<string, DetectedItem[]>, item: DetectedItem) => {
       const category = item.category || "other";
       if (!acc[category]) {
         acc[category] = [];
