@@ -226,21 +226,25 @@ export class JobEquipmentAllocationORM {
   /**
    * Get job_equipment_allocation by JobId index
    */
-  async getJobEquipmentAllocationByJobId(job_id: string): Promise<JobEquipmentAllocationModel[]> {
-    const q = query(collection(db, this.collectionName), where("job_id", "==", job_id));
+  async getJobEquipmentAllocationByJobId(job_id: string, company_id?: string): Promise<JobEquipmentAllocationModel[]> {
+    let constraints: QueryConstraint[] = [where("job_id", "==", job_id)];
+    if (company_id) {
+      constraints.push(where("company_id", "==", company_id));
+    }
+    const q = query(collection(db, this.collectionName), ...constraints);
     const snapshot = await getDocs(q);
     return snapshot.docs.map(d => d.data() as JobEquipmentAllocationModel);
   }
 
   async setJobEquipmentAllocationByJobId(job_id: string, data: JobEquipmentAllocationModel): Promise<JobEquipmentAllocationModel[]> {
     if (data.id) return this.setJobEquipmentAllocationById(data.id, data);
-    const items = await this.getJobEquipmentAllocationByJobId(job_id);
+    const items = await this.getJobEquipmentAllocationByJobId(job_id, data.company_id);
     if (items.length > 0) return this.setJobEquipmentAllocationById(items[0].id, data);
     return this.insertJobEquipmentAllocation([data]);
   }
 
-  async deleteJobEquipmentAllocationByJobId(job_id: string): Promise<void> {
-    const items = await this.getJobEquipmentAllocationByJobId(job_id);
+  async deleteJobEquipmentAllocationByJobId(job_id: string, company_id?: string): Promise<void> {
+    const items = await this.getJobEquipmentAllocationByJobId(job_id, company_id);
     const promises = items.map(i => deleteDoc(doc(db, this.collectionName, i.id)));
     await Promise.all(promises);
   }

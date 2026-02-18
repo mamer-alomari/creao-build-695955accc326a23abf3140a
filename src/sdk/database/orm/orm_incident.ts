@@ -20,7 +20,8 @@ export interface IncidentModel {
     reported_by: string; // User ID
     company_id: string;
     status: "open" | "investigating" | "resolved";
-    photos?: string[];
+    photos?: string[]; // Deprecated, use media_urls
+    media_urls?: string[]; // URL to image or video
 }
 
 export class IncidentORM {
@@ -55,5 +56,10 @@ export class IncidentORM {
         const q = query(collection(db, this.collectionName), where("company_id", "==", companyId));
         const snapshot = await getDocs(q);
         return snapshot.docs.map(doc => doc.data() as IncidentModel);
+    }
+
+    async updateIncident(incident: IncidentModel): Promise<void> {
+        const docRef = doc(db, this.collectionName, incident.id);
+        await setDoc(docRef, incident, { merge: true });
     }
 }

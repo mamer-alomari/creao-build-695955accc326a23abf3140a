@@ -1,9 +1,13 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, Outlet } from '@tanstack/react-router'
 
 export const Route = createFileRoute('/foreman/jobs/$jobId')({
-  component: RouteComponent,
+  component: ForemanJobLayout,
 })
 
-function RouteComponent() {
-  return <div>Hello "/foreman/jobs/$jobId"!</div>
+function ForemanJobLayout() {
+  return (
+    <>
+      <Outlet />
+    </>
+  )
 }

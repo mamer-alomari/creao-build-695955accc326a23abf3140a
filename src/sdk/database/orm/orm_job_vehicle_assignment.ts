@@ -225,21 +225,25 @@ export class JobVehicleAssignmentORM {
   /**
    * Get job_vehicle_assignment by JobId index
    */
-  async getJobVehicleAssignmentByJobId(job_id: string): Promise<JobVehicleAssignmentModel[]> {
-    const q = query(collection(db, this.collectionName), where("job_id", "==", job_id));
+  async getJobVehicleAssignmentByJobId(job_id: string, company_id?: string): Promise<JobVehicleAssignmentModel[]> {
+    let constraints: QueryConstraint[] = [where("job_id", "==", job_id)];
+    if (company_id) {
+      constraints.push(where("company_id", "==", company_id));
+    }
+    const q = query(collection(db, this.collectionName), ...constraints);
     const snapshot = await getDocs(q);
     return snapshot.docs.map(d => d.data() as JobVehicleAssignmentModel);
   }
 
   async setJobVehicleAssignmentByJobId(job_id: string, data: JobVehicleAssignmentModel): Promise<JobVehicleAssignmentModel[]> {
     if (data.id) return this.setJobVehicleAssignmentById(data.id, data);
-    const items = await this.getJobVehicleAssignmentByJobId(job_id);
+    const items = await this.getJobVehicleAssignmentByJobId(job_id, data.company_id);
     if (items.length > 0) return this.setJobVehicleAssignmentById(items[0].id, data);
     return this.insertJobVehicleAssignment([data]);
   }
 
-  async deleteJobVehicleAssignmentByJobId(job_id: string): Promise<void> {
-    const items = await this.getJobVehicleAssignmentByJobId(job_id);
+  async deleteJobVehicleAssignmentByJobId(job_id: string, company_id?: string): Promise<void> {
+    const items = await this.getJobVehicleAssignmentByJobId(job_id, company_id);
     const promises = items.map(i => deleteDoc(doc(db, this.collectionName, i.id)));
     await Promise.all(promises);
   }

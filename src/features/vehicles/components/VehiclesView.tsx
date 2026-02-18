@@ -14,7 +14,7 @@ import { Plus, Truck, Trash2, Wrench } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { format } from "date-fns";
 
-export function VehiclesView({ vehicles, companyId }: { vehicles: VehicleModel[]; companyId: string }) {
+export function VehiclesView({ vehicles, companyId, canManageFleet = true }: { vehicles: VehicleModel[]; companyId: string; canManageFleet?: boolean }) {
     const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
     const [selectedVehicle, setSelectedVehicle] = useState<VehicleModel | null>(null);
     const [isMaintenanceSheetOpen, setIsMaintenanceSheetOpen] = useState(false);
@@ -82,6 +82,8 @@ export function VehiclesView({ vehicles, companyId }: { vehicles: VehicleModel[]
     const createMaintenanceMutation = useMutation({
         mutationFn: async (record: Partial<MaintenanceRecordModel>) => {
             if (!selectedVehicle) throw new Error("No vehicle selected");
+            if (!companyId) throw new Error("No company ID provided");
+
             const maintenanceOrm = MaintenanceRecordORM.getInstance();
             return await maintenanceOrm.insertMaintenanceRecord([{
                 ...record,
@@ -100,7 +102,12 @@ export function VehiclesView({ vehicles, companyId }: { vehicles: VehicleModel[]
                 type: MaintenanceType.Routine,
                 notes: "",
             });
+            alert("Record added successfully!");
         },
+        onError: (error) => {
+            console.error("Failed to create maintenance record:", error);
+            alert(`Failed to add record: ${error.message}`);
+        }
     });
 
     const getVehicleTypeLabel = (type: VehicleType) => {
@@ -133,78 +140,81 @@ export function VehiclesView({ vehicles, companyId }: { vehicles: VehicleModel[]
                         <CardTitle>Vehicles Management</CardTitle>
                         <CardDescription>Manage your fleet of moving vehicles</CardDescription>
                     </div>
-                    <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-                        <DialogTrigger asChild>
-                            <Button>
-                                <Plus className="h-4 w-4 mr-2" />
-                                New Vehicle
-                            </Button>
-                        </DialogTrigger>
-                        <DialogContent>
-                            <DialogHeader>
-                                <DialogTitle>Create New Vehicle</DialogTitle>
-                                <DialogDescription>Add a new vehicle to your fleet</DialogDescription>
-                            </DialogHeader>
-                            <div className="grid gap-4 py-4">
-                                <div className="grid gap-2">
-                                    <Label htmlFor="vehicle_name">Vehicle Name</Label>
-                                    <Input
-                                        id="vehicle_name"
-                                        value={newVehicle.vehicle_name}
-                                        onChange={(e) => setNewVehicle({ ...newVehicle, vehicle_name: e.target.value })}
-                                        placeholder="Truck 1"
-                                    />
+                    {canManageFleet && (
+                        <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+                            <DialogTrigger asChild>
+                                <Button>
+                                    <Plus className="h-4 w-4 mr-2" />
+                                    New Vehicle
+                                </Button>
+                            </DialogTrigger>
+                            <DialogContent>
+                                {/* ... (dialog content) ... */}
+                                <DialogHeader>
+                                    <DialogTitle>Create New Vehicle</DialogTitle>
+                                    <DialogDescription>Add a new vehicle to your fleet</DialogDescription>
+                                </DialogHeader>
+                                <div className="grid gap-4 py-4">
+                                    <div className="grid gap-2">
+                                        <Label htmlFor="vehicle_name">Vehicle Name</Label>
+                                        <Input
+                                            id="vehicle_name"
+                                            value={newVehicle.vehicle_name}
+                                            onChange={(e) => setNewVehicle({ ...newVehicle, vehicle_name: e.target.value })}
+                                            placeholder="Truck 1"
+                                        />
+                                    </div>
+                                    <div className="grid gap-2">
+                                        <Label htmlFor="license_plate">License Plate</Label>
+                                        <Input
+                                            id="license_plate"
+                                            value={newVehicle.license_plate}
+                                            onChange={(e) => setNewVehicle({ ...newVehicle, license_plate: e.target.value })}
+                                            placeholder="ABC-1234"
+                                        />
+                                    </div>
+                                    <div className="grid gap-2">
+                                        <Label htmlFor="type">Vehicle Type</Label>
+                                        <Select
+                                            value={newVehicle.type?.toString()}
+                                            onValueChange={(value) => setNewVehicle({ ...newVehicle, type: parseInt(value) as VehicleType })}
+                                        >
+                                            <SelectTrigger>
+                                                <SelectValue placeholder="Select type" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value={VehicleType.BoxTruck16ft.toString()}>Box Truck 16ft</SelectItem>
+                                                <SelectItem value={VehicleType.BoxTruck26ft.toString()}>Box Truck 26ft</SelectItem>
+                                                <SelectItem value={VehicleType.CargoVan.toString()}>Cargo Van</SelectItem>
+                                                <SelectItem value={VehicleType.Flatbed.toString()}>Flatbed</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                    <div className="grid gap-2">
+                                        <Label htmlFor="capacity_cft">Capacity (cubic feet)</Label>
+                                        <Input
+                                            id="capacity_cft"
+                                            type="number"
+                                            value={newVehicle.capacity_cft || ""}
+                                            onChange={(e) => setNewVehicle({ ...newVehicle, capacity_cft: parseFloat(e.target.value) || 0 })}
+                                            placeholder="1000"
+                                        />
+                                    </div>
                                 </div>
-                                <div className="grid gap-2">
-                                    <Label htmlFor="license_plate">License Plate</Label>
-                                    <Input
-                                        id="license_plate"
-                                        value={newVehicle.license_plate}
-                                        onChange={(e) => setNewVehicle({ ...newVehicle, license_plate: e.target.value })}
-                                        placeholder="ABC-1234"
-                                    />
-                                </div>
-                                <div className="grid gap-2">
-                                    <Label htmlFor="type">Vehicle Type</Label>
-                                    <Select
-                                        value={newVehicle.type?.toString()}
-                                        onValueChange={(value) => setNewVehicle({ ...newVehicle, type: parseInt(value) as VehicleType })}
-                                    >
-                                        <SelectTrigger>
-                                            <SelectValue placeholder="Select type" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value={VehicleType.BoxTruck16ft.toString()}>Box Truck 16ft</SelectItem>
-                                            <SelectItem value={VehicleType.BoxTruck26ft.toString()}>Box Truck 26ft</SelectItem>
-                                            <SelectItem value={VehicleType.CargoVan.toString()}>Cargo Van</SelectItem>
-                                            <SelectItem value={VehicleType.Flatbed.toString()}>Flatbed</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                                <div className="grid gap-2">
-                                    <Label htmlFor="capacity_cft">Capacity (cubic feet)</Label>
-                                    <Input
-                                        id="capacity_cft"
-                                        type="number"
-                                        value={newVehicle.capacity_cft || ""}
-                                        onChange={(e) => setNewVehicle({ ...newVehicle, capacity_cft: parseFloat(e.target.value) || 0 })}
-                                        placeholder="1000"
-                                    />
-                                </div>
-                            </div>
-                            <DialogFooter>
-                                <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>Cancel</Button>
-                                <Button onClick={() => createVehicleMutation.mutate(newVehicle)}>Create Vehicle</Button>
-                            </DialogFooter>
-                        </DialogContent>
-                    </Dialog>
+                                <DialogFooter>
+                                    <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>Cancel</Button>
+                                    <Button onClick={() => createVehicleMutation.mutate(newVehicle)}>Create Vehicle</Button>
+                                </DialogFooter>
+                            </DialogContent>
+                        </Dialog>
+                    )}
                 </div>
             </CardHeader>
             <CardContent>
                 {vehicles.length === 0 ? (
                     <div className="text-center py-12">
                         <Truck className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                        <p className="text-muted-foreground">No vehicles yet. Add your first vehicle to get started.</p>
+                        <p className="text-muted-foreground">No vehicles yet.</p>
                     </div>
                 ) : (
                     <Table>
@@ -232,13 +242,15 @@ export function VehiclesView({ vehicles, companyId }: { vehicles: VehicleModel[]
                                             }}>
                                                 <Wrench className="h-4 w-4" />
                                             </Button>
-                                            <Button
-                                                variant="ghost"
-                                                size="sm"
-                                                onClick={() => deleteVehicleMutation.mutate(vehicle.id)}
-                                            >
-                                                <Trash2 className="h-4 w-4" />
-                                            </Button>
+                                            {canManageFleet && (
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    onClick={() => deleteVehicleMutation.mutate(vehicle.id)}
+                                                >
+                                                    <Trash2 className="h-4 w-4" />
+                                                </Button>
+                                            )}
                                         </div>
                                     </TableCell>
                                 </TableRow>

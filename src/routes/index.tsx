@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useCreaoAuth } from "@/sdk/core/auth";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { LayoutDashboard, Calendar, Users, Package, Truck, DollarSign, Clock } from "lucide-react";
+import { LayoutDashboard, Calendar, Users, Package, Truck, DollarSign, Clock, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 import { CompanyORM, type CompanyModel } from "@/sdk/database/orm/orm_company";
@@ -23,6 +23,12 @@ import { EquipmentView } from "@/features/equipment/components/EquipmentView";
 import { VehiclesView } from "@/features/vehicles/components/VehiclesView";
 import { PayrollView } from "@/features/payroll/components/PayrollView";
 import { SchedulingView } from "@/features/scheduling/components/SchedulingView";
+import { EarningsView } from "@/features/earnings/components/EarningsView";
+import { StorageNetworkView } from "@/features/network/StorageNetworkView";
+import { IncidentsView } from "@/features/incidents/components/IncidentsView";
+import { ForemanDashboard } from "@/features/foreman/ForemanDashboard";
+import { WorkerDashboard } from "@/features/worker/components/WorkerDashboard";
+import { UserRole } from "@/sdk/core/auth";
 
 export const Route = createFileRoute("/")({
 	component: App,
@@ -169,6 +175,23 @@ function App() {
 		);
 	}
 
+	// Role-Based Routing
+	if (role === UserRole.Foreman) {
+		return (
+			<div className="p-6 min-h-screen bg-background">
+				<ForemanDashboard />
+			</div>
+		);
+	}
+
+	if (role === UserRole.Worker) {
+		return (
+			<div className="p-6 min-h-screen bg-background">
+				<WorkerDashboard />
+			</div>
+		);
+	}
+
 	return (
 		<div className="flex min-h-[calc(100vh-3.5rem)]">
 			{/* Sidebar Navigation */}
@@ -233,6 +256,30 @@ function App() {
 					>
 						<DollarSign className="mr-2 h-4 w-4" />
 						Payroll
+					</Button>
+					<Button
+						variant={activeTab === "earnings" ? "secondary" : "ghost"}
+						className="w-full justify-start"
+						onClick={() => setActiveTab("earnings")}
+					>
+						<DollarSign className="mr-2 h-4 w-4" />
+						Earnings
+					</Button>
+					<Button
+						variant={activeTab === "incidents" ? "secondary" : "ghost"}
+						className="w-full justify-start"
+						onClick={() => setActiveTab("incidents")}
+					>
+						<AlertTriangle className="mr-2 h-4 w-4" />
+						Incidents
+					</Button>
+					<Button
+						variant={activeTab === "storage" ? "secondary" : "ghost"}
+						className="w-full justify-start"
+						onClick={() => setActiveTab("storage")}
+					>
+						<Package className="mr-2 h-4 w-4" />
+						Storage Network
 					</Button>
 				</nav>
 			</aside>
@@ -301,6 +348,18 @@ function App() {
 							workers={workers}
 							companyId={companyId || ""}
 						/>
+					</TabsContent>
+
+					<TabsContent value="earnings" className="m-0">
+						<EarningsView jobs={jobs} />
+					</TabsContent>
+
+					<TabsContent value="incidents" className="m-0">
+						<IncidentsView />
+					</TabsContent>
+
+					<TabsContent value="storage" className="m-0">
+						<StorageNetworkView />
 					</TabsContent>
 				</Tabs>
 			</main>

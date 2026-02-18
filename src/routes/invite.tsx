@@ -33,6 +33,8 @@ function InviteView() {
     const [error, setError] = useState("");
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
+    const [name, setName] = useState("");
+    const [phone, setPhone] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     useEffect(() => {
@@ -53,6 +55,8 @@ function InviteView() {
                     setError("This invitation has expired.");
                 } else {
                     setInvitation(invite);
+                    if (invite.name) setName(invite.name);
+                    if (invite.phone_number) setPhone(invite.phone_number);
                 }
             } catch (err) {
                 console.error(err);
@@ -80,6 +84,8 @@ function InviteView() {
             // 2. Create User Profile with Role & Company
             await setDoc(doc(db, "users", userCred.user.uid), {
                 email: invitation.email,
+                full_name: name, // User might have edited it
+                phone_number: phone,
                 role: invitation.role,
                 companyId: invitation.company_id,
                 createdAt: new Date().toISOString()
@@ -139,6 +145,14 @@ function InviteView() {
                         <div className="space-y-2">
                             <Label>Email</Label>
                             <Input value={invitation?.email} disabled className="bg-slate-100" />
+                        </div>
+                        <div className="space-y-2">
+                            <Label>Full Name</Label>
+                            <Input value={name} onChange={e => setName(e.target.value)} placeholder="Your Full Name" required />
+                        </div>
+                        <div className="space-y-2">
+                            <Label>Phone Number</Label>
+                            <Input value={phone} onChange={e => setPhone(e.target.value)} type="tel" placeholder="(555) 123-4567" />
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor="password">Set Password</Label>

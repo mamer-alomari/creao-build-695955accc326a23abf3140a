@@ -13,7 +13,9 @@ import { validateCompanyName } from "../../lib/schemas";
 export function OnboardingView() {
     const { user, setCompanyId, setRole } = useCreaoAuth();
     const navigate = useNavigate();
-    const [companyName, setCompanyName] = useState("");
+    const [companyName, setCompanyName] = useState("Acme Moving");
+    const [warehouseLocations, setWarehouseLocations] = useState<string[]>([""]);
+    const [selectedRole, setSelectedRole] = useState<UserRole>(UserRole.Manager);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
@@ -30,26 +32,37 @@ export function OnboardingView() {
             // Validate company name with Zod
             const validatedName = validateCompanyName(companyName);
 
-            // 1. Create Company
-            const newCompanies = await companyOrm.insertCompany([{
-                name: validatedName,
-                contact_email: user.email || "",
-                // IDs and timestamps are handled by ORM
-            } as any]); // Cast to any to bypass strict checks if ORM types are partial
+            // 1. Check if Company Exists (Single Company Test Mode)
+            const existingCompanies = await companyOrm.getCompanyByName(validatedName);
+            let newCompany: CompanyModel;
 
-            if (newCompanies.length === 0) throw new Error("Failed to create company");
-            const newCompany = newCompanies[0];
+            if (existingCompanies.length > 0) {
+                // JOIN existing company
+                console.log("Joining existing company:", existingCompanies[0].name);
+                newCompany = existingCompanies[0];
+            } else {
+                // CREATE new company
+                const newCompanies = await companyOrm.insertCompany([{
+                    name: validatedName,
+                    contact_email: user.email || "",
+                    warehouse_locations: warehouseLocations.filter(l => l.trim() !== ""),
+                    // IDs and timestamps are handled by ORM
+                } as any]);
+
+                if (newCompanies.length === 0) throw new Error("Failed to create company");
+                newCompany = newCompanies[0];
+            }
 
             // 2. Update User Profile
             const userRef = doc(db, "users", user.uid);
             await updateDoc(userRef, {
                 companyId: newCompany.id,
-                role: UserRole.Manager // Creator becomes Manager
+                role: selectedRole // User selected role
             });
 
             // 3. Update Local State
             setCompanyId(newCompany.id);
-            setRole(UserRole.Manager);
+            setRole(selectedRole);
 
             // 4. Redirect
             navigate({ to: "/" });
@@ -64,12 +77,15 @@ export function OnboardingView() {
     return (
         <div className="flex items-center justify-center min-h-screen bg-slate-50">
             <Card className="w-[450px]">
-                <CardHeader>
-                    <CardTitle>Welcome to Swift Movers CRM</CardTitle>
-                    <CardDescription>Let's set up your moving company workspace.</CardDescription>
-                </CardHeader>
                 <form onSubmit={handleCreateCompany}>
+                    <CardHeader className="text-center">
+                        <CardTitle>Welcome to ABADAI</CardTitle>
+                        <CardDescription>Let's set up your moving company workspace.</CardDescription>
+                    </CardHeader>
                     <CardContent className="space-y-4">
+                        <div className="text-primary-foreground/80">
+                            Join thousands of moving companies using ABADAI to streamline their operations.
+                        </div>
                         <div className="space-y-2">
                             <Label htmlFor="companyName">Company Name</Label>
                             <Input
@@ -80,6 +96,55 @@ export function OnboardingView() {
                                 required
                                 minLength={3}
                             />
+                        </div>
+                        <div className="space-y-2">
+                            <Label>Warehouse Locations</Label>
+                            {warehouseLocations.map((location, index) => (
+                                <div key={index} className="flex gap-2">
+                                    <Input
+                                        placeholder="e.g. 123 Warehouse St, City, State"
+                                        value={location}
+                                        onChange={(e) => {
+                                            const newLocations = [...warehouseLocations];
+                                            newLocations[index] = e.target.value;
+                                            setWarehouseLocations(newLocations);
+                                        }}
+                                    />
+                                    {warehouseLocations.length > 1 && (
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            onClick={() => {
+                                                const newLocations = warehouseLocations.filter((_, i) => i !== index);
+                                                setWarehouseLocations(newLocations);
+                                            }}
+                                        >
+                                            Remove
+                                        </Button>
+                                    )}
+                                </div>
+                            ))}
+                            <Button
+                                type="button"
+                                variant="secondary"
+                                onClick={() => setWarehouseLocations([...warehouseLocations, ""])}
+                                className="w-full"
+                            >
+                                + Add Another Location
+                            </Button>
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label>Your Role (for testing)</Label>
+                            <select
+                                className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                value={selectedRole}
+                                onChange={(e) => setSelectedRole(e.target.value as UserRole)}
+                            >
+                                <option value={UserRole.Manager}>Manager (Full Access)</option>
+                                <option value={UserRole.Foreman}>Foreman (Field App)</option>
+                                <option value={UserRole.Worker}>Worker (Limited View)</option>
+                            </select>
                         </div>
                         {error && <p className="text-sm text-red-500">{error}</p>}
                     </CardContent>

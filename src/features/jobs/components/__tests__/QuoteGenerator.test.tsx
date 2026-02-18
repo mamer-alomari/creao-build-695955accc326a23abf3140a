@@ -5,6 +5,11 @@ import { JobsView } from "../JobsView";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import "@testing-library/jest-dom";
 
+// Mock address utils
+vi.mock("@/lib/address-utils", () => ({
+    classifyJobType: vi.fn().mockReturnValue("local")
+}));
+
 // Mock hooks and constants
 vi.mock("@/hooks/use-distance-matrix", () => ({
     useDistanceMatrix: () => ({
@@ -35,6 +40,26 @@ vi.mock("@/hooks/use-google-vision", () => ({
         { value: "furniture", label: "Furniture" }
     ]
 }));
+
+vi.mock("@/sdk/core/auth", () => ({
+    useCreaoAuth: () => ({
+        companyId: "test-company",
+        user: { uid: "user-123" }
+    })
+}));
+
+vi.mock("@/sdk/database/orm/orm_job", async (importOriginal) => {
+    const actual = await importOriginal<typeof import("@/sdk/database/orm/orm_job")>();
+    return {
+        ...actual,
+        JobORM: {
+            getInstance: vi.fn(() => ({
+                createJob: vi.fn().mockResolvedValue({ id: "new-job-1" }),
+                getJobsByCompanyId: vi.fn().mockResolvedValue([])
+            }))
+        }
+    };
+});
 
 // Mock React Query
 const queryClient = new QueryClient({
@@ -106,7 +131,8 @@ describe("Quote Generator Flow", () => {
             // Check for mocked distance values
             expect(screen.getByText("10 miles")).toBeInTheDocument();
             // Check for cost calculation: Base $200 + Distance (10 miles * $2 = $20) = $220
-            expect(screen.getByText("$220.00")).toBeInTheDocument();
+            expect(screen.getByText("$")).toBeInTheDocument();
+            expect(screen.getByDisplayValue("220")).toBeInTheDocument();
         });
     });
 });

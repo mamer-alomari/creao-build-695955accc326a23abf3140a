@@ -14,6 +14,8 @@ import { db } from "@/lib/firebase";
 export interface InvitationModel {
     id: string; // The token itself or a UUID
     email: string;
+    name?: string;
+    phone_number?: string;
     role: "worker" | "manager";
     company_id: string;
     status: "pending" | "accepted";

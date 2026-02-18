@@ -33,6 +33,8 @@ import {
   Sparkles,
   Box,
 } from "lucide-react";
+import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
+import { storage } from "@/lib/firebase";
 import {
   useAnalyzeRoomImage,
   fileToDataUrl,
@@ -304,12 +306,27 @@ function AddRoomDialog({
     }
   };
 
-  const handleAddRoom = () => {
+  const handleAddRoom = async () => {
+    let finalImageUrl = imagePreview;
+
+    if (imageFile) {
+      try {
+        // Upload to quotes bucket
+        const storageRef = ref(storage, `quotes/${Date.now()}_${imageFile.name}`);
+        const uploadTask = await uploadBytesResumable(storageRef, imageFile);
+        finalImageUrl = await getDownloadURL(uploadTask.ref);
+      } catch (error) {
+        console.error("Failed to upload room image:", error);
+        // Fallback to preview if upload fails, or handle error
+        // keeping base64 as fallback for now to not break flow
+      }
+    }
+
     const selectedItems = detectedItems.filter((item) => item.quantity > 0);
     const room: RoomInventory = {
       roomName: roomName || ROOM_TYPES.find((t) => t.value === roomType)?.label || "Room",
       roomType,
-      imageUrl: imagePreview || undefined,
+      imageUrl: finalImageUrl || undefined,
       items: selectedItems,
       totalItems: selectedItems.length,
       analyzedAt: new Date().toISOString(),

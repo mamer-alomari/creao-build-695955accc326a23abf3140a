@@ -49,6 +49,9 @@ export interface WorkerModel {
   status: WorkerStatus;
   company_id: string;
   hourly_rate?: number;
+  email?: string;
+  phone_number?: string;
+  can_self_schedule?: boolean;
 }
 
 // Re-export common types for compatibility

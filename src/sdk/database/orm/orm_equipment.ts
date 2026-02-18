@@ -18,6 +18,15 @@ import {
 import { db, auth } from "@/lib/firebase";
 
 /**
+ * Enumeration for EquipmentType
+ */
+export enum EquipmentType {
+  Unspecified = 0,
+  Reusable = 1, // e.g., Dolly, Blankets
+  Consumable = 2, // e.g., Boxes, Tape, Wrap
+}
+
+/**
  * Interface for EquipmentModel
  */
 export interface EquipmentModel {
@@ -29,6 +38,7 @@ export interface EquipmentModel {
   company_id: string;
   name: string;
   total_quantity: number;
+  type: EquipmentType;
   description?: string | null;
 }
 

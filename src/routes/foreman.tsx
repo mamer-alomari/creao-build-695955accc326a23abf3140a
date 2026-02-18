@@ -1,5 +1,5 @@
-import { createFileRoute, redirect } from '@tanstack/react-router'
-import { useCreaoAuth, UserRole, getAuthState } from '@/sdk/core/auth'
+import { createFileRoute, redirect, Outlet } from '@tanstack/react-router'
+import { UserRole, getAuthState } from '@/sdk/core/auth'
 
 export const Route = createFileRoute('/foreman')({
   beforeLoad: () => {
@@ -28,17 +28,5 @@ export const Route = createFileRoute('/foreman')({
 })
 
 function RouteComponent() {
-  const { user, role } = useCreaoAuth()
-
-  return (
-    <div className="container mx-auto py-8">
-      <h1 className="text-2xl font-bold mb-4">Foreman Dashboard</h1>
-      <p className="text-muted-foreground">
-        Welcome, {user?.email} (Role: {role})
-      </p>
-      <div className="mt-8">
-        <p>Foreman features coming soon...</p>
-      </div>
-    </div>
-  )
+  return <Outlet />
 }

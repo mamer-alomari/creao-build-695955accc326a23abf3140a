@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { type JobModel, JobStatus } from "@/sdk/database/orm/orm_job";
 import { type WorkerModel, WorkerStatus, WorkerRole } from "@/sdk/database/orm/orm_worker";
-import { type EquipmentModel } from "@/sdk/database/orm/orm_equipment";
+import { type EquipmentModel, EquipmentType } from "@/sdk/database/orm/orm_equipment";
 import { type VehicleModel, VehicleType } from "@/sdk/database/orm/orm_vehicle";
 import { JobWorkerAssignmentORM, type JobWorkerAssignmentModel } from "@/sdk/database/orm/orm_job_worker_assignment";
 import { JobVehicleAssignmentORM, type JobVehicleAssignmentModel } from "@/sdk/database/orm/orm_job_vehicle_assignment";
@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
-import { Plus, Trash2, Clock, Truck, Hammer, Users, Calendar } from "lucide-react";
+import { Plus, Trash2, Clock, Truck, Hammer, Users, Calendar, Box, Repeat } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
@@ -191,7 +191,8 @@ export function SchedulingView({ jobs, workers, equipment, vehicles, jobAssignme
     // Helpers for display
     const getWorkerName = (id: string) => workers.find(w => w.id === id)?.full_name || "Unknown";
     const getVehicleName = (id: string) => vehicles.find(v => v.id === id)?.vehicle_name || "Unknown";
-    const getEquipmentName = (id: string) => equipment.find(e => e.id === id)?.name || "Unknown";
+    const getEquipment = (id: string) => equipment.find(e => e.id === id);
+    const getEquipmentName = (id: string) => getEquipment(id)?.name || "Unknown";
 
     return (
         <div className="space-y-6">
@@ -285,12 +286,16 @@ export function SchedulingView({ jobs, workers, equipment, vehicles, jobAssignme
                                                         <p className="text-sm text-muted-foreground italic">None assigned</p>
                                                     ) : (
                                                         <div className="flex flex-wrap gap-2">
-                                                            {myEquipment.map(a => (
-                                                                <Badge key={a.id} variant="outline" className="border-dashed">
-                                                                    {getEquipmentName(a.equipment_id)}
-                                                                    <span className="ml-1 text-muted-foreground border-l pl-1">x{a.quantity_assigned}</span>
-                                                                </Badge>
-                                                            ))}
+                                                            {myEquipment.map(a => {
+                                                                const equip = getEquipment(a.equipment_id);
+                                                                return (
+                                                                    <Badge key={a.id} variant="outline" className="border-dashed gap-1">
+                                                                        {equip?.type === EquipmentType.Consumable ? <Box className="h-3 w-3" /> : <Repeat className="h-3 w-3" />}
+                                                                        {getEquipmentName(a.equipment_id)}
+                                                                        <span className="ml-1 text-muted-foreground border-l pl-1">x{a.quantity_assigned}</span>
+                                                                    </Badge>
+                                                                );
+                                                            })}
                                                         </div>
                                                     )}
                                                 </div>
@@ -332,12 +337,12 @@ export function SchedulingView({ jobs, workers, equipment, vehicles, jobAssignme
                                         {workers.filter(w => w.status === WorkerStatus.Active).map(worker => (
                                             <div key={worker.id} className="flex items-start space-x-3 p-2 hover:bg-muted/50 rounded-md">
                                                 <Checkbox
-                                                    id={`w-${worker.id}`}
+                                                    id={`w - ${worker.id} `}
                                                     checked={selectedWorkerIds.includes(worker.id)}
                                                     onCheckedChange={() => handleToggleWorker(worker.id)}
                                                 />
                                                 <div className="grid gap-1.5 leading-none">
-                                                    <Label htmlFor={`w-${worker.id}`} className="cursor-pointer font-medium">
+                                                    <Label htmlFor={`w - ${worker.id} `} className="cursor-pointer font-medium">
                                                         {worker.full_name}
                                                     </Label>
                                                     <p className="text-xs text-muted-foreground">{WorkerRole[worker.role]}</p>
@@ -358,12 +363,12 @@ export function SchedulingView({ jobs, workers, equipment, vehicles, jobAssignme
                                         {vehicles.map(vehicle => (
                                             <div key={vehicle.id} className="flex items-start space-x-3 p-2 hover:bg-muted/50 rounded-md">
                                                 <Checkbox
-                                                    id={`v-${vehicle.id}`}
+                                                    id={`v - ${vehicle.id} `}
                                                     checked={selectedVehicleIds.includes(vehicle.id)}
                                                     onCheckedChange={() => handleToggleVehicle(vehicle.id)}
                                                 />
                                                 <div className="grid gap-1.5 leading-none">
-                                                    <Label htmlFor={`v-${vehicle.id}`} className="cursor-pointer font-medium">
+                                                    <Label htmlFor={`v - ${vehicle.id} `} className="cursor-pointer font-medium">
                                                         {vehicle.vehicle_name}
                                                     </Label>
                                                     <p className="text-xs text-muted-foreground">{VehicleType[vehicle.type]}</p>
@@ -389,14 +394,15 @@ export function SchedulingView({ jobs, workers, equipment, vehicles, jobAssignme
                                                 <div key={equip.id} className="flex flex-col gap-2 p-2 hover:bg-muted/50 rounded-md">
                                                     <div className="flex items-start space-x-3">
                                                         <Checkbox
-                                                            id={`e-${equip.id}`}
+                                                            id={`e - ${equip.id} `}
                                                             checked={isSelected}
                                                             onCheckedChange={() => handleToggleEquipment(equip.id)}
                                                         />
                                                         <div className="grid gap-1.5 leading-none flex-1">
-                                                            <div className="flex justify-between">
-                                                                <Label htmlFor={`e-${equip.id}`} className="cursor-pointer font-medium">
+                                                            <div className="flex justify-between items-center">
+                                                                <Label htmlFor={`e - ${equip.id} `} className="cursor-pointer font-medium flex items-center gap-2">
                                                                     {equip.name}
+                                                                    {equip.type === EquipmentType.Consumable ? <Box className="h-3 w-3 text-muted-foreground" /> : <Repeat className="h-3 w-3 text-muted-foreground" />}
                                                                 </Label>
                                                                 <span className="text-xs text-muted-foreground">Max: {equip.total_quantity}</span>
                                                             </div>

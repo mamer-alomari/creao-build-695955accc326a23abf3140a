@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 import { EquipmentView } from "../EquipmentView";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import "@testing-library/jest-dom";
+import { EquipmentType } from "@/sdk/database/orm/orm_equipment";
 
 const queryClient = new QueryClient();
 
@@ -22,6 +23,7 @@ const mockEquipment = [
         id: "equip-1",
         name: "Hand Truck",
         total_quantity: 5,
+        type: EquipmentType.Reusable,
         company_id: "company-1",
         data_creator: "user-1",
         data_updater: "user-1",

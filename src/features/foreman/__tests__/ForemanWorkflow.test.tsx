@@ -8,11 +8,15 @@ import '@testing-library/jest-dom';
 import { describe, it, expect, beforeEach, vi, type Mock } from 'vitest';
 
 // Mocks
-vi.mock("@tanstack/react-query", () => ({
-    useQuery: vi.fn(),
-    useMutation: vi.fn(),
-    useQueryClient: vi.fn(() => ({ invalidateQueries: vi.fn() })),
-}));
+vi.mock("@tanstack/react-query", async (importOriginal) => {
+    const actual = await importOriginal();
+    return {
+        ...actual,
+        useQuery: vi.fn(),
+        useMutation: vi.fn(),
+        useQueryClient: vi.fn(() => ({ invalidateQueries: vi.fn() })),
+    };
+});
 
 vi.mock("@tanstack/react-router", () => ({
     useParams: vi.fn(),
@@ -20,11 +24,26 @@ vi.mock("@tanstack/react-router", () => ({
     createFileRoute: vi.fn(() => () => null),
 }));
 
+vi.mock("@/sdk/core/auth", () => ({
+    useCreaoAuth: vi.fn(() => ({ user: { uid: "test-user" }, companyId: "test-company" })),
+}));
+
+vi.mock("@/lib/notifications", () => ({
+    notifications: {
+        notifyArrival: vi.fn(),
+    }
+}));
+
+vi.mock("@/lib/firebase", () => ({
+    storage: {},
+}));
+
 describe("ForemanWorkflow", () => {
     const mockNavigate = vi.fn();
     const mockMutate = vi.fn();
 
     beforeEach(() => {
+        vi.clearAllMocks();
         (useNavigate as unknown as Mock).mockReturnValue(mockNavigate);
         (useParams as unknown as Mock).mockReturnValue({ jobId: "job-123" });
         (useMutation as unknown as Mock).mockReturnValue({
@@ -40,6 +59,7 @@ describe("ForemanWorkflow", () => {
                 status: JobStatus.Booked,
                 customer_name: "Alice Smith",
                 pickup_address: "123 Main St",
+                vehicle_checklist: { completed_by: "test" }, // Mock checklist done so it starts directly
             },
             isLoading: false,
         });
@@ -76,25 +96,29 @@ describe("ForemanWorkflow", () => {
         }));
     });
 
-    it("shows Equipment Check after Arrival", () => {
+    it("navigates to Inventory after notifying customer", async () => {
         (useQuery as unknown as Mock).mockReturnValue({
             data: {
                 id: "job-123",
-                status: JobStatus.Arrived, // 7
+                status: JobStatus.Arrived,
                 customer_name: "Alice Smith",
             },
             isLoading: false,
         });
 
-        render(<ForemanJobExecution />);
-        // By default step is "status", but clicking "Continue setup" sets step to "equipment"
-        // Wait, current logic:
-        // statusConfig.handler -> setStep("equipment")
+        // Mock window.confirm
+        const confirmSpy = vi.spyOn(window, 'confirm');
+        confirmSpy.mockImplementation(() => true);
 
-        const btn = screen.getByText("Continue setup");
+        render(<ForemanJobExecution />);
+
+        const btn = screen.getByText("Notify Customer Team is Here");
         fireEvent.click(btn);
 
-        expect(screen.getByText("2. Equipment Check")).toBeInTheDocument();
-        expect(screen.getByText("Confirm Equipment")).toBeInTheDocument();
+        await waitFor(() => {
+            expect(mockNavigate).toHaveBeenCalledWith({ to: "/foreman/jobs/job-123/inventory" });
+        });
+
+        confirmSpy.mockRestore();
     });
 });

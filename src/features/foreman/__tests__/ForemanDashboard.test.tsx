@@ -21,9 +21,15 @@ vi.mock("@/sdk/database/orm/orm_job", async (importOriginal) => {
     };
 });
 
-vi.mock("@tanstack/react-query", () => ({
-    useQuery: vi.fn(),
-}));
+vi.mock("@tanstack/react-query", async (importOriginal) => {
+    const actual = await importOriginal();
+    return {
+        ...actual,
+        useQuery: vi.fn(),
+        useMutation: vi.fn(() => ({ mutate: vi.fn() })),
+        useQueryClient: vi.fn(() => ({ invalidateQueries: vi.fn() })),
+    };
+});
 
 vi.mock("@/sdk/core/auth", () => ({
     useCreaoAuth: vi.fn(),

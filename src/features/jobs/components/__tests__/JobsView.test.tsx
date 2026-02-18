@@ -18,6 +18,28 @@ const Wrapper = ({ children }: { children: React.ReactNode }) => (
     <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
 );
 
+// Mocks
+vi.mock("@/sdk/core/auth", () => ({
+    useCreaoAuth: () => ({
+        companyId: "company-1",
+        user: { uid: "user-1" }
+    })
+}));
+
+vi.mock("@/sdk/database/orm/orm_job", async (importOriginal) => {
+    const actual = await importOriginal<typeof import("@/sdk/database/orm/orm_job")>();
+    return {
+        ...actual,
+        JobORM: {
+            getInstance: vi.fn(() => ({
+                createJob: vi.fn().mockResolvedValue({ id: "new-job-1" }),
+                getJobsByCompanyId: vi.fn().mockResolvedValue([]),
+                updateJob: vi.fn()
+            }))
+        }
+    };
+});
+
 const mockJobs = [
     {
         id: "job-1",
@@ -25,7 +47,7 @@ const mockJobs = [
         pickup_address: "789 Pine Rd",
         dropoff_address: "101 Maple Ln",
         scheduled_date: (Date.now() / 1000).toString(),
-        status: JobStatus.Quote,
+        status: JobStatus.Booked,
         estimated_cost: 500,
         company_id: "company-1",
         data_creator: "user-1",
@@ -49,11 +71,11 @@ describe("JobsView", () => {
             </Wrapper>
         );
 
-        expect(screen.getByText("Jobs Management")).toBeInTheDocument();
+        expect(screen.getByText("Jobs & Quotes")).toBeInTheDocument();
         expect(screen.getByText("Alice Johnson")).toBeInTheDocument();
         expect(screen.getByText("789 Pine Rd")).toBeInTheDocument();
         expect(screen.getByText("$500.00")).toBeInTheDocument();
-        expect(screen.getByText("Quote")).toBeInTheDocument();
+        expect(screen.getByText("Booked")).toBeInTheDocument();
     });
 
     it("opens create job dialog", async () => {
@@ -89,6 +111,6 @@ describe("JobsView", () => {
             </Wrapper>
         );
 
-        expect(screen.getByText("No jobs yet. Create your first job to get started.")).toBeInTheDocument();
+        expect(screen.getByText("No active jobs.")).toBeInTheDocument();
     });
 });

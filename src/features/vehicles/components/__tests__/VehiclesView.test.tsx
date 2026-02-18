@@ -1,5 +1,5 @@
 import { render, screen, fireEvent } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { VehiclesView } from "../VehiclesView";
 import { VehicleType } from "@/sdk/database/orm/orm_vehicle";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -10,6 +10,29 @@ const queryClient = new QueryClient();
 const Wrapper = ({ children }: { children: React.ReactNode }) => (
     <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
 );
+
+// Mocks
+vi.mock("@/sdk/core/auth", () => ({
+    useCreaoAuth: () => ({
+        companyId: "company-1",
+        user: { uid: "user-1" }
+    })
+}));
+
+vi.mock("@/sdk/database/orm/orm_vehicle", async (importOriginal) => {
+    const actual = await importOriginal<typeof import("@/sdk/database/orm/orm_vehicle")>();
+    return {
+        ...actual,
+        VehicleORM: {
+            getInstance: vi.fn(() => ({
+                createVehicle: vi.fn().mockResolvedValue({ id: "new-vehicle-1" }),
+                getVehiclesByCompanyId: vi.fn().mockResolvedValue([]),
+                updateVehicle: vi.fn(),
+                deleteVehicle: vi.fn()
+            }))
+        }
+    };
+});
 
 const mockVehicles = [
     {
@@ -69,6 +92,6 @@ describe("VehiclesView", () => {
             </Wrapper>
         );
 
-        expect(screen.getByText("No vehicles yet. Add your first vehicle to get started.")).toBeInTheDocument();
+        expect(screen.getByText("No vehicles yet.")).toBeInTheDocument();
     });
 });

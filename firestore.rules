@@ -64,6 +64,14 @@ service cloud.firestore {
         allow delete: if isCompanyMember(resource.data.company_id);
     }
 
+    // Maintenance Records
+    match /maintenance_records/{recordId} {
+        allow read: if isCompanyMember(resource.data.company_id);
+        allow create: if isCompanyMember(request.resource.data.company_id);
+        allow update: if isCompanyMember(resource.data.company_id) && isCompanyMember(request.resource.data.company_id);
+        allow delete: if isCompanyMember(resource.data.company_id);
+    }
+
     // Equipment
     match /equipment/{equipmentId} {
         allow read: if isCompanyMember(resource.data.company_id);

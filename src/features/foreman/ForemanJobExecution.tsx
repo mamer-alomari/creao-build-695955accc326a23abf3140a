@@ -11,16 +11,70 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { ArrowLeft, Truck, Package, CreditCard, PenTool, Camera, Navigation, MapPin } from "lucide-react";
-import { useState, useRef } from "react";
+import { ArrowLeft, Truck, Package, CreditCard, PenTool, Camera, Navigation, MapPin, CheckCircle2 } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
 import { format } from "date-fns";
+import { toast } from "sonner";
 // import ReactSignatureCanvas from 'react-signature-canvas'; // Would need to install
 
+import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
+import { storage } from "@/lib/firebase";
+import { useCreaoAuth } from "@/sdk/core/auth";
+import { notifications } from "@/lib/notifications";
+import { VehicleChecklistDialog } from "./components/VehicleChecklistDialog";
+
 export function ForemanJobExecution() {
-    const { jobId } = useParams({ from: "/foreman/jobs/$jobId" });
+    const { user, companyId } = useCreaoAuth(); // Need companyId for path
+    const params = useParams({ strict: false });
+    const jobId = (params as any).jobId;
     const navigate = useNavigate();
     const queryClient = useQueryClient();
     const [step, setStep] = useState<"status" | "equipment" | "inventory" | "quote" | "payment" | "loading">("status");
+    const [showVehicleCheck, setShowVehicleCheck] = useState(false);
+
+    // Auto-advance step if returning from inventory
+    useEffect(() => {
+        // If we have final inventory but no signatures, we are likely in Quote phase
+        // Accessing 'job' here requires it to be in dependency, but 'job' is fetched below.
+        // We'll handle this in the render/query success if needed, or rely on manual 'actions' if user re-enters.
+        // Actually best to leave default as 'status' -> allowing them to pick up where left off if we added logic.
+    }, []);
+
+    // Upload State
+    const [isUploading, setIsUploading] = useState(false);
+    const [uploadedPhotos, setUploadedPhotos] = useState<string[]>([]);
+
+    const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (!e.target.files || !e.target.files[0]) return;
+        const file = e.target.files[0];
+
+        setIsUploading(true);
+        try {
+            // Path: gs://abadai-da22b.firebasestorage.app/in-field-jobs
+            const storageRef = ref(storage, `in-field-jobs/${companyId}/${jobId}/${Date.now()}_${file.name}`);
+            const uploadTask = uploadBytesResumable(storageRef, file);
+
+            uploadTask.on('state_changed',
+                (snapshot) => {
+                    const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+                    console.log('Upload is ' + progress + '% done');
+                },
+                (error) => {
+                    console.error("Upload Error:", error);
+                    setIsUploading(false);
+                    alert("Upload failed: " + error.message);
+                },
+                async () => {
+                    const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+                    setUploadedPhotos(prev => [...prev, downloadURL]);
+                    setIsUploading(false);
+                }
+            );
+        } catch (error) {
+            console.error("Upload setup failed", error);
+            setIsUploading(false);
+        }
+    };
 
     // Fetch Job
     const { data: job, isLoading } = useQuery({
@@ -46,8 +100,31 @@ export function ForemanJobExecution() {
     // --- Workflow Steps ---
 
     // 1. Start Job (En Route)
-    const handleStartJob = () => {
-        // Trigger notification logic here (cloud function or simple status update)
+    const handleStartJobClick = () => {
+        console.log("Start Job Clicked", job.vehicle_checklist);
+        // If checklist is already done, proceed directly (retry case)
+        if (job.vehicle_checklist) {
+            console.log("Checklist already done, starting job");
+            startJob();
+        } else {
+            console.log("Showing vehicle checklist");
+            // Show checklist
+            setShowVehicleCheck(true);
+        }
+    };
+
+    const handleChecklistConfirm = (checklist: any) => {
+        setShowVehicleCheck(false);
+        updateJobMutation.mutate({
+            vehicle_checklist: checklist
+        }, {
+            onSuccess: () => {
+                startJob();
+            }
+        });
+    };
+
+    const startJob = () => {
         updateJobMutation.mutate({
             status: JobStatus.EnRoute,
             actual_start_time: new Date().toISOString()
@@ -56,7 +133,21 @@ export function ForemanJobExecution() {
 
     const handleArrived = () => {
         updateJobMutation.mutate({ status: JobStatus.Arrived });
-        setStep("equipment");
+        // We stay on the "status" step to show the "Notify Customer" action now
+    };
+
+    const handleNotifyCustomer = async () => {
+        const confirmed = window.confirm("Notify customer that the team has arrived?");
+        if (!confirmed) return;
+
+        try {
+            await notifications.notifyArrival(job.customer_name, "555-0000", "customer@example.com"); // Mock data for now, ideally from job
+            toast("Customer Notified", { description: "SMS and Email sent." });
+            navigate({ to: `/foreman/jobs/${jobId}/inventory` });
+        } catch (err) {
+            console.error(err);
+            toast("Failed to notify", { description: "Please try again." });
+        }
     };
 
     // 2. Equipment
@@ -101,7 +192,7 @@ export function ForemanJobExecution() {
     const handleLoadingComplete = () => {
         updateJobMutation.mutate({
             status: JobStatus.onWayToDropoff,
-            loading_photos: ["mock_photo_url"]
+            loading_photos: uploadedPhotos.length > 0 ? uploadedPhotos : ["mock_photo_url"]
         });
         alert("Truck Loaded! Customer Notified.");
         navigate({ to: "/foreman" });
@@ -116,7 +207,7 @@ export function ForemanJobExecution() {
                 return {
                     title: "Ready to Start?",
                     action: "Start Route (Notify Customer)",
-                    handler: handleStartJob,
+                    handler: handleStartJobClick,
                     variant: "default" as const
                 };
             case JobStatus.EnRoute:
@@ -127,7 +218,12 @@ export function ForemanJobExecution() {
                     variant: "default" as const
                 };
             case JobStatus.Arrived:
-                return { title: "On Site", action: "Continue setup", handler: () => setStep("equipment"), variant: "outline" as const };
+                return {
+                    title: "On Site",
+                    action: "Notify Customer Team is Here",
+                    handler: handleNotifyCustomer,
+                    variant: "default" as const
+                };
             case JobStatus.Loading:
                 return { title: "Loading is Active", action: "Finish Loading", handler: () => setStep("loading"), variant: "outline" as const };
             case JobStatus.onWayToDropoff:
@@ -211,19 +307,26 @@ export function ForemanJobExecution() {
                 <Card className={step === "inventory" ? "border-primary border-2" : "opacity-80"}>
                     <CardHeader><CardTitle className="flex items-center gap-2"><Camera className="h-5 w-5" /> 3. Walkthrough & Scan</CardTitle></CardHeader>
                     <CardContent>
-                        <div className="border-2 border-dashed p-8 text-center rounded-lg bg-slate-50">
-                            <p>Tap to start AI Room Scan</p>
-                            <Button variant="outline" className="mt-4">
-                                <Camera className="mr-2 h-4 w-4" /> Open Camera
-                            </Button>
-                        </div>
+                        {job.final_inventory_data ? (
+                            <div className="text-green-600 flex items-center gap-2">
+                                <CheckCircle2 className="h-4 w-4" /> Inventory Completed
+                            </div>
+                        ) : (
+                            <div className="border-2 border-dashed p-8 text-center rounded-lg bg-slate-50">
+                                <p>Manage Inventory in dedicated view</p>
+                                <Button variant="outline" className="mt-4" onClick={() => navigate({ to: `/foreman/jobs/${jobId}/inventory` })}>
+                                    <Camera className="mr-2 h-4 w-4" /> Go to Scan Items
+                                </Button>
+                            </div>
+                        )}
                         <div className="mt-4 text-sm text-muted-foreground">
                             Using inventory from Quote ({JSON.parse(job.inventory_data || "[]").length} rooms)...
                         </div>
                     </CardContent>
                     {step === "inventory" && (
                         <CardFooter>
-                            <Button onClick={handleInventoryConfirm} className="w-full">Finalize Inventory</Button>
+                            {/* If they come back here without finishing, they can go to scan or skip */}
+                            <Button onClick={() => setStep("quote")} variant="ghost" className="w-full">Skip to Quote (Debug)</Button>
                         </CardFooter>
                     )}
                 </Card>
@@ -278,17 +381,39 @@ export function ForemanJobExecution() {
                     <CardContent className="space-y-4">
                         <div className="text-center py-8">
                             <p className="mb-4">Crew is loading the truck...</p>
-                            <Button variant="outline">
-                                <Camera className="mr-2 h-4 w-4" /> Photo of Loaded Truck
-                            </Button>
+                            <div className="flex flex-col items-center gap-4">
+                                <Button variant="outline" className="relative">
+                                    <Camera className="mr-2 h-4 w-4" />
+                                    {isUploading ? "Uploading..." : "Photo of Loaded Truck"}
+                                    <input
+                                        type="file"
+                                        className="absolute inset-0 opacity-0 cursor-pointer"
+                                        accept="image/*"
+                                        onChange={handlePhotoUpload}
+                                        disabled={isUploading}
+                                    />
+                                </Button>
+                                {uploadedPhotos.length > 0 && (
+                                    <div className="text-sm text-muted-foreground">
+                                        {uploadedPhotos.length} photo(s) uploaded
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     </CardContent>
                     <CardFooter>
-                        <Button onClick={handleLoadingComplete} className="w-full" size="lg">Truck Loaded & Closed</Button>
+                        <Button onClick={handleLoadingComplete} className="w-full" size="lg" disabled={isUploading}>Truck Loaded & Closed</Button>
                     </CardFooter>
                 </Card>
             )}
 
+            {/* Vehicle Checklist Dialog */}
+            <VehicleChecklistDialog
+                isOpen={showVehicleCheck}
+                onClose={() => setShowVehicleCheck(false)}
+                onConfirm={handleChecklistConfirm}
+                vehicleName="Assigned Vehicle" // Could fetch actual vehicle name if needed
+            />
         </div>
     );
 }

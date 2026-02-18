@@ -19,7 +19,8 @@ export function TeamManager() {
     const queryClient = useQueryClient();
     const [isInviteOpen, setIsInviteOpen] = useState(false);
     const [inviteEmail, setInviteEmail] = useState("");
-    const [inviteName, setInviteName] = useState(""); // Not stored in invite model currently, but useful UI
+    const [inviteName, setInviteName] = useState("");
+    const [invitePhone, setInvitePhone] = useState("");
     const [generatedLink, setGeneratedLink] = useState("");
 
     // Fetch Workers
@@ -52,6 +53,8 @@ export function TeamManager() {
 
             const invite = await InvitationORM.getInstance().createInvitation({
                 email: inviteEmail,
+                name: inviteName,
+                phone_number: invitePhone,
                 role: "worker",
                 company_id: companyId,
                 expires_at: expires,
@@ -80,6 +83,8 @@ export function TeamManager() {
         setIsInviteOpen(false);
         setGeneratedLink("");
         setInviteEmail("");
+        setInviteName("");
+        setInvitePhone("");
     };
 
     return (
@@ -109,6 +114,10 @@ export function TeamManager() {
                                 <div className="space-y-2">
                                     <Label>Name (Optional)</Label>
                                     <Input value={inviteName} onChange={e => setInviteName(e.target.value)} placeholder="John Doe" />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label>Phone Number (Optional)</Label>
+                                    <Input type="tel" value={invitePhone} onChange={e => setInvitePhone(e.target.value)} placeholder="(555) 123-4567" />
                                 </div>
                                 <div className="space-y-2">
                                     <Label>Email Address</Label>

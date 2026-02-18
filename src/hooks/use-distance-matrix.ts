@@ -1,12 +1,5 @@
-import { useState, useEffect, useCallback } from "react";
-
-// Add Google Maps type definitions for TypeScript
-declare global {
-    interface Window {
-        google: any;
-        initGoogleMaps?: () => void;
-    }
-}
+import { useState, useCallback } from "react";
+import { useGoogleMaps } from "./use-google-maps";
 
 interface DistanceMatrixResult {
     distance: {
@@ -23,61 +16,25 @@ interface UseDistanceMatrixOptions {
     apiKey?: string;
 }
 
-const GOOGLE_MAPS_SCRIPT_ID = "google-maps-script";
-
 export function useDistanceMatrix(options: UseDistanceMatrixOptions = {}) {
-    const [isLoaded, setIsLoaded] = useState(false);
-    const [error, setError] = useState<string | null>(null);
-    const [isLoading, setIsLoading] = useState(false);
-
-    // Get API key from env or options
+    // Determine API key
     const apiKey = options.apiKey || import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 
-    useEffect(() => {
-        if (!apiKey) {
-            console.warn("Google Maps API key is missing. Distance calculation will not work.");
-            setError("API Key missing");
-            return;
-        }
+    // Use shared hook to load script
+    const { isLoaded, error: loadError } = useGoogleMaps(apiKey);
 
-        // Check if script is already loaded
-        if (window.google && window.google.maps) {
-            setIsLoaded(true);
-            return;
-        }
-
-        // Check if script is already being loaded
-        const existingScript = document.getElementById(GOOGLE_MAPS_SCRIPT_ID);
-        if (existingScript) {
-            existingScript.addEventListener("load", () => setIsLoaded(true));
-            existingScript.addEventListener("error", () => setError("Failed to load Google Maps script"));
-            return;
-        }
-
-        // Load script
-        const script = document.createElement("script");
-        script.id = GOOGLE_MAPS_SCRIPT_ID;
-        script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places`;
-        script.async = true;
-        script.defer = true;
-        script.onload = () => setIsLoaded(true);
-        script.onerror = () => setError("Failed to load Google Maps script");
-
-        document.head.appendChild(script);
-
-        return () => {
-            // Cleanup if needed, though usually we keep the script
-        };
-    }, [apiKey]);
+    // Local state for calculation
+    const [isLoading, setIsLoading] = useState(false);
+    const [calcError, setCalcError] = useState<string | null>(null);
 
     const calculateDistance = useCallback(async (origin: string, destination: string): Promise<DistanceMatrixResult | null> => {
         if (!isLoaded || !window.google) {
-            setError("Google Maps not loaded yet");
+            setCalcError(loadError || "Google Maps not loaded yet");
             return null;
         }
 
         setIsLoading(true);
-        setError(null);
+        setCalcError(null);
 
         return new Promise((resolve, reject) => {
             const service = new window.google.maps.DistanceMatrixService();
@@ -94,7 +51,7 @@ export function useDistanceMatrix(options: UseDistanceMatrixOptions = {}) {
 
                     if (status !== "OK") {
                         const errorMsg = `Distance Matrix failed: ${status}`;
-                        setError(errorMsg);
+                        setCalcError(errorMsg);
                         reject(new Error(errorMsg));
                         return;
                     }
@@ -116,13 +73,13 @@ export function useDistanceMatrix(options: UseDistanceMatrixOptions = {}) {
                 }
             );
         });
-    }, [isLoaded]);
+    }, [isLoaded, loadError]);
 
     return {
         isLoaded,
-        error,
+        error: calcError || loadError,
         isLoading,
         calculateDistance,
-        apiKey, // Return checking purposes
+        apiKey,
     };
 }

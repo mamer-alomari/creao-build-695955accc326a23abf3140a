@@ -225,21 +225,26 @@ export class JobWorkerAssignmentORM {
   /**
    * Get job_worker_assignment by JobId index
    */
-  async getJobWorkerAssignmentByJobId(job_id: string): Promise<JobWorkerAssignmentModel[]> {
-    const q = query(collection(db, this.collectionName), where("job_id", "==", job_id));
+  async getJobWorkerAssignmentByJobId(job_id: string, company_id?: string): Promise<JobWorkerAssignmentModel[]> {
+    let constraints: QueryConstraint[] = [where("job_id", "==", job_id)];
+    if (company_id) {
+      constraints.push(where("company_id", "==", company_id));
+    }
+
+    const q = query(collection(db, this.collectionName), ...constraints);
     const snapshot = await getDocs(q);
     return snapshot.docs.map(d => d.data() as JobWorkerAssignmentModel);
   }
 
   async setJobWorkerAssignmentByJobId(job_id: string, data: JobWorkerAssignmentModel): Promise<JobWorkerAssignmentModel[]> {
     if (data.id) return this.setJobWorkerAssignmentById(data.id, data);
-    const items = await this.getJobWorkerAssignmentByJobId(job_id);
+    const items = await this.getJobWorkerAssignmentByJobId(job_id, data.company_id);
     if (items.length > 0) return this.setJobWorkerAssignmentById(items[0].id, data);
     return this.insertJobWorkerAssignment([data]);
   }
 
-  async deleteJobWorkerAssignmentByJobId(job_id: string): Promise<void> {
-    const items = await this.getJobWorkerAssignmentByJobId(job_id);
+  async deleteJobWorkerAssignmentByJobId(job_id: string, company_id?: string): Promise<void> {
+    const items = await this.getJobWorkerAssignmentByJobId(job_id, company_id);
     const promises = items.map(i => deleteDoc(doc(db, this.collectionName, i.id)));
     await Promise.all(promises);
   }

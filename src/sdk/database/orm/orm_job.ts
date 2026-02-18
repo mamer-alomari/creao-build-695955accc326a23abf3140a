@@ -52,6 +52,9 @@ export interface JobModel {
   pickup_address: string;
   dropoff_address: string;
   estimated_cost?: number | null;
+  full_price?: number | null;
+  distance?: string;
+  classification?: "intrastate" | "interstate";
   inventory_data?: string;
   customer_id?: string;
 
@@ -60,6 +63,14 @@ export interface JobModel {
   actual_end_time?: string;
   vehicle_id?: string;
   equipment_ids?: string[];
+  vehicle_checklist?: {
+    engine_start: boolean;
+    no_check_engine_light: boolean;
+    warmed_up: boolean;
+    equipment_present: boolean;
+    timestamp: string;
+    completed_by: string;
+  };
 
   // On-Site Updates
   final_inventory_data?: string;

@@ -91,8 +91,11 @@ export function DashboardView({ jobs, workers, equipment, vehicles, activeWorker
 									<TableHead>Customer</TableHead>
 									<TableHead>Date</TableHead>
 									<TableHead>Route</TableHead>
+									<TableHead>Type</TableHead>
+									<TableHead>Distance</TableHead>
 									<TableHead>Status</TableHead>
 									<TableHead className="text-right">Estimate</TableHead>
+									<TableHead className="text-right">Full Price</TableHead>
 								</TableRow>
 							</TableHeader>
 							<TableBody>
@@ -103,9 +106,20 @@ export function DashboardView({ jobs, workers, equipment, vehicles, activeWorker
 										<TableCell className="text-sm">
 											<div className="max-w-xs truncate">{job.pickup_address} → {job.dropoff_address}</div>
 										</TableCell>
+										<TableCell>
+											{job.classification ? (
+												<span className="capitalize text-xs font-medium px-2 py-1 rounded bg-muted">
+													{job.classification}
+												</span>
+											) : "-"}
+										</TableCell>
+										<TableCell>{job.distance || "-"}</TableCell>
 										<TableCell>{getJobStatusBadge(job.status)}</TableCell>
 										<TableCell className="text-right">
 											{job.estimated_cost ? `$${job.estimated_cost.toFixed(2)}` : "-"}
+										</TableCell>
+										<TableCell className="text-right">
+											{job.full_price ? `$${job.full_price.toFixed(2)}` : "-"}
 										</TableCell>
 									</TableRow>
 								))}

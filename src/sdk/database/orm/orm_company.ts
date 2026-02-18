@@ -29,6 +29,7 @@ export interface CompanyModel {
   name: string;
   license_number?: string | null;
   contact_email: string;
+  warehouse_locations?: string[];
 }
 
 // Re-export common types

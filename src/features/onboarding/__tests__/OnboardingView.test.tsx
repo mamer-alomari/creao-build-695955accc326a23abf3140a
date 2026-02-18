@@ -55,7 +55,7 @@ describe("OnboardingView", () => {
 
     it("renders the company creation form", () => {
         render(<OnboardingView />);
-        expect(screen.getByText("Welcome to Swift Movers CRM")).toBeInTheDocument();
+        expect(screen.getByText("Welcome to ABADAI")).toBeInTheDocument();
         expect(screen.getByLabelText("Company Name")).toBeInTheDocument();
     });
 

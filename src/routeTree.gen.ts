@@ -26,6 +26,9 @@ import { Route as WorkerReportIncidentRouteImport } from './routes/worker.report
 import { Route as JobsJobIdRouteImport } from './routes/jobs.$jobId'
 import { Route as WorkerJobsJobIdRouteImport } from './routes/worker.jobs.$jobId'
 import { Route as ForemanJobsJobIdRouteImport } from './routes/foreman.jobs.$jobId'
+import { Route as ForemanJobsJobIdIndexRouteImport } from './routes/foreman.jobs.$jobId.index'
+import { Route as ForemanJobsJobIdInventoryRouteImport } from './routes/foreman.jobs.$jobId.inventory'
+import { Route as ForemanJobsJobIdExecuteRouteImport } from './routes/foreman.jobs.$jobId.execute'
 
 const WorkerRoute = WorkerRouteImport.update({
   id: '/worker',
@@ -112,6 +115,22 @@ const ForemanJobsJobIdRoute = ForemanJobsJobIdRouteImport.update({
   path: '/jobs/$jobId',
   getParentRoute: () => ForemanRoute,
 } as any)
+const ForemanJobsJobIdIndexRoute = ForemanJobsJobIdIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => ForemanJobsJobIdRoute,
+} as any)
+const ForemanJobsJobIdInventoryRoute =
+  ForemanJobsJobIdInventoryRouteImport.update({
+    id: '/inventory',
+    path: '/inventory',
+    getParentRoute: () => ForemanJobsJobIdRoute,
+  } as any)
+const ForemanJobsJobIdExecuteRoute = ForemanJobsJobIdExecuteRouteImport.update({
+  id: '/execute',
+  path: '/execute',
+  getParentRoute: () => ForemanJobsJobIdRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -129,8 +148,11 @@ export interface FileRoutesByFullPath {
   '/portal/': typeof PortalIndexRoute
   '/team/': typeof TeamIndexRoute
   '/worker/': typeof WorkerIndexRoute
-  '/foreman/jobs/$jobId': typeof ForemanJobsJobIdRoute
+  '/foreman/jobs/$jobId': typeof ForemanJobsJobIdRouteWithChildren
   '/worker/jobs/$jobId': typeof WorkerJobsJobIdRoute
+  '/foreman/jobs/$jobId/execute': typeof ForemanJobsJobIdExecuteRoute
+  '/foreman/jobs/$jobId/inventory': typeof ForemanJobsJobIdInventoryRoute
+  '/foreman/jobs/$jobId/': typeof ForemanJobsJobIdIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -144,8 +166,10 @@ export interface FileRoutesByTo {
   '/portal': typeof PortalIndexRoute
   '/team': typeof TeamIndexRoute
   '/worker': typeof WorkerIndexRoute
-  '/foreman/jobs/$jobId': typeof ForemanJobsJobIdRoute
   '/worker/jobs/$jobId': typeof WorkerJobsJobIdRoute
+  '/foreman/jobs/$jobId/execute': typeof ForemanJobsJobIdExecuteRoute
+  '/foreman/jobs/$jobId/inventory': typeof ForemanJobsJobIdInventoryRoute
+  '/foreman/jobs/$jobId': typeof ForemanJobsJobIdIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -164,8 +188,11 @@ export interface FileRoutesById {
   '/portal/': typeof PortalIndexRoute
   '/team/': typeof TeamIndexRoute
   '/worker/': typeof WorkerIndexRoute
-  '/foreman/jobs/$jobId': typeof ForemanJobsJobIdRoute
+  '/foreman/jobs/$jobId': typeof ForemanJobsJobIdRouteWithChildren
   '/worker/jobs/$jobId': typeof WorkerJobsJobIdRoute
+  '/foreman/jobs/$jobId/execute': typeof ForemanJobsJobIdExecuteRoute
+  '/foreman/jobs/$jobId/inventory': typeof ForemanJobsJobIdInventoryRoute
+  '/foreman/jobs/$jobId/': typeof ForemanJobsJobIdIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -187,6 +214,9 @@ export interface FileRouteTypes {
     | '/worker/'
     | '/foreman/jobs/$jobId'
     | '/worker/jobs/$jobId'
+    | '/foreman/jobs/$jobId/execute'
+    | '/foreman/jobs/$jobId/inventory'
+    | '/foreman/jobs/$jobId/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -200,8 +230,10 @@ export interface FileRouteTypes {
     | '/portal'
     | '/team'
     | '/worker'
-    | '/foreman/jobs/$jobId'
     | '/worker/jobs/$jobId'
+    | '/foreman/jobs/$jobId/execute'
+    | '/foreman/jobs/$jobId/inventory'
+    | '/foreman/jobs/$jobId'
   id:
     | '__root__'
     | '/'
@@ -221,6 +253,9 @@ export interface FileRouteTypes {
     | '/worker/'
     | '/foreman/jobs/$jobId'
     | '/worker/jobs/$jobId'
+    | '/foreman/jobs/$jobId/execute'
+    | '/foreman/jobs/$jobId/inventory'
+    | '/foreman/jobs/$jobId/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -357,17 +392,53 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ForemanJobsJobIdRouteImport
       parentRoute: typeof ForemanRoute
     }
+    '/foreman/jobs/$jobId/': {
+      id: '/foreman/jobs/$jobId/'
+      path: '/'
+      fullPath: '/foreman/jobs/$jobId/'
+      preLoaderRoute: typeof ForemanJobsJobIdIndexRouteImport
+      parentRoute: typeof ForemanJobsJobIdRoute
+    }
+    '/foreman/jobs/$jobId/inventory': {
+      id: '/foreman/jobs/$jobId/inventory'
+      path: '/inventory'
+      fullPath: '/foreman/jobs/$jobId/inventory'
+      preLoaderRoute: typeof ForemanJobsJobIdInventoryRouteImport
+      parentRoute: typeof ForemanJobsJobIdRoute
+    }
+    '/foreman/jobs/$jobId/execute': {
+      id: '/foreman/jobs/$jobId/execute'
+      path: '/execute'
+      fullPath: '/foreman/jobs/$jobId/execute'
+      preLoaderRoute: typeof ForemanJobsJobIdExecuteRouteImport
+      parentRoute: typeof ForemanJobsJobIdRoute
+    }
   }
 }
 
+interface ForemanJobsJobIdRouteChildren {
+  ForemanJobsJobIdExecuteRoute: typeof ForemanJobsJobIdExecuteRoute
+  ForemanJobsJobIdInventoryRoute: typeof ForemanJobsJobIdInventoryRoute
+  ForemanJobsJobIdIndexRoute: typeof ForemanJobsJobIdIndexRoute
+}
+
+const ForemanJobsJobIdRouteChildren: ForemanJobsJobIdRouteChildren = {
+  ForemanJobsJobIdExecuteRoute: ForemanJobsJobIdExecuteRoute,
+  ForemanJobsJobIdInventoryRoute: ForemanJobsJobIdInventoryRoute,
+  ForemanJobsJobIdIndexRoute: ForemanJobsJobIdIndexRoute,
+}
+
+const ForemanJobsJobIdRouteWithChildren =
+  ForemanJobsJobIdRoute._addFileChildren(ForemanJobsJobIdRouteChildren)
+
 interface ForemanRouteChildren {
   ForemanIndexRoute: typeof ForemanIndexRoute
-  ForemanJobsJobIdRoute: typeof ForemanJobsJobIdRoute
+  ForemanJobsJobIdRoute: typeof ForemanJobsJobIdRouteWithChildren
 }
 
 const ForemanRouteChildren: ForemanRouteChildren = {
   ForemanIndexRoute: ForemanIndexRoute,
-  ForemanJobsJobIdRoute: ForemanJobsJobIdRoute,
+  ForemanJobsJobIdRoute: ForemanJobsJobIdRouteWithChildren,
 }
 
 const ForemanRouteWithChildren =

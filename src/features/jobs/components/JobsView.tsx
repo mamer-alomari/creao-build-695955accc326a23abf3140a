@@ -18,6 +18,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import QRCode from "react-qr-code";
 import { RoomInventoryManager } from "@/components/room-inventory";
 import { useDistanceMatrix } from "@/hooks/use-distance-matrix";
+import { classifyJobType } from "@/lib/address-utils";
 
 interface JobsViewProps {
     jobs: JobModel[];
@@ -166,8 +167,15 @@ export function JobsView({ jobs, workers, vehicles, equipment, companyId }: Jobs
                         // value is in meters. 1 mile = 1609.34 meters
                         const miles = result.distance.value / 1609.34;
                         const cost = 200 + (miles * 2);
+                        const classification = classifyJobType(quoteData.pickup_address, quoteData.dropoff_address);
+
                         setEstimatedCost(Math.round(cost));
-                        setQuoteData(prev => ({ ...prev, estimated_cost: Math.round(cost) }));
+                        setQuoteData(prev => ({
+                            ...prev,
+                            estimated_cost: Math.round(cost),
+                            distance: result.distance.text,
+                            classification: classification
+                        }));
                     }
                 } catch (e) {
                     console.error(e);
@@ -266,7 +274,10 @@ export function JobsView({ jobs, workers, vehicles, equipment, companyId }: Jobs
                                 </div>
                                 <DialogFooter>
                                     <Button variant="outline" onClick={() => setIsQuickJobOpen(false)}>Cancel</Button>
-                                    <Button onClick={() => createJobMutation.mutate(quickJob)}>Create Job</Button>
+                                    <Button onClick={() => {
+                                        const classification = classifyJobType(quickJob.pickup_address || "", quickJob.dropoff_address || "");
+                                        createJobMutation.mutate({ ...quickJob, classification });
+                                    }}>Create Job</Button>
                                 </DialogFooter>
                             </DialogContent>
                         </Dialog>
@@ -297,7 +308,10 @@ export function JobsView({ jobs, workers, vehicles, equipment, companyId }: Jobs
                                             <TableHead>Date</TableHead>
                                             <TableHead>Pickup</TableHead>
                                             <TableHead>Dropoff</TableHead>
-                                            <TableHead>Cost</TableHead>
+                                            <TableHead>Distance</TableHead>
+                                            <TableHead>Type</TableHead>
+                                            <TableHead>Est. Cost</TableHead>
+                                            <TableHead>Full Price</TableHead>
                                             <TableHead>Status</TableHead>
                                             <TableHead className="text-right">Actions</TableHead>
                                         </TableRow>
@@ -318,7 +332,16 @@ export function JobsView({ jobs, workers, vehicles, equipment, companyId }: Jobs
                                                 </TableCell>
                                                 <TableCell className="truncate max-w-[150px]" title={job.pickup_address}>{job.pickup_address}</TableCell>
                                                 <TableCell className="truncate max-w-[150px]" title={job.dropoff_address}>{job.dropoff_address}</TableCell>
+                                                <TableCell>{job.distance || "-"}</TableCell>
+                                                <TableCell>
+                                                    {job.classification ? (
+                                                        <span className="capitalize text-xs font-medium px-2 py-1 rounded bg-muted">
+                                                            {job.classification}
+                                                        </span>
+                                                    ) : "-"}
+                                                </TableCell>
                                                 <TableCell>${job.estimated_cost?.toFixed(2) || "0.00"}</TableCell>
+                                                <TableCell>{job.full_price ? `$${job.full_price.toFixed(2)}` : "-"}</TableCell>
                                                 <TableCell>{getJobStatusBadge(job.status)}</TableCell>
                                                 <TableCell className="text-right">
                                                     <Button
@@ -356,6 +379,8 @@ export function JobsView({ jobs, workers, vehicles, equipment, companyId }: Jobs
                                             <TableHead>Customer</TableHead>
                                             <TableHead>Date</TableHead>
                                             <TableHead>Route</TableHead>
+                                            <TableHead>Distance</TableHead>
+                                            <TableHead>Type</TableHead>
                                             <TableHead>Est. Cost</TableHead>
                                             <TableHead className="text-right">Actions</TableHead>
                                         </TableRow>
@@ -378,6 +403,14 @@ export function JobsView({ jobs, workers, vehicles, equipment, companyId }: Jobs
                                                     <div className="max-w-xs truncate" title={`${job.pickup_address} -> ${job.dropoff_address}`}>
                                                         {job.pickup_address} → {job.dropoff_address}
                                                     </div>
+                                                </TableCell>
+                                                <TableCell>{job.distance || "-"}</TableCell>
+                                                <TableCell>
+                                                    {job.classification ? (
+                                                        <span className="capitalize text-xs font-medium px-2 py-1 rounded bg-muted">
+                                                            {job.classification}
+                                                        </span>
+                                                    ) : "-"}
                                                 </TableCell>
                                                 <TableCell>${job.estimated_cost?.toFixed(2) || "0.00"}</TableCell>
                                                 <TableCell className="text-right space-x-2">
@@ -596,6 +629,26 @@ export function JobsView({ jobs, workers, vehicles, equipment, companyId }: Jobs
                                     <div>
                                         <Label>Dropoff</Label>
                                         <div className="mt-1 font-medium">{selectedJob.dropoff_address}</div>
+                                    </div>
+                                    <div>
+                                        <Label>Distance</Label>
+                                        <div className="mt-1 font-medium">{selectedJob.distance || "-"}</div>
+                                    </div>
+                                    <div>
+                                        <Label>Type</Label>
+                                        <div className="mt-1 font-medium capitalize">{selectedJob.classification || "-"}</div>
+                                    </div>
+                                    <div>
+                                        <Label>Est. Cost</Label>
+                                        <div className="mt-1 font-medium">
+                                            {selectedJob.estimated_cost ? `$${selectedJob.estimated_cost.toFixed(2)}` : "-"}
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <Label>Full Price</Label>
+                                        <div className="mt-1 font-medium">
+                                            {selectedJob.full_price ? `$${selectedJob.full_price.toFixed(2)}` : "-"}
+                                        </div>
                                     </div>
                                 </div>
                             </div>

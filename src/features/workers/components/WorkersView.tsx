@@ -10,11 +10,20 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Plus, Users, Trash2 } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
+import { sendWorkerInvitation } from "@/features/workers/utils/invitation";
+
+import { useCreaoAuth, UserRole } from "@/sdk/core/auth";
 
 export function WorkersView({ workers, companyId }: { workers: WorkerModel[]; companyId: string }) {
+    const { role } = useCreaoAuth();
+    const canCreateWorker = role === UserRole.Manager || role === UserRole.Admin;
+
     const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
     const [newWorker, setNewWorker] = useState<Partial<WorkerModel>>({
         full_name: "",
+        email: "",
+        phone_number: "",
         role: WorkerRole.Mover,
         status: WorkerStatus.Active,
     });
@@ -29,15 +38,33 @@ export function WorkersView({ workers, companyId }: { workers: WorkerModel[]; co
                 company_id: companyId,
             } as WorkerModel]);
         },
-        onSuccess: () => {
+        onSuccess: async (data, variables) => {
             queryClient.invalidateQueries({ queryKey: ["workers"] });
             setIsCreateDialogOpen(false);
+
+            // Send invitation to the newly created worker(s)
+            // The mutation returns an array of created workers
+            if (data && data.length > 0) {
+                try {
+                    await sendWorkerInvitation(data[0]);
+                } catch (error) {
+                    console.error("Failed to send invitation:", error);
+                    // Don't block UI on invitation failure, but maybe toast error?
+                }
+            }
+
             setNewWorker({
                 full_name: "",
+                email: "",
+                phone_number: "",
                 role: WorkerRole.Mover,
                 status: WorkerStatus.Active,
             });
         },
+        onError: (error) => {
+            console.error("Failed to create worker:", error);
+            alert(`Failed to create worker: ${error instanceof Error ? error.message : "Unknown error"}`);
+        }
     });
 
     const deleteWorkerMutation = useMutation({
@@ -48,6 +75,10 @@ export function WorkersView({ workers, companyId }: { workers: WorkerModel[]; co
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["workers"] });
         },
+        onError: (error) => {
+            console.error("Failed to delete worker:", error);
+            alert(`Failed to delete worker: ${error instanceof Error ? error.message : "Unknown error"}`);
+        }
     });
 
     const getWorkerRoleLabel = (role: WorkerRole) => {
@@ -78,86 +109,107 @@ export function WorkersView({ workers, companyId }: { workers: WorkerModel[]; co
                         <CardTitle>Workers Management</CardTitle>
                         <CardDescription>Manage your moving company workers</CardDescription>
                     </div>
-                    <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-                        <DialogTrigger asChild>
-                            <Button>
-                                <Plus className="h-4 w-4 mr-2" />
-                                New Worker
-                            </Button>
-                        </DialogTrigger>
-                        <DialogContent>
-                            <DialogHeader>
-                                <DialogTitle>Create New Worker</DialogTitle>
-                                <DialogDescription>Add a new worker to your team</DialogDescription>
-                            </DialogHeader>
-                            <div className="grid gap-4 py-4">
-                                <div className="grid gap-2">
-                                    <Label htmlFor="full_name">Full Name</Label>
-                                    <Input
-                                        id="full_name"
-                                        value={newWorker.full_name}
-                                        onChange={(e) => setNewWorker({ ...newWorker, full_name: e.target.value })}
-                                        placeholder="John Doe"
-                                    />
+                    {canCreateWorker && (
+                        <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+                            <DialogTrigger asChild>
+                                <Button>
+                                    <Plus className="h-4 w-4 mr-2" />
+                                    New Worker
+                                </Button>
+                            </DialogTrigger>
+                            <DialogContent>
+                                <DialogHeader>
+                                    <DialogTitle>Create New Worker</DialogTitle>
+                                    <DialogDescription>Add a new worker to your team</DialogDescription>
+                                </DialogHeader>
+                                <div className="grid gap-4 py-4">
+                                    <div className="grid gap-2">
+                                        <Label htmlFor="full_name">Full Name</Label>
+                                        <Input
+                                            id="full_name"
+                                            value={newWorker.full_name}
+                                            onChange={(e) => setNewWorker({ ...newWorker, full_name: e.target.value })}
+                                            placeholder="John Doe"
+                                        />
+                                    </div>
+                                    <div className="grid gap-2">
+                                        <Label htmlFor="email">Email</Label>
+                                        <Input
+                                            id="email"
+                                            type="email"
+                                            value={newWorker.email || ""}
+                                            onChange={(e) => setNewWorker({ ...newWorker, email: e.target.value })}
+                                            placeholder="john@example.com"
+                                        />
+                                    </div>
+                                    <div className="grid gap-2">
+                                        <Label htmlFor="phone">Phone Number</Label>
+                                        <Input
+                                            id="phone"
+                                            type="tel"
+                                            value={newWorker.phone_number || ""}
+                                            onChange={(e) => setNewWorker({ ...newWorker, phone_number: e.target.value })}
+                                            placeholder="+1 (555) 000-0000"
+                                        />
+                                    </div>
+                                    <div className="grid gap-2">
+                                        <Label htmlFor="hourly_rate">Hourly Rate ($)</Label>
+                                        <Input
+                                            id="hourly_rate"
+                                            type="number"
+                                            value={newWorker.hourly_rate || ""}
+                                            onChange={(e) => setNewWorker({ ...newWorker, hourly_rate: parseFloat(e.target.value) })}
+                                            placeholder="20.00"
+                                        />
+                                    </div>
+
+                                    <div className="grid gap-2">
+                                        <Label htmlFor="role">Role</Label>
+                                        <Select
+                                            value={newWorker.role?.toString()}
+                                            onValueChange={(value) => setNewWorker({ ...newWorker, role: parseInt(value) as WorkerRole })}
+                                        >
+                                            <SelectTrigger>
+                                                <SelectValue placeholder="Select role" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value={WorkerRole.Mover.toString()}>Mover</SelectItem>
+                                                <SelectItem value={WorkerRole.Driver.toString()}>Driver</SelectItem>
+                                                <SelectItem value={WorkerRole.Supervisor.toString()}>Supervisor</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                    <div className="grid gap-2">
+                                        <Label htmlFor="status">Status</Label>
+                                        <Select
+                                            value={newWorker.status?.toString()}
+                                            onValueChange={(value) => setNewWorker({ ...newWorker, status: parseInt(value) as WorkerStatus })}
+                                        >
+                                            <SelectTrigger>
+                                                <SelectValue placeholder="Select status" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value={WorkerStatus.Active.toString()}>Active</SelectItem>
+                                                <SelectItem value={WorkerStatus.Inactive.toString()}>Inactive</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                    <div className="flex items-center space-x-2">
+                                        <Checkbox
+                                            id="can_self_schedule"
+                                            checked={newWorker.can_self_schedule || false}
+                                            onCheckedChange={(checked) => setNewWorker({ ...newWorker, can_self_schedule: checked as boolean })}
+                                        />
+                                        <Label htmlFor="can_self_schedule">Allow Self-Scheduling</Label>
+                                    </div>
                                 </div>
-                                <div className="grid gap-2">
-                                    <Label htmlFor="hourly_rate">Hourly Rate ($)</Label>
-                                    <Input
-                                        id="hourly_rate"
-                                        type="number"
-                                        value={newWorker.hourly_rate || ""}
-                                        onChange={(e) => setNewWorker({ ...newWorker, hourly_rate: parseFloat(e.target.value) })}
-                                        placeholder="20.00"
-                                    />
-                                </div>
-                                <div className="grid gap-2">
-                                    <Label htmlFor="hourly_rate">Hourly Rate ($)</Label>
-                                    <Input
-                                        id="hourly_rate"
-                                        type="number"
-                                        value={newWorker.hourly_rate || ""}
-                                        onChange={(e) => setNewWorker({ ...newWorker, hourly_rate: parseFloat(e.target.value) })}
-                                        placeholder="20.00"
-                                    />
-                                </div>
-                                <div className="grid gap-2">
-                                    <Label htmlFor="role">Role</Label>
-                                    <Select
-                                        value={newWorker.role?.toString()}
-                                        onValueChange={(value) => setNewWorker({ ...newWorker, role: parseInt(value) as WorkerRole })}
-                                    >
-                                        <SelectTrigger>
-                                            <SelectValue placeholder="Select role" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value={WorkerRole.Mover.toString()}>Mover</SelectItem>
-                                            <SelectItem value={WorkerRole.Driver.toString()}>Driver</SelectItem>
-                                            <SelectItem value={WorkerRole.Supervisor.toString()}>Supervisor</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                                <div className="grid gap-2">
-                                    <Label htmlFor="status">Status</Label>
-                                    <Select
-                                        value={newWorker.status?.toString()}
-                                        onValueChange={(value) => setNewWorker({ ...newWorker, status: parseInt(value) as WorkerStatus })}
-                                    >
-                                        <SelectTrigger>
-                                            <SelectValue placeholder="Select status" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value={WorkerStatus.Active.toString()}>Active</SelectItem>
-                                            <SelectItem value={WorkerStatus.Inactive.toString()}>Inactive</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                            </div>
-                            <DialogFooter>
-                                <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>Cancel</Button>
-                                <Button onClick={() => createWorkerMutation.mutate(newWorker)}>Create Worker</Button>
-                            </DialogFooter>
-                        </DialogContent>
-                    </Dialog>
+                                <DialogFooter>
+                                    <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>Cancel</Button>
+                                    <Button onClick={() => createWorkerMutation.mutate(newWorker)}>Create Worker</Button>
+                                </DialogFooter>
+                            </DialogContent>
+                        </Dialog>
+                    )}
                 </div>
             </CardHeader>
             <CardContent>

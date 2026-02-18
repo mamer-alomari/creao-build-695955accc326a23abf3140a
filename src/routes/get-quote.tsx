@@ -13,6 +13,8 @@ import { cn } from "@/lib/utils";
 import { RoomInventoryManager } from "@/components/room-inventory";
 import { type RoomInventory } from "@/hooks/use-google-vision";
 import { QuoteORM } from "@/sdk/database/orm/orm_quote";
+import { AddressAutocomplete } from "@/components/ui/address-autocomplete";
+import { classifyJobType } from "@/lib/address-utils";
 
 
 export const Route = createFileRoute("/get-quote")({
@@ -50,9 +52,11 @@ export function GetQuoteView() {
         }
         setIsSubmitting(true);
         try {
+            const classification = classifyJobType(pickup, dropoff);
             const quote = await QuoteORM.getInstance().insertQuote({
                 pickup_address: pickup,
                 dropoff_address: dropoff,
+                classification: classification,
                 move_date: date.toISOString(),
                 inventory_items: rooms,
                 estimated_volume: estimatedVolume,
@@ -120,26 +124,22 @@ export function GetQuoteView() {
                             <div className="space-y-2">
                                 <Label htmlFor="pickup">Pickup Address</Label>
                                 <div className="relative">
-                                    <MapPin className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                                    <Input
+                                    <AddressAutocomplete
                                         id="pickup"
                                         placeholder="123 Main St, City, State"
-                                        className="pl-9"
                                         value={pickup}
-                                        onChange={(e) => setPickup(e.target.value)}
+                                        onChange={setPickup}
                                     />
                                 </div>
                             </div>
                             <div className="space-y-2">
                                 <Label htmlFor="dropoff">Dropoff Address</Label>
                                 <div className="relative">
-                                    <MapPin className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                                    <Input
+                                    <AddressAutocomplete
                                         id="dropoff"
                                         placeholder="456 New Home Ave, City, State"
-                                        className="pl-9"
                                         value={dropoff}
-                                        onChange={(e) => setDropoff(e.target.value)}
+                                        onChange={setDropoff}
                                     />
                                 </div>
                             </div>
