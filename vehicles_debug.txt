@@ -1,0 +1,269 @@
+
+> test
+> vitest run src/features/vehicles/components/__tests__/VehiclesView.test.tsx
+
+
+ RUN  v3.2.4 /Users/mmioi/Downloads/creao-build-695955accc326a23abf3140a
+
+stderr | src/features/vehicles/components/__tests__/VehiclesView.test.tsx > VehiclesView > opens create vehicle dialog
+`DialogContent` requires a `DialogTitle` for the component to be accessible for screen reader users.
+
+If you want to hide the `DialogTitle`, you can wrap it with our VisuallyHidden component.
+
+For more information, see https://radix-ui.com/primitives/docs/components/dialog
+Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}.
+
+ ❯ src/features/vehicles/components/__tests__/VehiclesView.test.tsx (3 tests | 1 failed) 241ms
+   ✓ VehiclesView > renders vehicles list correctly 69ms
+   ✓ VehiclesView > opens create vehicle dialog 154ms
+   × VehiclesView > shows empty state when no vehicles 16ms
+     → Unable to find an element with the text: No vehicles yet. Add your first vehicle to get started.. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+Ignored nodes: comments, script, style
+[36m<body[39m
+  [33mstyle[39m=[32m""[39m
+[36m>[39m
+  [36m<div>[39m
+    [36m<div[39m
+      [33mclass[39m=[32m"bg-card text-card-foreground flex flex-col gap-6 rounded-xl border py-6 shadow-sm"[39m
+      [33mdata-slot[39m=[32m"card"[39m
+    [36m>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"@container/card-header grid auto-rows-min grid-rows-[auto_auto] items-start gap-1.5 px-6 has-data-[slot=card-action]:grid-cols-[1fr_auto] [.border-b]:pb-6"[39m
+        [33mdata-slot[39m=[32m"card-header"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"flex items-center justify-between"[39m
+        [36m>[39m
+          [36m<div>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"leading-none font-semibold"[39m
+              [33mdata-slot[39m=[32m"card-title"[39m
+            [36m>[39m
+              [0mVehicles Management[0m
+            [36m</div>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"text-muted-foreground text-sm"[39m
+              [33mdata-slot[39m=[32m"card-description"[39m
+            [36m>[39m
+              [0mManage your fleet of moving vehicles[0m
+            [36m</div>[39m
+          [36m</div>[39m
+          [36m<button[39m
+            [33maria-controls[39m=[32m"radix-_r_h_"[39m
+            [33maria-expanded[39m=[32m"false"[39m
+            [33maria-haspopup[39m=[32m"dialog"[39m
+            [33mclass[39m=[32m"inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive bg-primary text-primary-foreground shadow-xs hover:bg-primary/90 h-9 px-4 py-2 has-[>svg]:px-3"[39m
+            [33mdata-slot[39m=[32m"dialog-trigger"[39m
+            [33mdata-state[39m=[32m"closed"[39m
+            [33mtype[39m=[32m"button"[39m
+          [36m>[39m
+            [36m<svg[39m
+              [33mclass[39m=[32m"lucide lucide-plus h-4 w-4 mr-2"[39m
+              [33mfill[39m=[32m"none"[39m
+              [33mheight[39m=[32m"24"[39m
+              [33mstroke[39m=[32m"currentColor"[39m
+              [33mstroke-linecap[39m=[32m"round"[39m
+              [33mstroke-linejoin[39m=[32m"round"[39m
+              [33mstroke-width[39m=[32m"2"[39m
+              [33mviewBox[39m=[32m"0 0 24 24"[39m
+              [33mwidth[39m=[32m"24"[39m
+              [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+            [36m>[39m
+              [36m<path[39m
+                [33md[39m=[32m"M5 12h14"[39m
+              [36m/>[39m
+              [36m<path[39m
+                [33md[39m=[32m"M12 5v14"[39m
+              [36m/>[39m
+            [36m</svg>[39m
+            [0mNew Vehicle[0m
+          [36m</button>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"px-6"[39m
+        [33mdata-slot[39m=[32m"card-content"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"text-center py-12"[39m
+        [36m>[39m
+          [36m<svg[39m
+            [33mclass[39m=[32m"lucide lucide-truck h-12 w-12 mx-auto text-muted-foreground mb-4"[39m
+            [33mfill[39m=[32m"none"[39m
+            [33mheight[39m=[32m"24"[39m
+            [33mstroke[39m=[32m"currentColor"[39m
+            [33mstroke-linecap[39m=[32m"round"[39m
+            [33mstroke-linejoin[39m=[32m"round"[39m
+            [33mstroke-width[39m=[32m"2"[39m
+            [33mviewBox[39m=[32m"0 0 24 24"[39m
+            [33mwidth[39m=[32m"24"[39m
+            [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+          [36m>[39m
+            [36m<path[39m
+              [33md[39m=[32m"M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2"[39m
+            [36m/>[39m
+            [36m<path[39m
+              [33md[39m=[32m"M15 18H9"[39m
+            [36m/>[39m
+            [36m<path[39m
+              [33md[39m=[32m"M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.624l-3.48-4.35A1 1 0 0 0 17.52 8H14"[39m
+            [36m/>[39m
+            [36m<circle[39m
+              [33mcx[39m=[32m"17"[39m
+              [33mcy[39m=[32m"18"[39m
+              [33mr[39m=[32m"2"[39m
+            [36m/>[39m
+            [36m<circle[39m
+              [33mcx[39m=[32m"7"[39m
+              [33mcy[39m=[32m"18"[39m
+              [33mr[39m=[32m"2"[39m
+            [36m/>[39m
+          [36m</svg>[39m
+          [36m<p[39m
+            [33mclass[39m=[32m"text-muted-foreground"[39m
+          [36m>[39m
+            [0mNo vehicles yet.[0m
+          [36m</p>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+    [36m</div>[39m
+  [36m</div>[39m
+[36m</body>[39m
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/features/vehicles/components/__tests__/VehiclesView.test.tsx > VehiclesView > shows empty state when no vehicles
+TestingLibraryElementError: Unable to find an element with the text: No vehicles yet. Add your first vehicle to get started.. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+Ignored nodes: comments, script, style
+[36m<body[39m
+  [33mstyle[39m=[32m""[39m
+[36m>[39m
+  [36m<div>[39m
+    [36m<div[39m
+      [33mclass[39m=[32m"bg-card text-card-foreground flex flex-col gap-6 rounded-xl border py-6 shadow-sm"[39m
+      [33mdata-slot[39m=[32m"card"[39m
+    [36m>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"@container/card-header grid auto-rows-min grid-rows-[auto_auto] items-start gap-1.5 px-6 has-data-[slot=card-action]:grid-cols-[1fr_auto] [.border-b]:pb-6"[39m
+        [33mdata-slot[39m=[32m"card-header"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"flex items-center justify-between"[39m
+        [36m>[39m
+          [36m<div>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"leading-none font-semibold"[39m
+              [33mdata-slot[39m=[32m"card-title"[39m
+            [36m>[39m
+              [0mVehicles Management[0m
+            [36m</div>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"text-muted-foreground text-sm"[39m
+              [33mdata-slot[39m=[32m"card-description"[39m
+            [36m>[39m
+              [0mManage your fleet of moving vehicles[0m
+            [36m</div>[39m
+          [36m</div>[39m
+          [36m<button[39m
+            [33maria-controls[39m=[32m"radix-_r_h_"[39m
+            [33maria-expanded[39m=[32m"false"[39m
+            [33maria-haspopup[39m=[32m"dialog"[39m
+            [33mclass[39m=[32m"inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive bg-primary text-primary-foreground shadow-xs hover:bg-primary/90 h-9 px-4 py-2 has-[>svg]:px-3"[39m
+            [33mdata-slot[39m=[32m"dialog-trigger"[39m
+            [33mdata-state[39m=[32m"closed"[39m
+            [33mtype[39m=[32m"button"[39m
+          [36m>[39m
+            [36m<svg[39m
+              [33mclass[39m=[32m"lucide lucide-plus h-4 w-4 mr-2"[39m
+              [33mfill[39m=[32m"none"[39m
+              [33mheight[39m=[32m"24"[39m
+              [33mstroke[39m=[32m"currentColor"[39m
+              [33mstroke-linecap[39m=[32m"round"[39m
+              [33mstroke-linejoin[39m=[32m"round"[39m
+              [33mstroke-width[39m=[32m"2"[39m
+              [33mviewBox[39m=[32m"0 0 24 24"[39m
+              [33mwidth[39m=[32m"24"[39m
+              [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+            [36m>[39m
+              [36m<path[39m
+                [33md[39m=[32m"M5 12h14"[39m
+              [36m/>[39m
+              [36m<path[39m
+                [33md[39m=[32m"M12 5v14"[39m
+              [36m/>[39m
+            [36m</svg>[39m
+            [0mNew Vehicle[0m
+          [36m</button>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"px-6"[39m
+        [33mdata-slot[39m=[32m"card-content"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"text-center py-12"[39m
+        [36m>[39m
+          [36m<svg[39m
+            [33mclass[39m=[32m"lucide lucide-truck h-12 w-12 mx-auto text-muted-foreground mb-4"[39m
+            [33mfill[39m=[32m"none"[39m
+            [33mheight[39m=[32m"24"[39m
+            [33mstroke[39m=[32m"currentColor"[39m
+            [33mstroke-linecap[39m=[32m"round"[39m
+            [33mstroke-linejoin[39m=[32m"round"[39m
+            [33mstroke-width[39m=[32m"2"[39m
+            [33mviewBox[39m=[32m"0 0 24 24"[39m
+            [33mwidth[39m=[32m"24"[39m
+            [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+          [36m>[39m
+            [36m<path[39m
+              [33md[39m=[32m"M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2"[39m
+            [36m/>[39m
+            [36m<path[39m
+              [33md[39m=[32m"M15 18H9"[39m
+            [36m/>[39m
+            [36m<path[39m
+              [33md[39m=[32m"M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.624l-3.48-4.35A1 1 0 0 0 17.52 8H14"[39m
+            [36m/>[39m
+            [36m<circle[39m
+              [33mcx[39m=[32m"17"[39m
+              [33mcy[39m=[32m"18"[39m
+              [33mr[39m=[32m"2"[39m
+            [36m/>[39m
+            [36m<circle[39m
+              [33mcx[39m=[32m"7"[39m
+              [33mcy[39m=[32m"18"[39m
+              [33mr[39m=[32m"2"[39m
+            [36m/>[39m
+          [36m</svg>[39m
+          [36m<p[39m
+            [33mclass[39m=[32m"text-muted-foreground"[39m
+          [36m>[39m
+            [0mNo vehicles yet.[0m
+          [36m</p>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+    [36m</div>[39m
+  [36m</div>[39m
+[36m</body>[39m
+ ❯ Object.getElementError node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+ ❯ node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ src/features/vehicles/components/__tests__/VehiclesView.test.tsx:95:23
+     93|         );
+     94| 
+     95|         expect(screen.getByText("No vehicles yet. Add your first vehic…
+       |                       ^
+     96|     });
+     97| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 2 passed (3)
+   Start at  21:53:13
+   Duration  2.11s (transform 186ms, setup 77ms, collect 673ms, tests 241ms, environment 421ms, prepare 143ms)
+

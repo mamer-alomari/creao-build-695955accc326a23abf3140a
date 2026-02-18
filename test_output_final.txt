@@ -1,0 +1,138 @@
+
+ RUN  v3.2.4 /Users/mmioi/Downloads/creao-build-695955accc326a23abf3140a
+
+ ✓ src/features/vehicles/components/__tests__/VehicleMaintenance.test.tsx (3 tests) 1258ms
+   ✓ VehiclesView Maintenance > opens maintenance sheet when wrench icon is clicked  301ms
+   ✓ VehiclesView Maintenance > allows adding a new maintenance record  826ms
+ ✓ src/features/quote/__tests__/PublicQuoteFlow.test.tsx (1 test) 838ms
+   ✓ PublicQuoteFlow Integration > completes full quote flow  836ms
+ ✓ src/features/auth/__tests__/LoginView.test.tsx (5 tests) 910ms
+ ✓ src/features/worker/components/__tests__/ReportIncidentView.test.tsx (2 tests) 412ms
+stderr | src/features/jobs/components/__tests__/QuoteGenerator.test.tsx > Quote Generator Flow > allows navigating through the quote wizard
+`DialogContent` requires a `DialogTitle` for the component to be accessible for screen reader users.
+
+If you want to hide the `DialogTitle`, you can wrap it with our VisuallyHidden component.
+
+For more information, see https://radix-ui.com/primitives/docs/components/dialog
+Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}.
+
+ ✓ src/features/jobs/components/__tests__/QuoteGenerator.test.tsx (2 tests) 281ms
+stderr | src/features/jobs/components/__tests__/JobsViewInventory.test.tsx > JobsView Inventory Persistence > displays inventory section in edit dialog when inventory_data is present
+`DialogContent` requires a `DialogTitle` for the component to be accessible for screen reader users.
+
+If you want to hide the `DialogTitle`, you can wrap it with our VisuallyHidden component.
+
+For more information, see https://radix-ui.com/primitives/docs/components/dialog
+Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}.
+
+stderr | src/features/jobs/components/__tests__/JobsViewInventory.test.tsx > JobsView Inventory Persistence > does not display inventory section when inventory_data is missing
+`DialogContent` requires a `DialogTitle` for the component to be accessible for screen reader users.
+
+If you want to hide the `DialogTitle`, you can wrap it with our VisuallyHidden component.
+
+For more information, see https://radix-ui.com/primitives/docs/components/dialog
+Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}.
+
+ ✓ src/features/jobs/components/__tests__/JobsViewInventory.test.tsx (2 tests) 268ms
+stderr | src/features/scheduling/components/__tests__/SchedulingView.test.tsx > SchedulingView > opens assign resource dialog
+`DialogContent` requires a `DialogTitle` for the component to be accessible for screen reader users.
+
+If you want to hide the `DialogTitle`, you can wrap it with our VisuallyHidden component.
+
+For more information, see https://radix-ui.com/primitives/docs/components/dialog
+Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}.
+
+ ✓ src/features/scheduling/components/__tests__/SchedulingView.test.tsx (3 tests) 246ms
+stderr | src/features/jobs/components/__tests__/JobsViewQRCode.test.tsx > JobsView QR Code > displays QR code in edit dialog
+`DialogContent` requires a `DialogTitle` for the component to be accessible for screen reader users.
+
+If you want to hide the `DialogTitle`, you can wrap it with our VisuallyHidden component.
+
+For more information, see https://radix-ui.com/primitives/docs/components/dialog
+Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}.
+
+ ✓ src/features/jobs/components/__tests__/JobsViewQRCode.test.tsx (1 test) 204ms
+stderr | src/features/payroll/components/__tests__/PayrollView.test.tsx > PayrollView > opens create payroll dialog
+`DialogContent` requires a `DialogTitle` for the component to be accessible for screen reader users.
+
+If you want to hide the `DialogTitle`, you can wrap it with our VisuallyHidden component.
+
+For more information, see https://radix-ui.com/primitives/docs/components/dialog
+Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}.
+
+ ✓ src/features/payroll/components/__tests__/PayrollView.test.tsx (3 tests) 256ms
+stderr | src/features/jobs/components/__tests__/JobsView.test.tsx > JobsView > opens create job dialog
+`DialogContent` requires a `DialogTitle` for the component to be accessible for screen reader users.
+
+If you want to hide the `DialogTitle`, you can wrap it with our VisuallyHidden component.
+
+For more information, see https://radix-ui.com/primitives/docs/components/dialog
+Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}.
+
+ ✓ src/features/jobs/components/__tests__/JobsView.test.tsx (3 tests) 257ms
+stderr | src/features/vehicles/components/__tests__/VehiclesView.test.tsx > VehiclesView > opens create vehicle dialog
+`DialogContent` requires a `DialogTitle` for the component to be accessible for screen reader users.
+
+If you want to hide the `DialogTitle`, you can wrap it with our VisuallyHidden component.
+
+For more information, see https://radix-ui.com/primitives/docs/components/dialog
+Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}.
+
+ ✓ src/features/vehicles/components/__tests__/VehiclesView.test.tsx (3 tests) 300ms
+stderr | src/features/workers/components/__tests__/WorkersView.test.tsx > WorkersView > opens create worker dialog
+`DialogContent` requires a `DialogTitle` for the component to be accessible for screen reader users.
+
+If you want to hide the `DialogTitle`, you can wrap it with our VisuallyHidden component.
+
+For more information, see https://radix-ui.com/primitives/docs/components/dialog
+Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}.
+
+ ✓ src/features/workers/components/__tests__/WorkersView.test.tsx (3 tests) 245ms
+stderr | src/features/equipment/components/__tests__/EquipmentView.test.tsx > EquipmentView > opens create equipment dialog
+`DialogContent` requires a `DialogTitle` for the component to be accessible for screen reader users.
+
+If you want to hide the `DialogTitle`, you can wrap it with our VisuallyHidden component.
+
+For more information, see https://radix-ui.com/primitives/docs/components/dialog
+Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}.
+
+ ✓ src/features/equipment/components/__tests__/EquipmentView.test.tsx (3 tests) 229ms
+ ✓ src/features/portal/components/__tests__/PortalDashboard.test.tsx (4 tests) 219ms
+stderr | src/features/team/__tests__/TeamManager.test.tsx > TeamManager > opens invite dialog
+`DialogContent` requires a `DialogTitle` for the component to be accessible for screen reader users.
+
+If you want to hide the `DialogTitle`, you can wrap it with our VisuallyHidden component.
+
+For more information, see https://radix-ui.com/primitives/docs/components/dialog
+Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}.
+
+ ✓ src/features/team/__tests__/TeamManager.test.tsx (2 tests) 174ms
+ ✓ src/features/foreman/__tests__/ForemanWorkflow.test.tsx (3 tests) 176ms
+ ✓ src/features/foreman/__tests__/ForemanDashboard.test.tsx (2 tests) 172ms
+ ✓ src/features/worker/components/__tests__/WorkerDashboard.test.tsx (4 tests) 148ms
+ ✓ src/components/ui/__tests__/textarea.test.tsx (4 tests) 115ms
+ ✓ src/components/ui/__tests__/checkbox.test.tsx (4 tests) 123ms
+ ✓ src/components/ui/__tests__/avatar.test.tsx (3 tests) 94ms
+ ✓ src/features/auth/__tests__/InvitationAcceptance.test.tsx (4 tests) 114ms
+ ✓ src/features/dashboard/components/__tests__/DashboardView.test.tsx (3 tests) 105ms
+ ✓ src/components/ui/__tests__/input.test.tsx (4 tests) 100ms
+ ✓ src/components/ui/__tests__/button.test.tsx (5 tests) 122ms
+ ✓ src/components/ui/__tests__/switch.test.tsx (3 tests) 112ms
+ ✓ src/features/quote/__tests__/QuoteGeneration.test.tsx (2 tests) 109ms
+ ✓ src/features/onboarding/__tests__/OnboardingView.test.tsx (2 tests) 85ms
+ ✓ src/components/ui/__tests__/label.test.tsx (2 tests) 47ms
+ ✓ src/components/ui/__tests__/card.test.tsx (2 tests) 52ms
+ ✓ src/components/ui/__tests__/badge.test.tsx (5 tests) 56ms
+ ✓ src/components/ui/__tests__/skeleton.test.tsx (2 tests) 39ms
+ ✓ src/components/ui/__tests__/separator.test.tsx (3 tests) 43ms
+ ✓ src/components/AppTest.test.tsx (2 tests) 32ms
+ ✓ src/hooks/__tests__/use-mobile.test.ts (2 tests) 24ms
+ ✓ src/lib/__tests__/utils.test.ts (6 tests) 11ms
+ ✓ src/sdk/core/internal/__tests__/auth-helpers.test.ts (3 tests) 6ms
+ ✓ src/features/jobs/lib/__tests__/job-utils.test.ts (2 tests) 4ms
+
+ Test Files  38 passed (38)
+      Tests  112 passed (112)
+   Start at  15:31:07
+   Duration  63.51s (transform 884ms, setup 2.48s, collect 17.67s, tests 7.99s, environment 18.37s, prepare 3.37s)
+

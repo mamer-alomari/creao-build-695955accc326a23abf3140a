@@ -1,0 +1,845 @@
+
+> test
+> vitest run src/features/jobs/components/__tests__/JobsView.test.tsx
+
+
+ RUN  v3.2.4 /Users/mmioi/Downloads/creao-build-695955accc326a23abf3140a
+
+stdout | src/features/jobs/components/__tests__/JobsView.test.tsx > JobsView > renders jobs list correctly
+JobsView: Received jobs: [33m1[39m
+JobsView: First job status: [33m2[39m Quote: [33m1[39m
+JobsView: Active List: [33m1[39m Quotes List: [33m0[39m
+
+stdout | src/features/jobs/components/__tests__/JobsView.test.tsx > JobsView > opens create job dialog
+JobsView: Received jobs: [33m0[39m
+JobsView: Active List: [33m0[39m Quotes List: [33m0[39m
+JobsView: Received jobs: [33m0[39m
+JobsView: Active List: [33m0[39m Quotes List: [33m0[39m
+
+stderr | src/features/jobs/components/__tests__/JobsView.test.tsx > JobsView > opens create job dialog
+`DialogContent` requires a `DialogTitle` for the component to be accessible for screen reader users.
+
+If you want to hide the `DialogTitle`, you can wrap it with our VisuallyHidden component.
+
+For more information, see https://radix-ui.com/primitives/docs/components/dialog
+Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}.
+
+stdout | src/features/jobs/components/__tests__/JobsView.test.tsx > JobsView > shows empty state when no jobs
+JobsView: Received jobs: [33m0[39m
+JobsView: Active List: [33m0[39m Quotes List: [33m0[39m
+
+ ❯ src/features/jobs/components/__tests__/JobsView.test.tsx (3 tests | 2 failed) 269ms
+   × JobsView > renders jobs list correctly 138ms
+     → Unable to find an element with the text: Jobs Management. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<div[39m
+      [33mclass[39m=[32m"text-card-foreground gap-6 rounded-xl border py-6 h-full flex flex-col border-none shadow-none bg-transparent"[39m
+      [33mdata-slot[39m=[32m"card"[39m
+    [36m>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"@container/card-header grid auto-rows-min grid-rows-[auto_auto] items-start gap-1.5 has-data-[slot=card-action]:grid-cols-[1fr_auto] [.border-b]:pb-6 px-0 pt-0"[39m
+        [33mdata-slot[39m=[32m"card-header"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"flex items-center justify-between"[39m
+        [36m>[39m
+          [36m<div>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"leading-none font-semibold"[39m
+              [33mdata-slot[39m=[32m"card-title"[39m
+            [36m>[39m
+              [0mJobs & Quotes[0m
+            [36m</div>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"text-muted-foreground text-sm"[39m
+              [33mdata-slot[39m=[32m"card-description"[39m
+            [36m>[39m
+              [0mManage active jobs and incoming quotes[0m
+            [36m</div>[39m
+          [36m</div>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"flex gap-2"[39m
+          [36m>[39m
+            [36m<button[39m
+              [33mclass[39m=[32m"inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 h-9 px-4 py-2 has-[>svg]:px-3"[39m
+              [33mdata-slot[39m=[32m"button"[39m
+            [36m>[39m
+              [36m<svg[39m
+                [33mclass[39m=[32m"lucide lucide-calculator h-4 w-4 mr-2"[39m
+                [33mfill[39m=[32m"none"[39m
+                [33mheight[39m=[32m"24"[39m
+                [33mstroke[39m=[32m"currentColor"[39m
+                [33mstroke-linecap[39m=[32m"round"[39m
+                [33mstroke-linejoin[39m=[32m"round"[39m
+                [33mstroke-width[39m=[32m"2"[39m
+                [33mviewBox[39m=[32m"0 0 24 24"[39m
+                [33mwidth[39m=[32m"24"[39m
+                [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+              [36m>[39m
+                [36m<rect[39m
+                  [33mheight[39m=[32m"20"[39m
+                  [33mrx[39m=[32m"2"[39m
+                  [33mwidth[39m=[32m"16"[39m
+                  [33mx[39m=[32m"4"[39m
+                  [33my[39m=[32m"2"[39m
+                [36m/>[39m
+                [36m<line[39m
+                  [33mx1[39m=[32m"8"[39m
+                  [33mx2[39m=[32m"16"[39m
+                  [33my1[39m=[32m"6"[39m
+                  [33my2[39m=[32m"6"[39m
+                [36m/>[39m
+                [36m<line[39m
+                  [33mx1[39m=[32m"16"[39m
+                  [33mx2[39m=[32m"16"[39m
+                  [33my1[39m=[32m"14"[39m
+                  [33my2[39m=[32m"18"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M16 10h.01"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M12 10h.01"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M8 10h.01"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M12 14h.01"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M8 14h.01"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M12 18h.01"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M8 18h.01"[39m
+                [36m/>[39m
+              [36m</svg>[39m
+              [0mCreate Quote with AI Inventory[0m
+            [36m</button>[39m
+            [36m<button[39m
+              [33maria-controls[39m=[32m"radix-_r_0_"[39m
+              [33maria-expanded[39m=[32m"false"[39m
+              [33maria-haspopup[39m=[32m"dialog"[39m
+              [33mclass[39m=[32m"inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive bg-primary text-primary-foreground shadow-xs hover:bg-primary/90 h-9 px-4 py-2 has-[>svg]:px-3"[39m
+              [33mdata-slot[39m=[32m"dialog-trigger"[39m
+              [33mdata-state[39m=[32m"closed"[39m
+              [33mtype[39m=[32m"button"[39m
+            [36m>[39m
+              [36m<svg[39m
+                [33mclass[39m=[32m"lucide lucide-plus h-4 w-4 mr-2"[39m
+                [33mfill[39m=[32m"none"[39m
+                [33mheight[39m=[32m"24"[39m
+                [33mstroke[39m=[32m"currentColor"[39m
+                [33mstroke-linecap[39m=[32m"round"[39m
+                [33mstroke-linejoin[39m=[32m"round"[39m
+                [33mstroke-width[39m=[32m"2"[39m
+                [33mviewBox[39m=[32m"0 0 24 24"[39m
+                [33mwidth[39m=[32m"24"[39m
+                [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+              [36m>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M5 12h14"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M12 5v14"[39m
+                [36m/>[39m
+              [36m</svg>[39m
+              [0mQuick Job[0m
+            [36m</button>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"flex-1 overflow-auto px-0"[39m
+        [33mdata-slot[39m=[32m"card-content"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"gap-2 h-full flex flex-col"[39m
+          [33mdata-orientation[39m=[32m"horizontal"[39m
+          [33mdata-slot[39m=[32m"tabs"[39m
+          [33mdir[39m=[32m"ltr"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33maria-orientation[39m=[32m"horizontal"[39m
+            [33mclass[39m=[32m"bg-muted text-muted-foreground inline-flex h-9 w-fit items-...
+   ✓ JobsView > opens create job dialog 106ms
+   × JobsView > shows empty state when no jobs 23ms
+     → Unable to find an element with the text: No jobs yet. Create your first job to get started.. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+Ignored nodes: comments, script, style
+[36m<body[39m
+  [33mstyle[39m=[32m""[39m
+[36m>[39m
+  [36m<div>[39m
+    [36m<div[39m
+      [33mclass[39m=[32m"text-card-foreground gap-6 rounded-xl border py-6 h-full flex flex-col border-none shadow-none bg-transparent"[39m
+      [33mdata-slot[39m=[32m"card"[39m
+    [36m>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"@container/card-header grid auto-rows-min grid-rows-[auto_auto] items-start gap-1.5 has-data-[slot=card-action]:grid-cols-[1fr_auto] [.border-b]:pb-6 px-0 pt-0"[39m
+        [33mdata-slot[39m=[32m"card-header"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"flex items-center justify-between"[39m
+        [36m>[39m
+          [36m<div>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"leading-none font-semibold"[39m
+              [33mdata-slot[39m=[32m"card-title"[39m
+            [36m>[39m
+              [0mJobs & Quotes[0m
+            [36m</div>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"text-muted-foreground text-sm"[39m
+              [33mdata-slot[39m=[32m"card-description"[39m
+            [36m>[39m
+              [0mManage active jobs and incoming quotes[0m
+            [36m</div>[39m
+          [36m</div>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"flex gap-2"[39m
+          [36m>[39m
+            [36m<button[39m
+              [33mclass[39m=[32m"inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 h-9 px-4 py-2 has-[>svg]:px-3"[39m
+              [33mdata-slot[39m=[32m"button"[39m
+            [36m>[39m
+              [36m<svg[39m
+                [33mclass[39m=[32m"lucide lucide-calculator h-4 w-4 mr-2"[39m
+                [33mfill[39m=[32m"none"[39m
+                [33mheight[39m=[32m"24"[39m
+                [33mstroke[39m=[32m"currentColor"[39m
+                [33mstroke-linecap[39m=[32m"round"[39m
+                [33mstroke-linejoin[39m=[32m"round"[39m
+                [33mstroke-width[39m=[32m"2"[39m
+                [33mviewBox[39m=[32m"0 0 24 24"[39m
+                [33mwidth[39m=[32m"24"[39m
+                [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+              [36m>[39m
+                [36m<rect[39m
+                  [33mheight[39m=[32m"20"[39m
+                  [33mrx[39m=[32m"2"[39m
+                  [33mwidth[39m=[32m"16"[39m
+                  [33mx[39m=[32m"4"[39m
+                  [33my[39m=[32m"2"[39m
+                [36m/>[39m
+                [36m<line[39m
+                  [33mx1[39m=[32m"8"[39m
+                  [33mx2[39m=[32m"16"[39m
+                  [33my1[39m=[32m"6"[39m
+                  [33my2[39m=[32m"6"[39m
+                [36m/>[39m
+                [36m<line[39m
+                  [33mx1[39m=[32m"16"[39m
+                  [33mx2[39m=[32m"16"[39m
+                  [33my1[39m=[32m"14"[39m
+                  [33my2[39m=[32m"18"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M16 10h.01"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M12 10h.01"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M8 10h.01"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M12 14h.01"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M8 14h.01"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M12 18h.01"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M8 18h.01"[39m
+                [36m/>[39m
+              [36m</svg>[39m
+              [0mCreate Quote with AI Inventory[0m
+            [36m</button>[39m
+            [36m<button[39m
+              [33maria-controls[39m=[32m"radix-_r_o_"[39m
+              [33maria-expanded[39m=[32m"false"[39m
+              [33maria-haspopup[39m=[32m"dialog"[39m
+              [33mclass[39m=[32m"inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive bg-primary text-primary-foreground shadow-xs hover:bg-primary/90 h-9 px-4 py-2 has-[>svg]:px-3"[39m
+              [33mdata-slot[39m=[32m"dialog-trigger"[39m
+              [33mdata-state[39m=[32m"closed"[39m
+              [33mtype[39m=[32m"button"[39m
+            [36m>[39m
+              [36m<svg[39m
+                [33mclass[39m=[32m"lucide lucide-plus h-4 w-4 mr-2"[39m
+                [33mfill[39m=[32m"none"[39m
+                [33mheight[39m=[32m"24"[39m
+                [33mstroke[39m=[32m"currentColor"[39m
+                [33mstroke-linecap[39m=[32m"round"[39m
+                [33mstroke-linejoin[39m=[32m"round"[39m
+                [33mstroke-width[39m=[32m"2"[39m
+                [33mviewBox[39m=[32m"0 0 24 24"[39m
+                [33mwidth[39m=[32m"24"[39m
+                [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+              [36m>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M5 12h14"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M12 5v14"[39m
+                [36m/>[39m
+              [36m</svg>[39m
+              [0mQuick Job[0m
+            [36m</button>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"flex-1 overflow-auto px-0"[39m
+        [33mdata-slot[39m=[32m"card-content"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"gap-2 h-full flex flex-col"[39m
+          [33mdata-orientation[39m=[32m"horizontal"[39m
+          [33mdata-slot[39m=[32m"tabs"[39m
+          [33mdir[39m=[32m"ltr"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33maria-orientation[39m=[32m"horizontal"[39m
+            [33mclass[39m=[32m"bg-muted text-muted-foreground inline-flex h-9 w-fit items-center justify-center rounded-lg p-[3px]"[39m
+            [33mdata-orientation[39m=[32m"horizontal"[39m
+            [33mdata-slot[39m=[32m"tabs-list"[39m
+            [33mrole[39m=[32m"tablist"[39m
+            [33mstyle[39m=[32m"outline: none;"[39m
+            [33mtabindex[39m=[32m"0"[39m
+          [36m>[39m
+            [36m<button[39m
+              [33maria-controls[39m=[32m"radix-_r_r_-content-active_jobs"[39m
+              [33maria-selected[39m=[32m"true"[39m
+              [33mclass[39m=[32m"data-[state=active]:bg-background dark:data-[state=active]:text-foreground focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:outline-ring dark:data-[state=active]:border-input dark:data-[state=active]:bg-input/30 text-foreground dark:text-muted-foreground inline-flex h-[calc(100%-1px)] flex-1 items-center justify-center gap-1.5 rounded-md border border-transparent px-2 py-1 text-sm font-medium whitespace-nowrap transition-[color,box-shadow] focus-visible:ring-[3px] focus-visible:outline-1 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:shadow-sm [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4"[39m
+              [33mdata-orientation[39m=[32m"horizontal"[39m
+              [33mdata-radix-collection-item[39m=[32m""[39m
+              [33mdata-slot[39m=[32m"tabs-trigger"[39m
+              [33mdata-state[39m=[32m"active"[39m
+              [33mrole[39m=[32m"tab"[39m
+              [33mtabindex[39m=[32m"-1"[39m
+              [33mtype[39m=[32m"button"[39m
+            [36m>[39m
+              [0mActive Jobs ([0m
+              [0m0[0m
+              [0m)[0m
+            [36m</button>[39m
+            [36m<button[39m
+              [33maria-controls[39m=[32m"radix-_r_r_-content-quotes"[39m
+              [33maria-selected[39m=[32m"false"[39m
+              [33mclass[39m=[32m"data-[state=active]:bg-background dark:data-[state=active]:text-foreground focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:outline-ring dark:data-[state=active]:border-input dark:data-[state=active]:bg-input/30 text-foreground dark:text-muted-foreground inline-flex h-[calc(100%-1px)] flex-1 items-center justify-center gap-1.5 rounded-md border border-transparent px-2 py-1 text-sm font-medium whitespace-nowrap transition-[color,box-shadow] focus-visible:ring-[3px] focus-visible:outline-1 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:shadow-sm [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4"[39m
+              [33mdata-orientation[39m=[32m"horizontal"[39m
+              [33mdata-radix-collection-item[39m=[32m""[39m
+              [33mdata-slot[39m=[32m"tabs-trigger"[39m
+              [33mdata-state[39m=[32m"inactive"[39m
+              [33mrole[39m=[32m"tab"[39m
+              [33mtabindex[39m=[32m"-1"[39m
+              [33mtype[39m=[32m"button"[39m
+            [36m>[39m
+              [0mQuotes ([0m
+              [0m0[0m
+              [0m)[0m
+            [36m</button>[39m
+          [36m</div>[39m
+          [36m<div[39m
+            [33maria-labelledby[39m=[32m"radix-_r_r_-trigger-active_jobs"[39m
+            [33mclass[39m=[32m"outline-none flex-1 overflow-auto mt-4 p-1"[39m
+            [33mdata-orientation[39m=[32m"horizontal"[39m
+            [33mdata-slot[39m=[32m"tabs-content"[39m
+            [33mdata-state[39m=[32m"active"[39m
+            [33mrole[39m=[32m"tabpanel"[39m
+            [33mstyle[39m=[32m"animation-duration: 0s;"[39m
+            [33mtabindex[39m=[32m"0"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"text-center py-12 border rounded-lg bg-card"[39m
+            [36m>[39m
+              [36m<svg[39m
+                [33mclass[39m=[32m"lucide lucide-calendar h-12 w-12 mx-auto text-muted-foreground mb-4"[39m
+                [33mfill[39m=[32m"none"[39m
+                [33mheight[39m=[32m"24"[39m
+                [33mstroke[39m=[32m"currentColor"[39m
+                [33mstroke-linecap[39m=[32m"round"[39m
+                [33mstroke-linejoin[39m=[32m"round"[39m
+                [33mstroke-width[39m=[32m"2"[39m
+                [33mviewBox[39m=[32m"0 0 24 24"[39m
+                [33mwidth[39m=[32m"24"[39m
+                [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+              [36m>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M8 2v4"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M16 2v4"[39m
+                [36m/>[39m
+                [36m<rect[39m
+                  [33mheight[39m=[32m"18"[39m
+                  [33mrx[39m=[32m"2"[39m
+                  [33mwidth[39m=[32m"18"[39m
+                  [33mx[39m=[32m"3"[39m
+                  [33my[39m=[32m"4"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M3 10h18"[39m
+                [36m/>[39m
+              [36m</svg>[39m
+              [36m<h3[39m
+                [33mclass[39m=[32m"text-lg font-semibold"[39m
+              [36m>[39m
+                [0mNo active jobs.[0m
+              [36m</h3>[39m
+              [36m<p[39m
+                [33mclass[39m=[32m"text-muted-foreground"[39m
+              [36m>[39m
+                [0mJobs converted from quotes will appear here.[0m
+              [36m</p>[39m
+            [36m</div>[39m
+          [36m</div>[39m
+          [36m<div[39m
+            [33maria-labelledby[39m=[32m"radix-_r_r_-trigger-quotes"[39m
+            [33mclass[39m=[32m"outline-none flex-1 overflow-auto mt-4 p-1"[39m
+            [33mdata-orientation[39m=[32m"horizontal"[39m
+            [33mdata-slot[39m=[32m"tabs-content"[39m
+            [33mdata-state[39m=[32m"inactive"[39m
+            [33mhidden[39m=[32m""[39m
+            [33mrole[39m=[32m"tabpanel"[39m
+            [33mtabindex[39m=[32m"0"[39m
+          [36m/>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+    [36m</div>[39m
+  [36m</div>[39m
+[36m</body>[39m
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/features/jobs/components/__tests__/JobsView.test.tsx > JobsView > renders jobs list correctly
+TestingLibraryElementError: Unable to find an element with the text: Jobs Management. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<div[39m
+      [33mclass[39m=[32m"text-card-foreground gap-6 rounded-xl border py-6 h-full flex flex-col border-none shadow-none bg-transparent"[39m
+      [33mdata-slot[39m=[32m"card"[39m
+    [36m>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"@container/card-header grid auto-rows-min grid-rows-[auto_auto] items-start gap-1.5 has-data-[slot=card-action]:grid-cols-[1fr_auto] [.border-b]:pb-6 px-0 pt-0"[39m
+        [33mdata-slot[39m=[32m"card-header"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"flex items-center justify-between"[39m
+        [36m>[39m
+          [36m<div>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"leading-none font-semibold"[39m
+              [33mdata-slot[39m=[32m"card-title"[39m
+            [36m>[39m
+              [0mJobs & Quotes[0m
+            [36m</div>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"text-muted-foreground text-sm"[39m
+              [33mdata-slot[39m=[32m"card-description"[39m
+            [36m>[39m
+              [0mManage active jobs and incoming quotes[0m
+            [36m</div>[39m
+          [36m</div>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"flex gap-2"[39m
+          [36m>[39m
+            [36m<button[39m
+              [33mclass[39m=[32m"inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 h-9 px-4 py-2 has-[>svg]:px-3"[39m
+              [33mdata-slot[39m=[32m"button"[39m
+            [36m>[39m
+              [36m<svg[39m
+                [33mclass[39m=[32m"lucide lucide-calculator h-4 w-4 mr-2"[39m
+                [33mfill[39m=[32m"none"[39m
+                [33mheight[39m=[32m"24"[39m
+                [33mstroke[39m=[32m"currentColor"[39m
+                [33mstroke-linecap[39m=[32m"round"[39m
+                [33mstroke-linejoin[39m=[32m"round"[39m
+                [33mstroke-width[39m=[32m"2"[39m
+                [33mviewBox[39m=[32m"0 0 24 24"[39m
+                [33mwidth[39m=[32m"24"[39m
+                [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+              [36m>[39m
+                [36m<rect[39m
+                  [33mheight[39m=[32m"20"[39m
+                  [33mrx[39m=[32m"2"[39m
+                  [33mwidth[39m=[32m"16"[39m
+                  [33mx[39m=[32m"4"[39m
+                  [33my[39m=[32m"2"[39m
+                [36m/>[39m
+                [36m<line[39m
+                  [33mx1[39m=[32m"8"[39m
+                  [33mx2[39m=[32m"16"[39m
+                  [33my1[39m=[32m"6"[39m
+                  [33my2[39m=[32m"6"[39m
+                [36m/>[39m
+                [36m<line[39m
+                  [33mx1[39m=[32m"16"[39m
+                  [33mx2[39m=[32m"16"[39m
+                  [33my1[39m=[32m"14"[39m
+                  [33my2[39m=[32m"18"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M16 10h.01"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M12 10h.01"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M8 10h.01"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M12 14h.01"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M8 14h.01"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M12 18h.01"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M8 18h.01"[39m
+                [36m/>[39m
+              [36m</svg>[39m
+              [0mCreate Quote with AI Inventory[0m
+            [36m</button>[39m
+            [36m<button[39m
+              [33maria-controls[39m=[32m"radix-_r_0_"[39m
+              [33maria-expanded[39m=[32m"false"[39m
+              [33maria-haspopup[39m=[32m"dialog"[39m
+              [33mclass[39m=[32m"inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive bg-primary text-primary-foreground shadow-xs hover:bg-primary/90 h-9 px-4 py-2 has-[>svg]:px-3"[39m
+              [33mdata-slot[39m=[32m"dialog-trigger"[39m
+              [33mdata-state[39m=[32m"closed"[39m
+              [33mtype[39m=[32m"button"[39m
+            [36m>[39m
+              [36m<svg[39m
+                [33mclass[39m=[32m"lucide lucide-plus h-4 w-4 mr-2"[39m
+                [33mfill[39m=[32m"none"[39m
+                [33mheight[39m=[32m"24"[39m
+                [33mstroke[39m=[32m"currentColor"[39m
+                [33mstroke-linecap[39m=[32m"round"[39m
+                [33mstroke-linejoin[39m=[32m"round"[39m
+                [33mstroke-width[39m=[32m"2"[39m
+                [33mviewBox[39m=[32m"0 0 24 24"[39m
+                [33mwidth[39m=[32m"24"[39m
+                [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+              [36m>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M5 12h14"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M12 5v14"[39m
+                [36m/>[39m
+              [36m</svg>[39m
+              [0mQuick Job[0m
+            [36m</button>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"flex-1 overflow-auto px-0"[39m
+        [33mdata-slot[39m=[32m"card-content"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"gap-2 h-full flex flex-col"[39m
+          [33mdata-orientation[39m=[32m"horizontal"[39m
+          [33mdata-slot[39m=[32m"tabs"[39m
+          [33mdir[39m=[32m"ltr"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33maria-orientation[39m=[32m"horizontal"[39m
+            [33mclass[39m=[32m"bg-muted text-muted-foreground inline-flex h-9 w-fit items-...
+ ❯ Object.getElementError node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+ ❯ node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ src/features/jobs/components/__tests__/JobsView.test.tsx:74:23
+     72|         );
+     73| 
+     74|         expect(screen.getByText("Jobs Management")).toBeInTheDocument(…
+       |                       ^
+     75|         expect(screen.getByText("Alice Johnson")).toBeInTheDocument();
+     76|         expect(screen.getByText("789 Pine Rd")).toBeInTheDocument();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  src/features/jobs/components/__tests__/JobsView.test.tsx > JobsView > shows empty state when no jobs
+TestingLibraryElementError: Unable to find an element with the text: No jobs yet. Create your first job to get started.. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+Ignored nodes: comments, script, style
+[36m<body[39m
+  [33mstyle[39m=[32m""[39m
+[36m>[39m
+  [36m<div>[39m
+    [36m<div[39m
+      [33mclass[39m=[32m"text-card-foreground gap-6 rounded-xl border py-6 h-full flex flex-col border-none shadow-none bg-transparent"[39m
+      [33mdata-slot[39m=[32m"card"[39m
+    [36m>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"@container/card-header grid auto-rows-min grid-rows-[auto_auto] items-start gap-1.5 has-data-[slot=card-action]:grid-cols-[1fr_auto] [.border-b]:pb-6 px-0 pt-0"[39m
+        [33mdata-slot[39m=[32m"card-header"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"flex items-center justify-between"[39m
+        [36m>[39m
+          [36m<div>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"leading-none font-semibold"[39m
+              [33mdata-slot[39m=[32m"card-title"[39m
+            [36m>[39m
+              [0mJobs & Quotes[0m
+            [36m</div>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"text-muted-foreground text-sm"[39m
+              [33mdata-slot[39m=[32m"card-description"[39m
+            [36m>[39m
+              [0mManage active jobs and incoming quotes[0m
+            [36m</div>[39m
+          [36m</div>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"flex gap-2"[39m
+          [36m>[39m
+            [36m<button[39m
+              [33mclass[39m=[32m"inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 h-9 px-4 py-2 has-[>svg]:px-3"[39m
+              [33mdata-slot[39m=[32m"button"[39m
+            [36m>[39m
+              [36m<svg[39m
+                [33mclass[39m=[32m"lucide lucide-calculator h-4 w-4 mr-2"[39m
+                [33mfill[39m=[32m"none"[39m
+                [33mheight[39m=[32m"24"[39m
+                [33mstroke[39m=[32m"currentColor"[39m
+                [33mstroke-linecap[39m=[32m"round"[39m
+                [33mstroke-linejoin[39m=[32m"round"[39m
+                [33mstroke-width[39m=[32m"2"[39m
+                [33mviewBox[39m=[32m"0 0 24 24"[39m
+                [33mwidth[39m=[32m"24"[39m
+                [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+              [36m>[39m
+                [36m<rect[39m
+                  [33mheight[39m=[32m"20"[39m
+                  [33mrx[39m=[32m"2"[39m
+                  [33mwidth[39m=[32m"16"[39m
+                  [33mx[39m=[32m"4"[39m
+                  [33my[39m=[32m"2"[39m
+                [36m/>[39m
+                [36m<line[39m
+                  [33mx1[39m=[32m"8"[39m
+                  [33mx2[39m=[32m"16"[39m
+                  [33my1[39m=[32m"6"[39m
+                  [33my2[39m=[32m"6"[39m
+                [36m/>[39m
+                [36m<line[39m
+                  [33mx1[39m=[32m"16"[39m
+                  [33mx2[39m=[32m"16"[39m
+                  [33my1[39m=[32m"14"[39m
+                  [33my2[39m=[32m"18"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M16 10h.01"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M12 10h.01"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M8 10h.01"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M12 14h.01"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M8 14h.01"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M12 18h.01"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M8 18h.01"[39m
+                [36m/>[39m
+              [36m</svg>[39m
+              [0mCreate Quote with AI Inventory[0m
+            [36m</button>[39m
+            [36m<button[39m
+              [33maria-controls[39m=[32m"radix-_r_o_"[39m
+              [33maria-expanded[39m=[32m"false"[39m
+              [33maria-haspopup[39m=[32m"dialog"[39m
+              [33mclass[39m=[32m"inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive bg-primary text-primary-foreground shadow-xs hover:bg-primary/90 h-9 px-4 py-2 has-[>svg]:px-3"[39m
+              [33mdata-slot[39m=[32m"dialog-trigger"[39m
+              [33mdata-state[39m=[32m"closed"[39m
+              [33mtype[39m=[32m"button"[39m
+            [36m>[39m
+              [36m<svg[39m
+                [33mclass[39m=[32m"lucide lucide-plus h-4 w-4 mr-2"[39m
+                [33mfill[39m=[32m"none"[39m
+                [33mheight[39m=[32m"24"[39m
+                [33mstroke[39m=[32m"currentColor"[39m
+                [33mstroke-linecap[39m=[32m"round"[39m
+                [33mstroke-linejoin[39m=[32m"round"[39m
+                [33mstroke-width[39m=[32m"2"[39m
+                [33mviewBox[39m=[32m"0 0 24 24"[39m
+                [33mwidth[39m=[32m"24"[39m
+                [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+              [36m>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M5 12h14"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M12 5v14"[39m
+                [36m/>[39m
+              [36m</svg>[39m
+              [0mQuick Job[0m
+            [36m</button>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"flex-1 overflow-auto px-0"[39m
+        [33mdata-slot[39m=[32m"card-content"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"gap-2 h-full flex flex-col"[39m
+          [33mdata-orientation[39m=[32m"horizontal"[39m
+          [33mdata-slot[39m=[32m"tabs"[39m
+          [33mdir[39m=[32m"ltr"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33maria-orientation[39m=[32m"horizontal"[39m
+            [33mclass[39m=[32m"bg-muted text-muted-foreground inline-flex h-9 w-fit items-center justify-center rounded-lg p-[3px]"[39m
+            [33mdata-orientation[39m=[32m"horizontal"[39m
+            [33mdata-slot[39m=[32m"tabs-list"[39m
+            [33mrole[39m=[32m"tablist"[39m
+            [33mstyle[39m=[32m"outline: none;"[39m
+            [33mtabindex[39m=[32m"0"[39m
+          [36m>[39m
+            [36m<button[39m
+              [33maria-controls[39m=[32m"radix-_r_r_-content-active_jobs"[39m
+              [33maria-selected[39m=[32m"true"[39m
+              [33mclass[39m=[32m"data-[state=active]:bg-background dark:data-[state=active]:text-foreground focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:outline-ring dark:data-[state=active]:border-input dark:data-[state=active]:bg-input/30 text-foreground dark:text-muted-foreground inline-flex h-[calc(100%-1px)] flex-1 items-center justify-center gap-1.5 rounded-md border border-transparent px-2 py-1 text-sm font-medium whitespace-nowrap transition-[color,box-shadow] focus-visible:ring-[3px] focus-visible:outline-1 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:shadow-sm [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4"[39m
+              [33mdata-orientation[39m=[32m"horizontal"[39m
+              [33mdata-radix-collection-item[39m=[32m""[39m
+              [33mdata-slot[39m=[32m"tabs-trigger"[39m
+              [33mdata-state[39m=[32m"active"[39m
+              [33mrole[39m=[32m"tab"[39m
+              [33mtabindex[39m=[32m"-1"[39m
+              [33mtype[39m=[32m"button"[39m
+            [36m>[39m
+              [0mActive Jobs ([0m
+              [0m0[0m
+              [0m)[0m
+            [36m</button>[39m
+            [36m<button[39m
+              [33maria-controls[39m=[32m"radix-_r_r_-content-quotes"[39m
+              [33maria-selected[39m=[32m"false"[39m
+              [33mclass[39m=[32m"data-[state=active]:bg-background dark:data-[state=active]:text-foreground focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:outline-ring dark:data-[state=active]:border-input dark:data-[state=active]:bg-input/30 text-foreground dark:text-muted-foreground inline-flex h-[calc(100%-1px)] flex-1 items-center justify-center gap-1.5 rounded-md border border-transparent px-2 py-1 text-sm font-medium whitespace-nowrap transition-[color,box-shadow] focus-visible:ring-[3px] focus-visible:outline-1 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:shadow-sm [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4"[39m
+              [33mdata-orientation[39m=[32m"horizontal"[39m
+              [33mdata-radix-collection-item[39m=[32m""[39m
+              [33mdata-slot[39m=[32m"tabs-trigger"[39m
+              [33mdata-state[39m=[32m"inactive"[39m
+              [33mrole[39m=[32m"tab"[39m
+              [33mtabindex[39m=[32m"-1"[39m
+              [33mtype[39m=[32m"button"[39m
+            [36m>[39m
+              [0mQuotes ([0m
+              [0m0[0m
+              [0m)[0m
+            [36m</button>[39m
+          [36m</div>[39m
+          [36m<div[39m
+            [33maria-labelledby[39m=[32m"radix-_r_r_-trigger-active_jobs"[39m
+            [33mclass[39m=[32m"outline-none flex-1 overflow-auto mt-4 p-1"[39m
+            [33mdata-orientation[39m=[32m"horizontal"[39m
+            [33mdata-slot[39m=[32m"tabs-content"[39m
+            [33mdata-state[39m=[32m"active"[39m
+            [33mrole[39m=[32m"tabpanel"[39m
+            [33mstyle[39m=[32m"animation-duration: 0s;"[39m
+            [33mtabindex[39m=[32m"0"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"text-center py-12 border rounded-lg bg-card"[39m
+            [36m>[39m
+              [36m<svg[39m
+                [33mclass[39m=[32m"lucide lucide-calendar h-12 w-12 mx-auto text-muted-foreground mb-4"[39m
+                [33mfill[39m=[32m"none"[39m
+                [33mheight[39m=[32m"24"[39m
+                [33mstroke[39m=[32m"currentColor"[39m
+                [33mstroke-linecap[39m=[32m"round"[39m
+                [33mstroke-linejoin[39m=[32m"round"[39m
+                [33mstroke-width[39m=[32m"2"[39m
+                [33mviewBox[39m=[32m"0 0 24 24"[39m
+                [33mwidth[39m=[32m"24"[39m
+                [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+              [36m>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M8 2v4"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M16 2v4"[39m
+                [36m/>[39m
+                [36m<rect[39m
+                  [33mheight[39m=[32m"18"[39m
+                  [33mrx[39m=[32m"2"[39m
+                  [33mwidth[39m=[32m"18"[39m
+                  [33mx[39m=[32m"3"[39m
+                  [33my[39m=[32m"4"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M3 10h18"[39m
+                [36m/>[39m
+              [36m</svg>[39m
+              [36m<h3[39m
+                [33mclass[39m=[32m"text-lg font-semibold"[39m
+              [36m>[39m
+                [0mNo active jobs.[0m
+              [36m</h3>[39m
+              [36m<p[39m
+                [33mclass[39m=[32m"text-muted-foreground"[39m
+              [36m>[39m
+                [0mJobs converted from quotes will appear here.[0m
+              [36m</p>[39m
+            [36m</div>[39m
+          [36m</div>[39m
+          [36m<div[39m
+            [33maria-labelledby[39m=[32m"radix-_r_r_-trigger-quotes"[39m
+            [33mclass[39m=[32m"outline-none flex-1 overflow-auto mt-4 p-1"[39m
+            [33mdata-orientation[39m=[32m"horizontal"[39m
+            [33mdata-slot[39m=[32m"tabs-content"[39m
+            [33mdata-state[39m=[32m"inactive"[39m
+            [33mhidden[39m=[32m""[39m
+            [33mrole[39m=[32m"tabpanel"[39m
+            [33mtabindex[39m=[32m"0"[39m
+          [36m/>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+    [36m</div>[39m
+  [36m</div>[39m
+[36m</body>[39m
+ ❯ Object.getElementError node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+ ❯ node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ src/features/jobs/components/__tests__/JobsView.test.tsx:114:23
+    112|         );
+    113| 
+    114|         expect(screen.getByText("No jobs yet. Create your first job to…
+       |                       ^
+    115|     });
+    116| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 1 passed (3)
+   Start at  21:53:12
+   Duration  2.68s (transform 384ms, setup 89ms, collect 984ms, tests 269ms, environment 423ms, prepare 155ms)
+

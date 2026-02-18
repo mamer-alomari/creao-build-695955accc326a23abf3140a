@@ -1,0 +1,43 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    
+    // Helper to get user data from Firestore
+    function getUser() {
+      return firestore.get(/databases/(default)/documents/users/$(request.auth.uid));
+    }
+    
+    // Helper to check if user belongs to the company
+    function isCompanyMember(companyId) {
+      return request.auth != null && getUser().data.companyId == companyId;
+    }
+
+    // Default: Deny unless explicitly allowed
+    match /{allPaths=**} {
+      allow read, write: if false; 
+    }
+
+    // Incident Reports: 
+    // - Write: Any member of the company (Worker, Foreman, Manager)
+    // - Read: Any member of the company
+    match /incident-reports/{companyId}/{fileName} {
+      allow read, write: if isCompanyMember(companyId);
+    }
+    
+    // In-Field Jobs:
+    // - Write: Any member (technically Foreman mainly, but open to crew)
+    // - Read: Any member
+    match /in-field-jobs/{companyId}/{jobId}/{fileName} {
+      allow read, write: if isCompanyMember(companyId);
+    }
+
+    // Quotes: 
+    // - Write: Public (for potential customers uploading room photos) | OR Company Member
+    // - Read: Company Members only
+    match /quotes/{fileName} {
+      allow write: if true; 
+      allow read: if request.auth != null; // Simplified for internal staff
+    }
+  }
+}

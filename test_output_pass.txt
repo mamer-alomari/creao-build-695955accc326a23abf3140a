@@ -1,0 +1,186 @@
+
+ RUN  v3.2.4 /Users/mmioi/Downloads/creao-build-695955accc326a23abf3140a
+
+ ✓ src/components/ui/__tests__/separator.test.tsx (3 tests) 40ms
+ ✓ src/features/auth/__tests__/InvitationAcceptance.test.tsx (4 tests) 124ms
+ ✓ src/features/jobs/lib/__tests__/job-utils.test.ts (2 tests) 4ms
+ ❯ src/sdk/core/internal/__tests__/auth-helpers.test.ts (5 tests | 2 failed) 33ms
+   ✓ Auth Helpers > UserRole has correct values 6ms
+   × Auth Helpers > isAuthenticatedSync > returns true when user exists 22ms
+     → expected false to be true // Object.is equality
+   ✓ Auth Helpers > isAuthenticatedSync > returns false when user is null 0ms
+   ✓ Auth Helpers > hasNoToken > returns true when token is missing 0ms
+   × Auth Helpers > hasNoToken > returns false when token exists 1ms
+     → expected true to be false // Object.is equality
+ ✓ src/features/vehicles/components/__tests__/VehicleMaintenance.test.tsx (3 tests) 1013ms
+   ✓ VehiclesView Maintenance > allows adding a new maintenance record  627ms
+ ✓ src/features/quote/__tests__/PublicQuoteFlow.test.tsx (1 test) 880ms
+   ✓ PublicQuoteFlow Integration > completes full quote flow  878ms
+ ✓ src/features/auth/__tests__/LoginView.test.tsx (5 tests) 840ms
+ ✓ src/features/worker/components/__tests__/ReportIncidentView.test.tsx (2 tests) 473ms
+   ✓ ReportIncidentView > submits the form  377ms
+stderr | src/features/jobs/components/__tests__/QuoteGenerator.test.tsx > Quote Generator Flow > allows navigating through the quote wizard
+`DialogContent` requires a `DialogTitle` for the component to be accessible for screen reader users.
+
+If you want to hide the `DialogTitle`, you can wrap it with our VisuallyHidden component.
+
+For more information, see https://radix-ui.com/primitives/docs/components/dialog
+Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}.
+
+ ✓ src/features/jobs/components/__tests__/QuoteGenerator.test.tsx (2 tests) 311ms
+stderr | src/features/scheduling/components/__tests__/SchedulingView.test.tsx > SchedulingView > opens assign resource dialog
+`DialogContent` requires a `DialogTitle` for the component to be accessible for screen reader users.
+
+If you want to hide the `DialogTitle`, you can wrap it with our VisuallyHidden component.
+
+For more information, see https://radix-ui.com/primitives/docs/components/dialog
+Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}.
+
+ ✓ src/features/scheduling/components/__tests__/SchedulingView.test.tsx (3 tests) 261ms
+stderr | src/features/workers/components/__tests__/WorkersView.test.tsx > WorkersView > opens create worker dialog
+`DialogContent` requires a `DialogTitle` for the component to be accessible for screen reader users.
+
+If you want to hide the `DialogTitle`, you can wrap it with our VisuallyHidden component.
+
+For more information, see https://radix-ui.com/primitives/docs/components/dialog
+Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}.
+
+ ✓ src/features/workers/components/__tests__/WorkersView.test.tsx (3 tests) 243ms
+stderr | src/features/jobs/components/__tests__/JobsViewInventory.test.tsx > JobsView Inventory Persistence > displays inventory section in edit dialog when inventory_data is present
+`DialogContent` requires a `DialogTitle` for the component to be accessible for screen reader users.
+
+If you want to hide the `DialogTitle`, you can wrap it with our VisuallyHidden component.
+
+For more information, see https://radix-ui.com/primitives/docs/components/dialog
+Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}.
+
+stderr | src/features/jobs/components/__tests__/JobsViewInventory.test.tsx > JobsView Inventory Persistence > does not display inventory section when inventory_data is missing
+`DialogContent` requires a `DialogTitle` for the component to be accessible for screen reader users.
+
+If you want to hide the `DialogTitle`, you can wrap it with our VisuallyHidden component.
+
+For more information, see https://radix-ui.com/primitives/docs/components/dialog
+Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}.
+
+ ✓ src/features/jobs/components/__tests__/JobsViewInventory.test.tsx (2 tests) 297ms
+stderr | src/features/payroll/components/__tests__/PayrollView.test.tsx > PayrollView > opens create payroll dialog
+`DialogContent` requires a `DialogTitle` for the component to be accessible for screen reader users.
+
+If you want to hide the `DialogTitle`, you can wrap it with our VisuallyHidden component.
+
+For more information, see https://radix-ui.com/primitives/docs/components/dialog
+Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}.
+
+ ✓ src/features/payroll/components/__tests__/PayrollView.test.tsx (3 tests) 247ms
+stderr | src/features/vehicles/components/__tests__/VehiclesView.test.tsx > VehiclesView > opens create vehicle dialog
+`DialogContent` requires a `DialogTitle` for the component to be accessible for screen reader users.
+
+If you want to hide the `DialogTitle`, you can wrap it with our VisuallyHidden component.
+
+For more information, see https://radix-ui.com/primitives/docs/components/dialog
+Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}.
+
+ ✓ src/features/vehicles/components/__tests__/VehiclesView.test.tsx (3 tests) 245ms
+stderr | src/features/jobs/components/__tests__/JobsView.test.tsx > JobsView > opens create job dialog
+`DialogContent` requires a `DialogTitle` for the component to be accessible for screen reader users.
+
+If you want to hide the `DialogTitle`, you can wrap it with our VisuallyHidden component.
+
+For more information, see https://radix-ui.com/primitives/docs/components/dialog
+Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}.
+
+ ✓ src/features/jobs/components/__tests__/JobsView.test.tsx (3 tests) 245ms
+stderr | src/features/equipment/components/__tests__/EquipmentView.test.tsx > EquipmentView > opens create equipment dialog
+`DialogContent` requires a `DialogTitle` for the component to be accessible for screen reader users.
+
+If you want to hide the `DialogTitle`, you can wrap it with our VisuallyHidden component.
+
+For more information, see https://radix-ui.com/primitives/docs/components/dialog
+Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}.
+
+ ✓ src/features/equipment/components/__tests__/EquipmentView.test.tsx (3 tests) 234ms
+ ✓ src/features/portal/components/__tests__/PortalDashboard.test.tsx (4 tests) 219ms
+stderr | src/features/jobs/components/__tests__/JobsViewQRCode.test.tsx > JobsView QR Code > displays QR code in edit dialog
+`DialogContent` requires a `DialogTitle` for the component to be accessible for screen reader users.
+
+If you want to hide the `DialogTitle`, you can wrap it with our VisuallyHidden component.
+
+For more information, see https://radix-ui.com/primitives/docs/components/dialog
+Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}.
+
+ ✓ src/features/jobs/components/__tests__/JobsViewQRCode.test.tsx (1 test) 256ms
+ ✓ src/features/foreman/__tests__/ForemanWorkflow.test.tsx (3 tests) 169ms
+stderr | src/features/team/__tests__/TeamManager.test.tsx > TeamManager > opens invite dialog
+`DialogContent` requires a `DialogTitle` for the component to be accessible for screen reader users.
+
+If you want to hide the `DialogTitle`, you can wrap it with our VisuallyHidden component.
+
+For more information, see https://radix-ui.com/primitives/docs/components/dialog
+Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}.
+
+ ✓ src/features/team/__tests__/TeamManager.test.tsx (2 tests) 188ms
+ ✓ src/features/foreman/__tests__/ForemanDashboard.test.tsx (2 tests) 155ms
+ ✓ src/features/worker/components/__tests__/WorkerDashboard.test.tsx (4 tests) 152ms
+ ✓ src/components/ui/__tests__/checkbox.test.tsx (4 tests) 133ms
+ ✓ src/components/ui/__tests__/textarea.test.tsx (4 tests) 137ms
+ ✓ src/components/ui/__tests__/button.test.tsx (5 tests) 120ms
+ ✓ src/components/ui/__tests__/switch.test.tsx (3 tests) 119ms
+ ✓ src/components/ui/__tests__/input.test.tsx (4 tests) 121ms
+ ✓ src/features/quote/__tests__/QuoteGeneration.test.tsx (2 tests) 111ms
+ ✓ src/components/ui/__tests__/avatar.test.tsx (3 tests) 131ms
+ ✓ src/features/dashboard/components/__tests__/DashboardView.test.tsx (3 tests) 123ms
+ ✓ src/features/onboarding/__tests__/OnboardingView.test.tsx (2 tests) 92ms
+ ✓ src/components/ui/__tests__/card.test.tsx (2 tests) 54ms
+ ✓ src/components/ui/__tests__/badge.test.tsx (5 tests) 50ms
+ ✓ src/components/ui/__tests__/label.test.tsx (2 tests) 57ms
+ ✓ src/components/ui/__tests__/skeleton.test.tsx (2 tests) 43ms
+ ✓ src/components/AppTest.test.tsx (2 tests) 37ms
+ ✓ src/hooks/__tests__/use-mobile.test.ts (2 tests) 23ms
+ ✓ src/lib/__tests__/utils.test.ts (6 tests) 12ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/sdk/core/internal/__tests__/auth-helpers.test.ts > Auth Helpers > isAuthenticatedSync > returns true when user exists
+AssertionError: expected false to be true // Object.is equality
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- true[39m
+[31m+ false[39m
+
+ ❯ src/sdk/core/internal/__tests__/auth-helpers.test.ts:30:43
+     28|         it('returns true when user exists', () => {
+     29|             mockGetState.mockReturnValue({ user: { uid: '123' } });
+     30|             expect(isAuthenticatedSync()).toBe(true);
+       |                                           ^
+     31|         });
+     32| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  src/sdk/core/internal/__tests__/auth-helpers.test.ts > Auth Helpers > hasNoToken > returns false when token exists
+AssertionError: expected true to be false // Object.is equality
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- false[39m
+[31m+ true[39m
+
+ ❯ src/sdk/core/internal/__tests__/auth-helpers.test.ts:47:34
+     45|         it('returns false when token exists', () => {
+     46|             mockGetState.mockReturnValue({ token: 'abc' });
+     47|             expect(hasNoToken()).toBe(false);
+       |                                  ^
+     48|         });
+     49|     });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed | 37 passed (38)
+      Tests  2 failed | 112 passed (114)
+   Start at  15:28:57
+   Duration  63.78s (transform 859ms, setup 2.62s, collect 18.44s, tests 7.99s, environment 18.32s, prepare 3.28s)
+
