@@ -1,4 +1,5 @@
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { JobsView } from "../JobsView";
 import { JobStatus, type JobModel } from "@/sdk/database/orm/orm_job";
@@ -75,6 +76,7 @@ const mockJobWithInventory: JobModel = {
 
 describe("JobsView Inventory Persistence", () => {
     it("displays inventory section in edit dialog when inventory_data is present", async () => {
+        const user = userEvent.setup();
         render(
             <Wrapper>
                 <JobsView
@@ -87,9 +89,12 @@ describe("JobsView Inventory Persistence", () => {
             </Wrapper>
         );
 
-        // Click on the job row to open dialog
-        const jobRow = screen.getByText("Inventory User");
-        fireEvent.click(jobRow);
+        // Job is Quote status — switch to Quotes tab first
+        await user.click(screen.getByRole("tab", { name: /Quotes/i }));
+
+        // Wait for job row then click to open dialog
+        await waitFor(() => expect(screen.getByText("Inventory User")).toBeInTheDocument());
+        await user.click(screen.getByText("Inventory User"));
 
         // Wait for dialog to open and check for Inventory section
         expect(await screen.findByText("Inventory & Images")).toBeInTheDocument();
@@ -109,6 +114,7 @@ describe("JobsView Inventory Persistence", () => {
             inventory_data: undefined,
         };
 
+        const user = userEvent.setup();
         render(
             <Wrapper>
                 <JobsView
@@ -121,8 +127,11 @@ describe("JobsView Inventory Persistence", () => {
             </Wrapper>
         );
 
-        const jobRow = screen.getByText("No Inventory User");
-        fireEvent.click(jobRow);
+        // Job is Quote status — switch to Quotes tab first
+        await user.click(screen.getByRole("tab", { name: /Quotes/i }));
+
+        await waitFor(() => expect(screen.getByText("No Inventory User")).toBeInTheDocument());
+        await user.click(screen.getByText("No Inventory User"));
 
         // Check that Inventory section header is NOT present
         expect(screen.queryByText("Inventory & Images")).not.toBeInTheDocument();

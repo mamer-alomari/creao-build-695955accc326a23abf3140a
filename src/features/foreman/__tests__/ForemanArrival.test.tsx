@@ -36,9 +36,10 @@ vi.mock("@/lib/notifications", () => ({
     }
 }));
 
+const mockNavigate = vi.fn();
 vi.mock("@tanstack/react-router", () => ({
     useParams: () => ({ jobId: "job-123" }),
-    useNavigate: () => vi.fn()
+    useNavigate: () => mockNavigate
 }));
 
 vi.mock("@/sdk/core/auth", () => ({
@@ -78,6 +79,7 @@ const renderWithClient = (ui: React.ReactElement) => {
 describe("ForemanJobExecution - Arrival Flow", () => {
     beforeEach(() => {
         vi.clearAllMocks();
+        mockNavigate.mockReset();
         (mockJobORMInstance.getJobById as any).mockResolvedValue([mockJob]);
         (mockJobORMInstance.setJobById as any).mockResolvedValue([mockJob]);
     });
@@ -107,10 +109,9 @@ describe("ForemanJobExecution - Arrival Flow", () => {
             );
         });
 
-        // Should transition to Inventory step (Scan Items)
-        // We look for text unique to the inventory step
+        // After notification the component navigates to the inventory route
         await waitFor(() => {
-            expect(screen.getByText(/Walkthrough & Scan/i)).toBeInTheDocument();
+            expect(mockNavigate).toHaveBeenCalledWith({ to: "/foreman/jobs/job-123/inventory" });
         });
     });
 });

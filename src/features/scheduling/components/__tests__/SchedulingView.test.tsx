@@ -1,4 +1,5 @@
 import { render, screen, fireEvent } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
 import { SchedulingView } from "../SchedulingView";
 import { JobStatus } from "@/sdk/database/orm/orm_job";
@@ -108,10 +109,11 @@ describe("SchedulingView", () => {
             </Wrapper>
         );
 
-        expect(screen.getByText("No active jobs to schedule. Create or book a job first.")).toBeInTheDocument();
+        expect(screen.getByText("No active jobs to schedule.")).toBeInTheDocument();
     });
 
-    it("opens assign resource dialog", () => {
+    it("opens assign resource dialog", async () => {
+        const user = userEvent.setup();
         render(
             <Wrapper>
                 <SchedulingView
@@ -127,8 +129,9 @@ describe("SchedulingView", () => {
             </Wrapper>
         );
 
-        fireEvent.click(screen.getByText("Assign Resources"));
+        await user.click(screen.getByRole("button", { name: "Manage Resources" }));
 
-        expect(screen.getByText("Assign Resources to Job")).toBeInTheDocument();
+        expect(screen.getByRole("dialog")).toBeInTheDocument();
+        expect(screen.getByRole("heading", { name: "Manage Resources" })).toBeInTheDocument();
     });
 });

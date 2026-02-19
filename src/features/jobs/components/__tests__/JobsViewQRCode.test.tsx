@@ -1,4 +1,5 @@
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { JobsView } from "../JobsView";
 import { JobStatus, type JobModel } from "@/sdk/database/orm/orm_job";
@@ -53,6 +54,7 @@ const mockJob: JobModel = {
 
 describe("JobsView QR Code", () => {
     it("displays QR code in edit dialog", async () => {
+        const user = userEvent.setup();
         render(
             <Wrapper>
                 <JobsView
@@ -65,9 +67,12 @@ describe("JobsView QR Code", () => {
             </Wrapper>
         );
 
-        // Click on the job row to open dialog
-        const jobRow = screen.getByText("QR User");
-        fireEvent.click(jobRow);
+        // Job is Quote status — switch to Quotes tab first
+        await user.click(screen.getByRole("tab", { name: /Quotes/i }));
+
+        // Wait for the job row to appear, then click it
+        await waitFor(() => expect(screen.getByText("QR User")).toBeInTheDocument());
+        await user.click(screen.getByText("QR User"));
 
         // Check for QR Code section header
         expect(await screen.findByText("Job QR Code")).toBeInTheDocument();
