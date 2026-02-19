@@ -1,7 +1,7 @@
 import { render, screen, fireEvent } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { WorkersView } from "../WorkersView";
-import { WorkerRole, WorkerStatus } from "@/sdk/database/orm/orm_worker";
+import { WorkerRole, WorkerStatus, type WorkerModel } from "@/sdk/database/orm/orm_worker";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import "@testing-library/jest-dom";
 
@@ -24,7 +24,7 @@ vi.mock("@/sdk/core/auth", async (importOriginal) => {
     };
 });
 
-const mockWorkers = [
+const mockWorkers: WorkerModel[] = [
     {
         id: "worker-1",
         full_name: "Bob Builder",

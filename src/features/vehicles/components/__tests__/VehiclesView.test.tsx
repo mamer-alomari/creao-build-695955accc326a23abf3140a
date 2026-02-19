@@ -1,7 +1,7 @@
 import { render, screen, fireEvent } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { VehiclesView } from "../VehiclesView";
-import { VehicleType } from "@/sdk/database/orm/orm_vehicle";
+import { VehicleType, type VehicleModel } from "@/sdk/database/orm/orm_vehicle";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import "@testing-library/jest-dom";
 
@@ -34,7 +34,7 @@ vi.mock("@/sdk/database/orm/orm_vehicle", async (importOriginal) => {
     };
 });
 
-const mockVehicles = [
+const mockVehicles: VehicleModel[] = [
     {
         id: "vehicle-1",
         vehicle_name: "Truck 1",

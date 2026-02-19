@@ -1,7 +1,7 @@
 import { render, screen, fireEvent } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { JobsView } from "../JobsView";
-import { JobStatus } from "@/sdk/database/orm/orm_job";
+import { JobStatus, type JobModel } from "@/sdk/database/orm/orm_job";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import "@testing-library/jest-dom";
 
@@ -40,7 +40,7 @@ vi.mock("@/sdk/database/orm/orm_job", async (importOriginal) => {
     };
 });
 
-const mockJobs = [
+const mockJobs: JobModel[] = [
     {
         id: "job-1",
         customer_name: "Alice Johnson",

@@ -3,7 +3,8 @@ import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import { PayrollView } from "../PayrollView";
-import { PayrollRecordStatus } from "@/sdk/database/orm/orm_payroll_record";
+import { PayrollRecordStatus, type PayrollRecordModel } from "@/sdk/database/orm/orm_payroll_record";
+import { type WorkerModel } from "@/sdk/database/orm/orm_worker";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import "@testing-library/jest-dom";
 
@@ -42,7 +43,7 @@ describe("PayrollView Approval", () => {
 
     it("shows Approve button for Draft records and calls mutation", async () => {
         const user = userEvent.setup();
-        const mockRecords = [{
+        const mockRecords: PayrollRecordModel[] = [{
             id: "payroll-1",
             worker_id: "worker-1",
             pay_period_start: "1000",
@@ -62,7 +63,7 @@ describe("PayrollView Approval", () => {
             <Wrapper>
                 <PayrollView
                     payrollRecords={mockRecords}
-                    workers={[{ id: "worker-1", full_name: "John Doe" } as any]}
+                    workers={[{ id: "worker-1", full_name: "John Doe", role: 0, status: 0, company_id: "company-1", data_creator: "user-1", data_updater: "user-1", create_time: "now", update_time: "now" } as WorkerModel]}
                     companyId="company-1"
                 />
             </Wrapper>
@@ -84,7 +85,7 @@ describe("PayrollView Approval", () => {
     });
 
     it("shows Approve button for Unspecified records (legacy data fix)", async () => {
-        const mockRecords = [{
+        const mockRecords: PayrollRecordModel[] = [{
             id: "payroll-2",
             worker_id: "worker-1",
             pay_period_start: "1000",
@@ -104,7 +105,7 @@ describe("PayrollView Approval", () => {
             <Wrapper>
                 <PayrollView
                     payrollRecords={mockRecords}
-                    workers={[{ id: "worker-1", full_name: "John Doe" } as any]}
+                    workers={[{ id: "worker-1", full_name: "John Doe", role: 0, status: 0, company_id: "company-1", data_creator: "user-1", data_updater: "user-1", create_time: "now", update_time: "now" } as WorkerModel]}
                     companyId="company-1"
                 />
             </Wrapper>

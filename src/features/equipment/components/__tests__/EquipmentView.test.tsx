@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 import { EquipmentView } from "../EquipmentView";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import "@testing-library/jest-dom";
-import { EquipmentType } from "@/sdk/database/orm/orm_equipment";
+import { EquipmentType, type EquipmentModel } from "@/sdk/database/orm/orm_equipment";
 
 const queryClient = new QueryClient();
 
@@ -18,7 +18,7 @@ const Wrapper = ({ children }: { children: React.ReactNode }) => (
     <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
 );
 
-const mockEquipment = [
+const mockEquipment: EquipmentModel[] = [
     {
         id: "equip-1",
         name: "Hand Truck",

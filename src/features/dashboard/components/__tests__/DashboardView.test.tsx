@@ -1,12 +1,14 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { DashboardView } from "../DashboardView";
-import { JobStatus } from "@/sdk/database/orm/orm_job";
-import { WorkerRole, WorkerStatus } from "@/sdk/database/orm/orm_worker";
+import { JobStatus, type JobModel } from "@/sdk/database/orm/orm_job";
+import { WorkerRole, WorkerStatus, type WorkerModel } from "@/sdk/database/orm/orm_worker";
+import { type EquipmentModel } from "@/sdk/database/orm/orm_equipment";
+import { type VehicleModel } from "@/sdk/database/orm/orm_vehicle";
 import "@testing-library/jest-dom";
 
 // Mock data
-const mockJobs = [
+const mockJobs: JobModel[] = [
     {
         id: "job-1",
         customer_name: "John Doe",
@@ -22,7 +24,7 @@ const mockJobs = [
     }
 ];
 
-const mockWorkers = [
+const mockWorkers: WorkerModel[] = [
     {
         id: "worker-1",
         full_name: "Jane Smith",
@@ -36,8 +38,8 @@ const mockWorkers = [
     }
 ];
 
-const mockEquipment: any[] = [];
-const mockVehicles: any[] = [];
+const mockEquipment: EquipmentModel[] = [];
+const mockVehicles: VehicleModel[] = [];
 
 describe("DashboardView", () => {
     it("renders summary cards correctly", () => {

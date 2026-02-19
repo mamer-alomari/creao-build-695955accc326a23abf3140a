@@ -2,9 +2,10 @@ import { render, screen, fireEvent } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
 import { SchedulingView } from "../SchedulingView";
-import { JobStatus } from "@/sdk/database/orm/orm_job";
-import { WorkerRole, WorkerStatus } from "@/sdk/database/orm/orm_worker";
-import { VehicleType } from "@/sdk/database/orm/orm_vehicle";
+import { JobStatus, type JobModel } from "@/sdk/database/orm/orm_job";
+import { WorkerRole, WorkerStatus, type WorkerModel } from "@/sdk/database/orm/orm_worker";
+import { VehicleType, type VehicleModel } from "@/sdk/database/orm/orm_vehicle";
+import { type JobWorkerAssignmentModel } from "@/sdk/database/orm/orm_job_worker_assignment";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import "@testing-library/jest-dom";
 
@@ -14,7 +15,7 @@ const Wrapper = ({ children }: { children: React.ReactNode }) => (
     <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
 );
 
-const mockJobs = [
+const mockJobs: JobModel[] = [
     {
         id: "job-1",
         customer_name: "Active Job",
@@ -30,7 +31,7 @@ const mockJobs = [
     }
 ];
 
-const mockWorkers = [
+const mockWorkers: WorkerModel[] = [
     {
         id: "worker-1",
         full_name: "Worker One",
@@ -44,7 +45,7 @@ const mockWorkers = [
     }
 ];
 
-const mockVehicles = [
+const mockVehicles: VehicleModel[] = [
     {
         id: "vehicle-1",
         vehicle_name: "Truck One",
@@ -58,7 +59,7 @@ const mockVehicles = [
     }
 ];
 
-const mockAssignments = [
+const mockAssignments: JobWorkerAssignmentModel[] = [
     {
         id: "assign-1",
         job_id: "job-1",

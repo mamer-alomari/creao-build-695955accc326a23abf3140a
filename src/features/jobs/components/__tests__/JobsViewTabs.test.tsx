@@ -3,7 +3,7 @@ import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import { JobsView } from "../JobsView";
-import { JobStatus } from "@/sdk/database/orm/orm_job";
+import { JobStatus, type JobModel } from "@/sdk/database/orm/orm_job";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import "@testing-library/jest-dom";
 
@@ -20,7 +20,7 @@ const Wrapper = ({ children }: { children: React.ReactNode }) => (
     <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
 );
 
-const mockJobs = [
+const mockJobs: JobModel[] = [
     {
         id: "job-active",
         customer_name: "Active Customer",
