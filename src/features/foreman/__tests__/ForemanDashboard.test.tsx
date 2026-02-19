@@ -22,7 +22,7 @@ vi.mock("@/sdk/database/orm/orm_job", async (importOriginal) => {
 });
 
 vi.mock("@tanstack/react-query", async (importOriginal) => {
-    const actual = await importOriginal();
+    const actual = await importOriginal<typeof import("@tanstack/react-query")>();
     return {
         ...actual,
         useQuery: vi.fn(),

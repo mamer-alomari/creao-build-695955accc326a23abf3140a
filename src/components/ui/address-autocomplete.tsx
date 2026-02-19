@@ -47,7 +47,7 @@ export function AddressAutocomplete({
         });
 
         // Add listener for place selection
-        autocompleteRef.current.addListener("place_changed", () => {
+        autocompleteRef.current?.addListener("place_changed", () => {
             const place = autocompleteRef.current?.getPlace();
 
             if (place && place.formatted_address) {

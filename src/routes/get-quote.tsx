@@ -57,7 +57,6 @@ export function GetQuoteView() {
             const quote = await QuoteORM.getInstance().insertQuote({
                 pickup_address: pickup,
                 dropoff_address: dropoff,
-                classification: classification,
                 move_date: date.toISOString(),
                 inventory_items: rooms,
                 estimated_volume: estimatedVolume,

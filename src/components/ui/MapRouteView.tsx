@@ -51,7 +51,7 @@ export function MapRouteView({ origin, destination, className }: MapRouteViewPro
                         destination: destination,
                         travelMode: window.google.maps.TravelMode.DRIVING,
                     },
-                    (result, status) => {
+                    (result: google.maps.DirectionsResult | null, status: google.maps.DirectionsStatus) => {
                         console.log("MapRouteView: Route result", { status, result });
                         if (status === window.google.maps.DirectionsStatus.OK && result) {
                             directionsRenderer.setDirections(result);

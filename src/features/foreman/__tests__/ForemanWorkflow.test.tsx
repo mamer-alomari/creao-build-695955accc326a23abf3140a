@@ -9,7 +9,7 @@ import { describe, it, expect, beforeEach, vi, type Mock } from 'vitest';
 
 // Mocks
 vi.mock("@tanstack/react-query", async (importOriginal) => {
-    const actual = await importOriginal();
+    const actual = await importOriginal<typeof import("@tanstack/react-query")>();
     return {
         ...actual,
         useQuery: vi.fn(),
