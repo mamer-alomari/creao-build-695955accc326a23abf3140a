@@ -4,7 +4,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite --port 3000",
-    "start": "serve -s dist",
+    "start": "vite",
     "build": "npm run check:safe && vite build",
     "serve": "vite preview",
     "test": "vitest run",
