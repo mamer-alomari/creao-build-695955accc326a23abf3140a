@@ -4,7 +4,8 @@
     "**/*.tsx"
   ],
   "exclude": [
-    "e2b-templates/**/*"
+    "e2b-templates/**/*",
+    "functions/**/*"
   ],
   "compilerOptions": {
     "target": "ES2022",
