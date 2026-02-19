@@ -4,7 +4,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite --port 3000",
-    "start": "vite --port 3000",
+    "start": "serve -s dist",
     "build": "npm run check:safe && vite build",
     "serve": "vite preview",
     "test": "vitest run",
@@ -77,6 +77,7 @@
     "react-qr-code": "^2.0.18",
     "react-resizable-panels": "^3.0.2",
     "recharts": "^2.15.3",
+    "serve": "^14.2.5",
     "sonner": "^2.0.6",
     "tailwind-merge": "^3.0.2",
     "tailwindcss": "^4.0.6",
