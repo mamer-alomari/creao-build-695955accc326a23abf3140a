@@ -1,5 +1,6 @@
 
 import { useState } from "react";
+import { toast } from "sonner";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useCreaoAuth } from "@/sdk/core/auth";
 import { InvitationORM, type InvitationModel } from "@/sdk/database/orm/orm_invitation";
@@ -72,14 +73,14 @@ export function TeamManager() {
             }
         },
         onError: (err) => {
-            alert("Failed to create invitation");
+            toast.error("Failed to create invitation");
             console.error(err);
         }
     });
 
     const copyLink = () => {
         navigator.clipboard.writeText(generatedLink);
-        alert("Link copied to clipboard!");
+        toast.success("Link copied to clipboard!");
         setIsInviteOpen(false);
         setGeneratedLink("");
         setInviteEmail("");

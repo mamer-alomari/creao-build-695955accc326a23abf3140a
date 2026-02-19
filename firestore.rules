@@ -26,25 +26,32 @@ service cloud.firestore {
       return isCompanyMember(companyId) && (getUserData().role == 'foreman' || getUserData().role == 'manager' || getUserData().role == 'admin');
     }
 
+    function isWorkerOrAbove(companyId) {
+      return isCompanyMember(companyId) && (getUserData().role == 'worker' || getUserData().role == 'foreman' || getUserData().role == 'manager' || getUserData().role == 'admin');
+    }
+
     // Users: Users can read/write their own profile
     match /users/{userId} {
       allow read, write: if isUser(userId);
     }
 
-    // Companies: 
+    // Companies:
     // Create: Allow if authenticated (onboarding)
-    // Read/Update: If user belongs to this company
+    // Read: Any authenticated user can read (needed for onboarding company lookup & invite acceptance)
+    // Update: Only members of this company
     match /companies/{companyId} {
-      allow create: if isAuthenticated(); 
-      allow read: if true;
+      allow create: if isAuthenticated();
+      allow read: if isAuthenticated();
       allow update: if isCompanyMember(companyId);
     }
 
     // Jobs
-    // Jobs - Managed by Foreman+
+    // Jobs - Managed by Foreman+; customers can read their own
     match /jobs/{jobId} {
-      allow read: if isCompanyMember(resource.data.company_id);
-      allow create: if isForeman(request.resource.data.company_id);
+      allow read: if isCompanyMember(resource.data.company_id) 
+                  || (isAuthenticated() && resource.data.customer_id == request.auth.uid);
+      allow create: if isForeman(request.resource.data.company_id)
+                    || (isAuthenticated() && request.resource.data.customer_id == request.auth.uid);
       allow update, delete: if isForeman(resource.data.company_id);
     }
 
@@ -107,6 +114,7 @@ service cloud.firestore {
         allow create: if isForeman(request.resource.data.company_id);
         allow update, delete: if isForeman(resource.data.company_id);
     }
+
     // Invitations
     match /invitations/{token} {
         // Managers can manage their company's invitations
@@ -138,7 +146,36 @@ service cloud.firestore {
         allow create: if true; // Public lead capture
         allow read, update, delete: if (resource.data.customer_id == request.auth.uid) || (resource.data.company_id != null && isCompanyMember(resource.data.company_id));
     }
+
+    // Storage Facilities
+    match /storage_facilities/{facilityId} {
+        allow read: if isCompanyMember(resource.data.company_id);
+        allow create: if isCompanyMember(request.resource.data.company_id);
+        allow update: if isCompanyMember(resource.data.company_id);
+        allow delete: if isManager(resource.data.company_id);
+    }
+
+    // Worker Schedules
+    match /worker_schedules/{scheduleId} {
+        allow read: if isCompanyMember(resource.data.company_id)
+                    || isUser(resource.data.worker_id);
+        allow create: if isWorkerOrAbove(request.resource.data.company_id);
+        allow update: if isWorkerOrAbove(resource.data.company_id);
+        allow delete: if isForeman(resource.data.company_id);
+    }
+
+    // Equipment Schedules
+    match /equipment_schedules/{scheduleId} {
+        allow read: if isCompanyMember(resource.data.company_id);
+        allow create: if isForeman(request.resource.data.company_id);
+        allow update, delete: if isForeman(resource.data.company_id);
+    }
+
+    // Vehicle Schedules
+    match /vehicle_schedules/{scheduleId} {
+        allow read: if isCompanyMember(resource.data.company_id);
+        allow create: if isForeman(request.resource.data.company_id);
+        allow update, delete: if isForeman(resource.data.company_id);
+    }
   }
 }
-
-

@@ -1,5 +1,6 @@
 
 import { useState } from "react";
+import { toast } from "sonner";
 import { useMutation } from "@tanstack/react-query";
 import { useCreaoAuth } from "@/sdk/core/auth";
 import { IncidentORM, type IncidentModel } from "@/sdk/database/orm/orm_incident";
@@ -33,12 +34,12 @@ export function ReportIncidentView() {
             });
         },
         onSuccess: () => {
-            alert("Incident reported successfully.");
+            toast.success("Incident reported successfully.");
             navigate({ to: "/worker" });
         },
         onError: (err) => {
             console.error(err);
-            alert("Failed to report incident.");
+            toast.error("Failed to report incident.");
         }
     });
 
@@ -86,7 +87,7 @@ export function ReportIncidentView() {
 
                     <div className="space-y-2">
                         <Label>Photos</Label>
-                        <div className="border-2 border-dashed border-slate-300 rounded-lg p-8 flex flex-col items-center justify-center text-slate-500 bg-slate-50 hover:bg-slate-100 transition-colors cursor-pointer" onClick={() => alert("Photo upload coming soon")}>
+                        <div className="border-2 border-dashed border-slate-300 rounded-lg p-8 flex flex-col items-center justify-center text-slate-500 bg-slate-50 hover:bg-slate-100 transition-colors cursor-pointer" onClick={() => toast.info("Photo upload coming soon")}>
                             <Camera className="h-8 w-8 mb-2" />
                             <span>Tap to add photo</span>
                         </div>

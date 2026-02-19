@@ -1,5 +1,6 @@
 
 import { useState, useEffect } from "react";
+import { toast } from "sonner";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -73,7 +74,7 @@ export function WorkerAssignmentDialog({ isOpen, onClose, jobId, jobTitle }: Wor
         },
         onError: (err) => {
             console.error("Failed to save assignments:", err);
-            alert("Failed to save crew assignments.");
+            toast.error("Failed to save crew assignments.");
         },
         onSettled: () => {
             setIsSaving(false);

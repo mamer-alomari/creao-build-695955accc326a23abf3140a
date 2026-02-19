@@ -53,6 +53,14 @@ vi.mock("../components/VehicleChecklistDialog", () => ({
     )
 }));
 
+vi.mock("../components/SignatureCapture", () => ({
+    SignatureCapture: ({ label, onCapture }: any) => (
+        <div data-testid={`signature-${label}`}>
+            <button onClick={() => onCapture("mock_sig_data")}>Sign {label}</button>
+        </div>
+    )
+}));
+
 const createTestQueryClient = () => new QueryClient({
     defaultOptions: { queries: { retry: false } },
 });

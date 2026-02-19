@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { type JobModel, JobStatus } from "@/sdk/database/orm/orm_job";
 import { type WorkerModel, WorkerStatus, WorkerRole } from "@/sdk/database/orm/orm_worker";
@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
-import { Plus, Trash2, Clock, Truck, Hammer, Users, Calendar, Box, Repeat } from "lucide-react";
+import { Plus, Trash2, Clock, Truck, Hammer, Users, Calendar, Box, Repeat, AlertTriangle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
@@ -194,6 +194,51 @@ export function SchedulingView({ jobs, workers, equipment, vehicles, jobAssignme
     const getEquipment = (id: string) => equipment.find(e => e.id === id);
     const getEquipmentName = (id: string) => getEquipment(id)?.name || "Unknown";
 
+    // ─── Conflict Detection ───
+    const getJobDate = (job: JobModel) => {
+        try {
+            return new Date(parseInt(job.scheduled_date) * 1000).toDateString();
+        } catch {
+            return job.scheduled_date;
+        }
+    };
+
+    const conflicts = useMemo(() => {
+        if (!editingJob) return { workers: new Map<string, string[]>(), vehicles: new Map<string, string[]>() };
+
+        const editDate = getJobDate(editingJob);
+        const sameDate = activeJobs.filter(j => j.id !== editingJob.id && getJobDate(j) === editDate);
+
+        const workerConflicts = new Map<string, string[]>();
+        const vehicleConflicts = new Map<string, string[]>();
+
+        sameDate.forEach(otherJob => {
+            jobAssignments.filter(a => a.job_id === otherJob.id).forEach(a => {
+                const existing = workerConflicts.get(a.worker_id) || [];
+                existing.push(otherJob.customer_name);
+                workerConflicts.set(a.worker_id, existing);
+            });
+            vehicleAssignments.filter(a => a.job_id === otherJob.id).forEach(a => {
+                const existing = vehicleConflicts.get(a.vehicle_id) || [];
+                existing.push(otherJob.customer_name);
+                vehicleConflicts.set(a.vehicle_id, existing);
+            });
+        });
+
+        return { workers: workerConflicts, vehicles: vehicleConflicts };
+    }, [editingJob, activeJobs, jobAssignments, vehicleAssignments]);
+
+    const hasActiveConflicts = useMemo(() => {
+        if (!editingJob) return false;
+        for (const wId of selectedWorkerIds) {
+            if (conflicts.workers.has(wId)) return true;
+        }
+        for (const vId of selectedVehicleIds) {
+            if (conflicts.vehicles.has(vId)) return true;
+        }
+        return false;
+    }, [selectedWorkerIds, selectedVehicleIds, conflicts, editingJob]);
+
     return (
         <div className="space-y-6">
             <Card>
@@ -323,6 +368,13 @@ export function SchedulingView({ jobs, workers, equipment, vehicles, jobAssignme
                         </DialogDescription>
                     </DialogHeader>
 
+                    {hasActiveConflicts && (
+                        <div className="flex items-center gap-2 bg-amber-50 border border-amber-200 text-amber-800 rounded-lg p-3 text-sm">
+                            <AlertTriangle className="h-4 w-4 flex-shrink-0" />
+                            <span><strong>Scheduling conflict:</strong> Some selected resources are already assigned to other jobs on this date.</span>
+                        </div>
+                    )}
+
                     <div className="flex-1 overflow-hidden">
                         <ScrollArea className="h-[500px] pr-4">
                             <div className="grid md:grid-cols-3 gap-6">
@@ -335,17 +387,25 @@ export function SchedulingView({ jobs, workers, equipment, vehicles, jobAssignme
                                     </div>
                                     <div className="space-y-2">
                                         {workers.filter(w => w.status === WorkerStatus.Active).map(worker => (
-                                            <div key={worker.id} className="flex items-start space-x-3 p-2 hover:bg-muted/50 rounded-md">
+                                            <div key={worker.id} className={`flex items-start space-x-3 p-2 hover:bg-muted/50 rounded-md ${conflicts.workers.has(worker.id) && selectedWorkerIds.includes(worker.id) ? 'bg-amber-50 border border-amber-200' : ''}`}>
                                                 <Checkbox
                                                     id={`w - ${worker.id} `}
                                                     checked={selectedWorkerIds.includes(worker.id)}
                                                     onCheckedChange={() => handleToggleWorker(worker.id)}
                                                 />
                                                 <div className="grid gap-1.5 leading-none">
-                                                    <Label htmlFor={`w - ${worker.id} `} className="cursor-pointer font-medium">
+                                                    <Label htmlFor={`w - ${worker.id} `} className="cursor-pointer font-medium flex items-center gap-1">
                                                         {worker.full_name}
+                                                        {conflicts.workers.has(worker.id) && (
+                                                            <span title={`Also on: ${conflicts.workers.get(worker.id)!.join(', ')}`}>
+                                                                <AlertTriangle className="h-3.5 w-3.5 text-amber-500" />
+                                                            </span>
+                                                        )}
                                                     </Label>
                                                     <p className="text-xs text-muted-foreground">{WorkerRole[worker.role]}</p>
+                                                    {conflicts.workers.has(worker.id) && (
+                                                        <p className="text-xs text-amber-600">Also assigned to: {conflicts.workers.get(worker.id)!.join(', ')}</p>
+                                                    )}
                                                 </div>
                                             </div>
                                         ))}
@@ -361,17 +421,25 @@ export function SchedulingView({ jobs, workers, equipment, vehicles, jobAssignme
                                     </div>
                                     <div className="space-y-2">
                                         {vehicles.map(vehicle => (
-                                            <div key={vehicle.id} className="flex items-start space-x-3 p-2 hover:bg-muted/50 rounded-md">
+                                            <div key={vehicle.id} className={`flex items-start space-x-3 p-2 hover:bg-muted/50 rounded-md ${conflicts.vehicles.has(vehicle.id) && selectedVehicleIds.includes(vehicle.id) ? 'bg-amber-50 border border-amber-200' : ''}`}>
                                                 <Checkbox
                                                     id={`v - ${vehicle.id} `}
                                                     checked={selectedVehicleIds.includes(vehicle.id)}
                                                     onCheckedChange={() => handleToggleVehicle(vehicle.id)}
                                                 />
                                                 <div className="grid gap-1.5 leading-none">
-                                                    <Label htmlFor={`v - ${vehicle.id} `} className="cursor-pointer font-medium">
+                                                    <Label htmlFor={`v - ${vehicle.id} `} className="cursor-pointer font-medium flex items-center gap-1">
                                                         {vehicle.vehicle_name}
+                                                        {conflicts.vehicles.has(vehicle.id) && (
+                                                            <span title={`Also on: ${conflicts.vehicles.get(vehicle.id)!.join(', ')}`}>
+                                                                <AlertTriangle className="h-3.5 w-3.5 text-amber-500" />
+                                                            </span>
+                                                        )}
                                                     </Label>
                                                     <p className="text-xs text-muted-foreground">{VehicleType[vehicle.type]}</p>
+                                                    {conflicts.vehicles.has(vehicle.id) && (
+                                                        <p className="text-xs text-amber-600">Also assigned to: {conflicts.vehicles.get(vehicle.id)!.join(', ')}</p>
+                                                    )}
                                                 </div>
                                             </div>
                                         ))}

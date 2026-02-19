@@ -1,6 +1,7 @@
 
 import { createFileRoute, useNavigate, useSearch } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
+import { toast } from "sonner";
 import { InvitationORM, type InvitationModel } from "@/sdk/database/orm/orm_invitation";
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import { auth, db } from "@/lib/firebase";
@@ -71,7 +72,7 @@ function InviteView() {
     const handleSignup = async (e: React.FormEvent) => {
         e.preventDefault();
         if (password !== confirmPassword) {
-            alert("Passwords do not match");
+            toast.error("Passwords do not match");
             return;
         }
         if (!invitation) return;
@@ -103,7 +104,7 @@ function InviteView() {
 
         } catch (err: any) {
             console.error(err);
-            alert("Signup failed: " + err.message);
+            toast.error("Signup failed: " + err.message);
         } finally {
             setIsSubmitting(false);
         }

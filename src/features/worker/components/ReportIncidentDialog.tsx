@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { toast } from "sonner";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -102,7 +103,7 @@ export function ReportIncidentDialog({ trigger, initialDescription = "", onClose
             }
         } catch (error) {
             console.error("Upload failed details:", error);
-            alert(`Upload failed: ${error instanceof Error ? error.message : "Unknown error"}`);
+            toast.error(`Upload failed: ${error instanceof Error ? error.message : "Unknown error"}`);
             throw error;
         } finally {
             setIsUploading(false);
@@ -134,11 +135,11 @@ export function ReportIncidentDialog({ trigger, initialDescription = "", onClose
             setType("other");
             setFiles([]);
             setIsUploading(false);
-            alert("Incident reported successfully.");
+            toast.success("Incident reported successfully.");
         },
         onError: (error) => {
             console.error("Failed to report incident:", error);
-            alert("Failed to report incident. Please try again.");
+            toast.error("Failed to report incident. Please try again.");
         }
     });
 

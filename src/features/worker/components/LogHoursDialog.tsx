@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { toast } from "sonner";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -57,11 +58,11 @@ export function LogHoursDialog({ trigger }: LogHoursDialogProps) {
                 hours_worked: 0,
                 hourly_wage: 0,
             });
-            alert("Hours logged successfully.");
+            toast.success("Hours logged successfully.");
         },
         onError: (error) => {
             console.error("Failed to log hours:", error);
-            alert("Failed to log hours. Please try again.");
+            toast.error("Failed to log hours. Please try again.");
         }
     });
 

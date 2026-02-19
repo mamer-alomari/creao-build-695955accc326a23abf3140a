@@ -1,5 +1,6 @@
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
+import { toast } from "sonner";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { JobORM, type JobModel, JobStatus } from "@/sdk/database/orm/orm_job";
 import { type WorkerModel } from "@/sdk/database/orm/orm_worker";
@@ -59,13 +60,45 @@ export function JobsView({ jobs, workers, vehicles, equipment, companyId }: Jobs
     const [selectedJob, setSelectedJob] = useState<JobModel | null>(null);
     const [isDetailsOpen, setIsDetailsOpen] = useState(false);
 
+    // Search & Filter State
+    const [searchQuery, setSearchQuery] = useState("");
+    const [statusFilter, setStatusFilter] = useState<"all" | "quotes" | "active" | "completed" | "canceled">("all");
+
     const queryClient = useQueryClient();
     const { calculateDistance } = useDistanceMatrix();
 
-    // Split jobs into lists
-    const quotesList = jobs.filter(j => j.status === JobStatus.Quote || j.status === JobStatus.Unspecified);
-    const activeJobsList = jobs.filter(j => j.status !== JobStatus.Quote && j.status !== JobStatus.Unspecified && j.status !== JobStatus.Canceled && j.status !== JobStatus.Completed);
-    // Optional: CompletedJobsList could be another tab or filtered out
+    // Filter jobs by search query and status
+    const filteredJobs = useMemo(() => {
+        let result = jobs;
+
+        // Search filter
+        if (searchQuery.trim()) {
+            const q = searchQuery.toLowerCase();
+            result = result.filter(j =>
+                j.customer_name.toLowerCase().includes(q) ||
+                j.pickup_address?.toLowerCase().includes(q) ||
+                j.dropoff_address?.toLowerCase().includes(q) ||
+                j.id.toLowerCase().includes(q)
+            );
+        }
+
+        // Status filter
+        if (statusFilter === "quotes") {
+            result = result.filter(j => j.status === JobStatus.Quote || j.status === JobStatus.Unspecified);
+        } else if (statusFilter === "active") {
+            result = result.filter(j => j.status === JobStatus.Booked || j.status === JobStatus.InProgress);
+        } else if (statusFilter === "completed") {
+            result = result.filter(j => j.status === JobStatus.Completed);
+        } else if (statusFilter === "canceled") {
+            result = result.filter(j => j.status === JobStatus.Canceled);
+        }
+
+        return result;
+    }, [jobs, searchQuery, statusFilter]);
+
+    // Split filtered jobs into lists
+    const quotesList = filteredJobs.filter(j => j.status === JobStatus.Quote || j.status === JobStatus.Unspecified);
+    const activeJobsList = filteredJobs.filter(j => j.status !== JobStatus.Quote && j.status !== JobStatus.Unspecified && j.status !== JobStatus.Canceled && j.status !== JobStatus.Completed);
 
     // Mutations
     const createJobMutation = useMutation({
@@ -100,7 +133,7 @@ export function JobsView({ jobs, workers, vehicles, equipment, companyId }: Jobs
         },
         onError: (error) => {
             console.error("Failed to create job/quote:", error);
-            alert(`Failed to save quote: ${error instanceof Error ? error.message : "Unknown error"}`);
+            toast.error(`Failed to save quote: ${error instanceof Error ? error.message : "Unknown error"}`);
         },
     });
 
@@ -217,6 +250,25 @@ export function JobsView({ jobs, workers, vehicles, equipment, companyId }: Jobs
                         <CardDescription>Manage active jobs and incoming quotes</CardDescription>
                     </div>
                     <div className="flex gap-2">
+                        {/* Search */}
+                        <Input
+                            placeholder="Search by name, address..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="w-64"
+                        />
+                        {/* Status Filter */}
+                        <select
+                            value={statusFilter}
+                            onChange={(e) => setStatusFilter(e.target.value as any)}
+                            className="h-9 rounded-md border border-input bg-background px-3 text-sm"
+                        >
+                            <option value="all">All Statuses</option>
+                            <option value="quotes">Quotes Only</option>
+                            <option value="active">Active Jobs</option>
+                            <option value="completed">Completed</option>
+                            <option value="canceled">Canceled</option>
+                        </select>
                         {/* Quote Wizard Button */}
                         <Button onClick={() => setIsQuoteWizardOpen(true)} variant="outline">
                             <Calculator className="h-4 w-4 mr-2" />

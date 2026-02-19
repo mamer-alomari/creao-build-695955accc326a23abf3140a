@@ -1,5 +1,6 @@
 
 import { useState, useEffect, useRef } from "react";
+import { toast } from "sonner";
 import { useCreaoAuth } from "@/sdk/core/auth";
 import { StorageFacilityORM, type StorageFacilityModel } from "@/sdk/database/orm/orm_storage_facility";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
@@ -85,7 +86,7 @@ export function StorageNetworkView() {
         },
         onError: (error) => {
             console.error("Failed to add storage facility:", error);
-            alert(`Failed to add storage facility: ${error instanceof Error ? error.message : "Unknown error"}`);
+            toast.error(`Failed to add storage facility: ${error instanceof Error ? error.message : "Unknown error"}`);
         }
     });
 

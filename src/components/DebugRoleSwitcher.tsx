@@ -80,14 +80,7 @@ export function DebugRoleSwitcher() {
             if (snap.exists()) {
                 const data = snap.data();
                 console.log("Firestore User Data:", data);
-                alert(`
-                   User ID: ${user.uid}
-                   Firestore Role: ${data.role}
-                   Firestore CompanyId: ${data.companyId}
-                   Client Role: ${role}
-                   
-                   If CompanyId is missing or wrong, you cannot create workers.
-               `);
+                toast.info(`User ID: ${user.uid}\nFirestore Role: ${data.role}\nFirestore CompanyId: ${data.companyId}\nClient Role: ${role}\n\nIf CompanyId is missing or wrong, you cannot create workers.`);
 
                 // Auto-Repair attempts
                 if (!data.companyId && role !== UserRole.Unspecified) {
@@ -105,12 +98,12 @@ export function DebugRoleSwitcher() {
                     }
                 }
             } else {
-                alert("User document does not exist in Firestore!");
+                toast.error("User document does not exist in Firestore!");
                 // Create it?
             }
         } catch (e: any) {
             console.error(e);
-            alert("Diagnostics failed: " + e.message);
+            toast.error("Diagnostics failed: " + e.message);
         }
     };
 

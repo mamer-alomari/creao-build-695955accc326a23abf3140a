@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { useCreaoAuth } from "@/sdk/core/auth";
 import { QuoteORM, type QuoteModel } from "@/sdk/database/orm/orm_quote";
 import { JobORM, type JobModel, JobStatus } from "@/sdk/database/orm/orm_job";
@@ -7,8 +8,10 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { format } from "date-fns";
-import { Package, Truck, Calendar, ArrowRight, CheckCircle2 } from "lucide-react";
+import { Package, Truck, Calendar, ArrowRight, CheckCircle2, ChevronDown, ChevronUp } from "lucide-react";
 import { useNavigate } from "@tanstack/react-router";
+import { JobTimeline } from "./JobTimeline";
+import { useState as useReactState } from "react";
 
 export function PortalDashboard() {
     const { user } = useCreaoAuth();
@@ -80,11 +83,11 @@ export function PortalDashboard() {
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["customer-quotes"] });
             queryClient.invalidateQueries({ queryKey: ["customer-jobs"] });
-            alert("Booking Confirmed! A mover will be assigned shortly.");
+            toast.success("Booking Confirmed! A mover will be assigned shortly.");
         },
         onError: (error) => {
             console.error("Booking failed:", error);
-            alert("Failed to book. Please try again.");
+            toast.error("Failed to book. Please try again.");
         }
     });
 
@@ -178,45 +181,65 @@ export function PortalDashboard() {
                         </Card>
                     ) : (
                         jobs.map((job) => (
-                            <Card key={job.id}>
-                                <CardHeader>
-                                    <div className="flex justify-between items-start">
-                                        <div>
-                                            <CardTitle className="flex items-center gap-2">
-                                                <Truck className="h-5 w-5 text-primary" />
-                                                Move on {format(new Date(job.scheduled_date), "PPP")}
-                                            </CardTitle>
-                                            <CardDescription>Job ID: {job.id.slice(0, 8)}</CardDescription>
-                                        </div>
-                                        <JobStatusBadge status={job.status} />
-                                    </div>
-                                </CardHeader>
-                                <CardContent>
-                                    <div className="grid md:grid-cols-2 gap-4">
-                                        <div className="space-y-1">
-                                            <div className="text-sm font-medium text-muted-foreground">Locations</div>
-                                            <div className="text-sm">
-                                                <span className="text-muted-foreground">From:</span> {job.pickup_address} <br />
-                                                <span className="text-muted-foreground">To:</span> {job.dropoff_address}
-                                            </div>
-                                        </div>
-                                        <div className="space-y-1">
-                                            <div className="text-sm font-medium text-muted-foreground">Status Details</div>
-                                            <div className="text-sm">
-                                                Your move is currently <strong>{JobStatus[job.status]}</strong>.
-                                                {job.company_id === "PENDING_ASSIGNMENT" && (
-                                                    <span className="block text-amber-600">Waiting for company assignment.</span>
-                                                )}
-                                            </div>
-                                        </div>
-                                    </div>
-                                </CardContent>
-                            </Card>
+                            <JobCard key={job.id} job={job} />
                         ))
                     )}
                 </TabsContent>
             </Tabs>
         </div>
+    );
+}
+
+function JobCard({ job }: { job: JobModel }) {
+    const [showTimeline, setShowTimeline] = useReactState(false);
+
+    return (
+        <Card>
+            <CardHeader>
+                <div className="flex justify-between items-start">
+                    <div>
+                        <CardTitle className="flex items-center gap-2">
+                            <Truck className="h-5 w-5 text-primary" />
+                            Move on {format(new Date(job.scheduled_date), "PPP")}
+                        </CardTitle>
+                        <CardDescription>Job ID: {job.id.slice(0, 8)}</CardDescription>
+                    </div>
+                    <JobStatusBadge status={job.status} />
+                </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+                <div className="grid md:grid-cols-2 gap-4">
+                    <div className="space-y-1">
+                        <div className="text-sm font-medium text-muted-foreground">Locations</div>
+                        <div className="text-sm">
+                            <span className="text-muted-foreground">From:</span> {job.pickup_address} <br />
+                            <span className="text-muted-foreground">To:</span> {job.dropoff_address}
+                        </div>
+                    </div>
+                    <div className="space-y-1">
+                        <div className="text-sm font-medium text-muted-foreground">Estimated Cost</div>
+                        <div className="text-lg font-bold">${job.estimated_cost}</div>
+                    </div>
+                </div>
+                {job.company_id === "PENDING_ASSIGNMENT" && (
+                    <div className="text-sm text-amber-600 bg-amber-50 p-2 rounded">
+                        Waiting for company assignment.
+                    </div>
+                )}
+                <button
+                    onClick={() => setShowTimeline(!showTimeline)}
+                    className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800 transition-colors font-medium"
+                >
+                    {showTimeline ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                    {showTimeline ? "Hide Timeline" : "View Timeline"}
+                </button>
+                {showTimeline && (
+                    <div className="pt-2 border-t">
+                        <JobTimeline currentStatus={job.status} />
+                    </div>
+                )}
+            </CardContent>
+        </Card>
     );
 }
 

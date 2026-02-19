@@ -31,6 +31,14 @@ vi.mock("@/sdk/core/auth", () => ({
     useCreaoAuth: () => ({ user: { uid: "user-123" } })
 }));
 
+vi.mock("@/hooks/use-google-vision", () => ({
+    useAnalyzeRoomImage: () => ({ mutateAsync: vi.fn() }),
+    ITEM_CATEGORIES: [
+        { value: "other", label: "Other" },
+        { value: "furniture", label: "Furniture" },
+    ]
+}));
+
 const renderWithClient = (ui: React.ReactElement) => {
     const client = new QueryClient({
         defaultOptions: {
@@ -54,14 +62,17 @@ describe("ForemanInventoryView", () => {
     it("renders loading initially", () => {
         (mockJobORMInstance.getJobById as any).mockImplementation(() => new Promise(() => { })); // Hang
         renderWithClient(<ForemanInventoryView />);
-        expect(screen.getByText("Loading Inventory...")).toBeInTheDocument();
+        expect(screen.getByText("Loading Job Inventory...")).toBeInTheDocument();
     });
 
     it("renders items from job data", async () => {
         (mockJobORMInstance.getJobById as any).mockResolvedValue([{
             id: "job-123",
             customer_name: "Test Job",
-            final_inventory_data: JSON.stringify(["Sofa", "Table"])
+            final_inventory_data: JSON.stringify([
+                { id: "i1", name: "Sofa", category: "furniture", quantity: 1 },
+                { id: "i2", name: "Table", category: "furniture", quantity: 1 }
+            ])
         }]);
 
         renderWithClient(<ForemanInventoryView />);
@@ -72,7 +83,7 @@ describe("ForemanInventoryView", () => {
         });
     });
 
-    it("allows adding items manually", async () => {
+    it("opens dialog for manual entry", async () => {
         (mockJobORMInstance.getJobById as any).mockResolvedValue([{
             id: "job-123",
             customer_name: "Test Job",
@@ -81,13 +92,16 @@ describe("ForemanInventoryView", () => {
 
         renderWithClient(<ForemanInventoryView />);
 
-        await waitFor(() => expect(screen.getByText("No items scanned yet. Use camera or add manually.")).toBeInTheDocument());
+        await waitFor(() => expect(screen.getByText(/No items scanned yet/)).toBeInTheDocument());
 
-        const addButton = screen.getByText("Add Manual");
+        // Click Manual Entry button
+        const addButton = screen.getByText("Manual Entry");
         fireEvent.click(addButton);
 
+        // Dialog should appear with item name input
         await waitFor(() => {
-            expect(screen.getByText("Item #1")).toBeInTheDocument();
+            expect(screen.getByText("Add Item")).toBeInTheDocument();
+            expect(screen.getByPlaceholderText("e.g., Sofa, Box of Books")).toBeInTheDocument();
         });
     });
 
@@ -95,7 +109,7 @@ describe("ForemanInventoryView", () => {
         (mockJobORMInstance.getJobById as any).mockResolvedValue([{
             id: "job-123",
             customer_name: "Test Job",
-            final_inventory_data: JSON.stringify(["Chair"])
+            final_inventory_data: JSON.stringify([{ id: "i1", name: "Chair", category: "other", quantity: 1 }])
         }]);
         (mockJobORMInstance.setJobById as any).mockResolvedValue([]);
 
@@ -103,14 +117,13 @@ describe("ForemanInventoryView", () => {
 
         await waitFor(() => expect(screen.getByText("Chair")).toBeInTheDocument());
 
-        const completeBtn = screen.getByText(/Complete & Continue to Quote/i);
+        const completeBtn = screen.getByText(/All Items Scanned/i);
         fireEvent.click(completeBtn);
 
         await waitFor(() => {
             expect(mockJobORMInstance.setJobById).toHaveBeenCalledWith("job-123", expect.objectContaining({
                 final_inventory_data: expect.stringContaining("Chair")
             }));
-            expect(mockNavigate).toHaveBeenCalledWith({ to: "/foreman/jobs/job-123/execute" });
         });
     });
 });

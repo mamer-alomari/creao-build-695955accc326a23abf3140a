@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { toast } from "sonner";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { VehicleORM, type VehicleModel, VehicleType } from "@/sdk/database/orm/orm_vehicle";
 import { MaintenanceRecordORM, type MaintenanceRecordModel, MaintenanceType } from "@/sdk/database/orm/orm_maintenance_record";
@@ -102,11 +103,11 @@ export function VehiclesView({ vehicles, companyId, canManageFleet = true }: { v
                 type: MaintenanceType.Routine,
                 notes: "",
             });
-            alert("Record added successfully!");
+            toast.success("Record added successfully!");
         },
         onError: (error) => {
             console.error("Failed to create maintenance record:", error);
-            alert(`Failed to add record: ${error.message}`);
+            toast.error(`Failed to add record: ${error.message}`);
         }
     });
 

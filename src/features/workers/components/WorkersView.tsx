@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { toast } from "sonner";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { WorkerORM, type WorkerModel, WorkerRole, WorkerStatus } from "@/sdk/database/orm/orm_worker";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -63,7 +64,7 @@ export function WorkersView({ workers, companyId }: { workers: WorkerModel[]; co
         },
         onError: (error) => {
             console.error("Failed to create worker:", error);
-            alert(`Failed to create worker: ${error instanceof Error ? error.message : "Unknown error"}`);
+            toast.error(`Failed to create worker: ${error instanceof Error ? error.message : "Unknown error"}`);
         }
     });
 
@@ -77,7 +78,7 @@ export function WorkersView({ workers, companyId }: { workers: WorkerModel[]; co
         },
         onError: (error) => {
             console.error("Failed to delete worker:", error);
-            alert(`Failed to delete worker: ${error instanceof Error ? error.message : "Unknown error"}`);
+            toast.error(`Failed to delete worker: ${error instanceof Error ? error.message : "Unknown error"}`);
         }
     });
 

@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { toast } from "sonner";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -47,7 +48,7 @@ export function GetQuoteView() {
 
     const handleBook = async () => {
         if (!date) {
-            alert("Please select a moving date.");
+            toast.error("Please select a moving date.");
             return;
         }
         setIsSubmitting(true);
@@ -72,7 +73,7 @@ export function GetQuoteView() {
             setStep("success");
         } catch (error) {
             console.error("Failed to submit quote:", error);
-            alert("Failed to submit quote. Please try again.");
+            toast.error("Failed to submit quote. Please try again.");
         } finally {
             setIsSubmitting(false);
         }

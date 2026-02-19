@@ -1,5 +1,6 @@
 
 import { useState, useEffect } from "react";
+import { toast } from "sonner";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -207,7 +208,7 @@ export function ResourceAssignmentDialog({ isOpen, onClose, jobId, jobTitle }: R
         },
         onError: (err) => {
             console.error("Failed to save resources:", err);
-            alert("Failed to save assignments.");
+            toast.error("Failed to save assignments.");
         },
         onSettled: () => setIsSaving(false)
     });

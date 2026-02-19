@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useCreaoAuth } from "@/sdk/core/auth";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { LayoutDashboard, Calendar, Users, Package, Truck, DollarSign, Clock, AlertTriangle } from "lucide-react";
+import { LayoutDashboard, Calendar, Users, Package, Truck, DollarSign, Clock, AlertTriangle, MapPin, BarChart3, Receipt } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 import { CompanyORM, type CompanyModel } from "@/sdk/database/orm/orm_company";
@@ -25,10 +25,14 @@ import { PayrollView } from "@/features/payroll/components/PayrollView";
 import { SchedulingView } from "@/features/scheduling/components/SchedulingView";
 import { EarningsView } from "@/features/earnings/components/EarningsView";
 import { StorageNetworkView } from "@/features/network/StorageNetworkView";
+import { LiveTrackingMap } from "@/features/tracking/LiveTrackingMap";
+import { AnalyticsDashboard } from "@/features/analytics/AnalyticsDashboard";
 import { IncidentsView } from "@/features/incidents/components/IncidentsView";
+import { InvoiceView } from "@/features/invoicing/InvoiceView";
 import { ForemanDashboard } from "@/features/foreman/ForemanDashboard";
 import { WorkerDashboard } from "@/features/worker/components/WorkerDashboard";
 import { UserRole } from "@/sdk/core/auth";
+import { DashboardSkeleton } from "@/components/DashboardSkeleton";
 
 export const Route = createFileRoute("/")({
 	component: App,
@@ -148,14 +152,7 @@ function App() {
 	const upcomingJobs = jobs.filter((j) => j.status === JobStatus.Booked || j.status === JobStatus.InProgress);
 
 	if (isLoading) {
-		return (
-			<div className="flex items-center justify-center min-h-screen">
-				<div className="text-center">
-					<div className="text-lg font-medium">Loading...</div>
-					<div className="text-sm text-muted-foreground mt-2">Please wait</div>
-				</div>
-			</div>
-		);
+		return <DashboardSkeleton />;
 	}
 
 	// Show proper empty state for unauthenticated users
@@ -281,6 +278,30 @@ function App() {
 						<Package className="mr-2 h-4 w-4" />
 						Storage Network
 					</Button>
+					<Button
+						variant={activeTab === "tracking" ? "secondary" : "ghost"}
+						className="w-full justify-start"
+						onClick={() => setActiveTab("tracking")}
+					>
+						<MapPin className="mr-2 h-4 w-4" />
+						Fleet Tracking
+					</Button>
+					<Button
+						variant={activeTab === "analytics" ? "secondary" : "ghost"}
+						className="w-full justify-start"
+						onClick={() => setActiveTab("analytics")}
+					>
+						<BarChart3 className="mr-2 h-4 w-4" />
+						Analytics
+					</Button>
+					<Button
+						variant={activeTab === "invoicing" ? "secondary" : "ghost"}
+						className="w-full justify-start"
+						onClick={() => setActiveTab("invoicing")}
+					>
+						<Receipt className="mr-2 h-4 w-4" />
+						Invoicing
+					</Button>
 				</nav>
 			</aside>
 
@@ -360,6 +381,26 @@ function App() {
 
 					<TabsContent value="storage" className="m-0">
 						<StorageNetworkView />
+					</TabsContent>
+
+					<TabsContent value="tracking" className="m-0">
+						<LiveTrackingMap height="600px" />
+					</TabsContent>
+
+					<TabsContent value="analytics" className="m-0">
+						<AnalyticsDashboard
+							jobs={jobs}
+							workers={workers}
+							jobAssignments={jobAssignments}
+							payrollRecords={payrollRecords}
+						/>
+					</TabsContent>
+
+					<TabsContent value="invoicing" className="m-0">
+						<InvoiceView
+							jobs={jobs}
+							company={company}
+						/>
 					</TabsContent>
 				</Tabs>
 			</main>

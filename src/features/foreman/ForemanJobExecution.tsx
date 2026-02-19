@@ -11,17 +11,18 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { ArrowLeft, Truck, Package, CreditCard, PenTool, Camera, Navigation, MapPin, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Camera, Clock, Truck, AlertTriangle, MapPin, PenTool, CreditCard, Loader2, CircleDot, Upload, Sparkles, Package, Navigation } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { format } from "date-fns";
 import { toast } from "sonner";
-// import ReactSignatureCanvas from 'react-signature-canvas'; // Would need to install
+import { SignatureCapture } from "./components/SignatureCapture";
 
 import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
 import { storage } from "@/lib/firebase";
 import { useCreaoAuth } from "@/sdk/core/auth";
 import { notifications } from "@/lib/notifications";
 import { VehicleChecklistDialog } from "./components/VehicleChecklistDialog";
+import { calculateAIQuote, type QuoteBreakdown } from "@/lib/quote-engine";
 
 export function ForemanJobExecution() {
     const { user, companyId } = useCreaoAuth(); // Need companyId for path
@@ -31,6 +32,9 @@ export function ForemanJobExecution() {
     const queryClient = useQueryClient();
     const [step, setStep] = useState<"status" | "equipment" | "inventory" | "quote" | "payment" | "loading">("status");
     const [showVehicleCheck, setShowVehicleCheck] = useState(false);
+    const [customerSignature, setCustomerSignature] = useState<string>("");
+    const [foremanSignature, setForemanSignature] = useState<string>("");
+    const [quoteAmount, setQuoteAmount] = useState<number>(0);
 
     // Auto-advance step if returning from inventory
     useEffect(() => {
@@ -62,7 +66,7 @@ export function ForemanJobExecution() {
                 (error) => {
                     console.error("Upload Error:", error);
                     setIsUploading(false);
-                    alert("Upload failed: " + error.message);
+                    toast.error("Upload failed: " + error.message);
                 },
                 async () => {
                     const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
@@ -92,7 +96,10 @@ export function ForemanJobExecution() {
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["job", jobId] });
-        }
+        },
+        onSettled: () => {
+            // Prevents unhandled rejection if component unmounts before mutation settles
+        },
     });
 
     if (isLoading || !job) return <div>Loading Job...</div>;
@@ -168,13 +175,17 @@ export function ForemanJobExecution() {
 
     // 4. Quote & Contract
     const handleQuoteSign = () => {
+        if (!customerSignature || !foremanSignature) {
+            toast.error("Both customer and foreman signatures are required.");
+            return;
+        }
         updateJobMutation.mutate({
             signatures: {
-                customer_sign: "mock_signature_base64",
-                foreman_sign: "mock_signature_base64",
+                customer_sign: customerSignature,
+                foreman_sign: foremanSignature,
                 timestamp: new Date().toISOString()
             },
-            final_quote_amount: job.estimated_cost ?? undefined // Allow edit in real UI
+            final_quote_amount: quoteAmount || (job.estimated_cost ?? undefined)
         });
         setStep("payment");
     };
@@ -194,7 +205,7 @@ export function ForemanJobExecution() {
             status: JobStatus.onWayToDropoff,
             loading_photos: uploadedPhotos.length > 0 ? uploadedPhotos : ["mock_photo_url"]
         });
-        alert("Truck Loaded! Customer Notified.");
+        toast.success("Truck Loaded! Customer Notified.");
         navigate({ to: "/foreman" });
     };
 
@@ -337,18 +348,93 @@ export function ForemanJobExecution() {
                 <Card className={step === "quote" ? "border-primary border-2" : "opacity-80"}>
                     <CardHeader><CardTitle className="flex items-center gap-2"><PenTool className="h-5 w-5" /> 4. Contract & Signature</CardTitle></CardHeader>
                     <CardContent className="space-y-4">
-                        <div className="flex justify-between text-lg font-bold">
-                            <span>Total Estimate</span>
-                            <span>${job.estimated_cost}</span>
+                        {/* AI Quote Estimate */}
+                        {job.final_inventory_data && (() => {
+                            try {
+                                const items = JSON.parse(job.final_inventory_data);
+                                if (items.length > 0) {
+                                    const aiQuote = calculateAIQuote(items, job.distance, job.classification);
+                                    // Auto-set quote amount if not yet set
+                                    if (quoteAmount === 0 && step === "quote") {
+                                        setTimeout(() => setQuoteAmount(aiQuote.totalEstimate), 0);
+                                    }
+                                    return (
+                                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 space-y-3">
+                                            <div className="flex items-center gap-2 text-blue-800 font-semibold text-sm">
+                                                <Sparkles className="h-4 w-4" />
+                                                AI-Generated Quote Estimate
+                                            </div>
+                                            <div className="grid grid-cols-2 gap-2 text-sm">
+                                                <div className="flex justify-between">
+                                                    <span className="text-muted-foreground">Labor ({aiQuote.details.estimatedHours}h)</span>
+                                                    <span className="font-medium">${aiQuote.laborCost}</span>
+                                                </div>
+                                                <div className="flex justify-between">
+                                                    <span className="text-muted-foreground">Fuel ({aiQuote.details.distanceMiles}mi)</span>
+                                                    <span className="font-medium">${aiQuote.fuelCost}</span>
+                                                </div>
+                                                <div className="flex justify-between">
+                                                    <span className="text-muted-foreground">Materials</span>
+                                                    <span className="font-medium">${aiQuote.materialsCost}</span>
+                                                </div>
+                                                <div className="flex justify-between">
+                                                    <span className="text-muted-foreground">Insurance</span>
+                                                    <span className="font-medium">${aiQuote.insuranceCost}</span>
+                                                </div>
+                                            </div>
+                                            <div className="flex justify-between pt-2 border-t border-blue-200 font-bold text-blue-900">
+                                                <span>AI Suggested Total</span>
+                                                <span>${aiQuote.totalEstimate}</span>
+                                            </div>
+                                            <p className="text-xs text-blue-600">
+                                                {aiQuote.details.itemCount} items · {aiQuote.details.totalVolumeCuFt} cu ft · {aiQuote.details.totalWeightLbs} lbs
+                                                {job.classification === "interstate" ? " · +15% interstate" : ""}
+                                            </p>
+                                        </div>
+                                    );
+                                }
+                            } catch { /* ignore parse errors */ }
+                            return null;
+                        })()}
+                        <div className="flex justify-between items-center text-lg font-bold">
+                            <span>Final Quote Amount</span>
+                            {step === "quote" ? (
+                                <div className="flex items-center gap-1">
+                                    <span className="text-lg">$</span>
+                                    <Input
+                                        type="number"
+                                        value={quoteAmount || job.estimated_cost || 0}
+                                        onChange={(e) => setQuoteAmount(Number(e.target.value))}
+                                        className="w-32 text-right text-lg font-bold h-10"
+                                    />
+                                </div>
+                            ) : (
+                                <span>${job.final_quote_amount || job.estimated_cost}</span>
+                            )}
                         </div>
                         <Separator />
-                        <div className="h-32 bg-slate-100 rounded border flex items-center justify-center text-muted-foreground">
-                            Signature Pad Placeholder
-                        </div>
+                        <SignatureCapture
+                            label="Customer Signature"
+                            onCapture={setCustomerSignature}
+                            value={customerSignature || undefined}
+                            disabled={step !== "quote"}
+                        />
+                        <SignatureCapture
+                            label="Foreman Signature"
+                            onCapture={setForemanSignature}
+                            value={foremanSignature || undefined}
+                            disabled={step !== "quote"}
+                        />
                     </CardContent>
                     {step === "quote" && (
                         <CardFooter>
-                            <Button onClick={handleQuoteSign} className="w-full">Sign & Accept</Button>
+                            <Button
+                                onClick={handleQuoteSign}
+                                className="w-full"
+                                disabled={!customerSignature || !foremanSignature}
+                            >
+                                Sign & Accept Contract
+                            </Button>
                         </CardFooter>
                     )}
                 </Card>

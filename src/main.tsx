@@ -1,4 +1,4 @@
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClient, QueryClientProvider, MutationCache } from "@tanstack/react-query";
 import { createRouter, RouterProvider } from "@tanstack/react-router";
 import { StrictMode } from "react";
 import ReactDOM from "react-dom/client";
@@ -14,8 +14,13 @@ import "./styles.css";
 import { APP_CONFIG } from "./sdk/core/global.ts";
 export { APP_CONFIG }; // for backward compatibility
 
-// Create a QueryClient instance
+// Create a QueryClient instance with global mutation error handling
 const queryClient = new QueryClient({
+	mutationCache: new MutationCache({
+		onError: (error) => {
+			console.error("[MutationCache] Unhandled mutation error:", error);
+		},
+	}),
 	defaultOptions: {
 		queries: {
 			staleTime: 5 * 60 * 1000, // 5 minutes

@@ -158,4 +158,42 @@ describe("PortalDashboard", () => {
         // Check for Job ID partial text
         expect(screen.getByText(/Job ID: job-1/)).toBeInTheDocument();
     });
+
+    it("shows estimated cost on job card", async () => {
+        const user = userEvent.setup();
+        render(<PortalDashboard />);
+        const jobsTab = screen.getByText("Active Jobs (1)");
+        await user.click(jobsTab);
+        expect(screen.getByText("Estimated Cost")).toBeInTheDocument();
+    });
+
+    it("shows View Timeline button on job cards", async () => {
+        const user = userEvent.setup();
+        render(<PortalDashboard />);
+        const jobsTab = screen.getByText("Active Jobs (1)");
+        await user.click(jobsTab);
+        expect(screen.getByText("View Timeline")).toBeInTheDocument();
+    });
+
+    it("toggles timeline visibility on click", async () => {
+        const user = userEvent.setup();
+        render(<PortalDashboard />);
+        const jobsTab = screen.getByText("Active Jobs (1)");
+        await user.click(jobsTab);
+
+        // Click View Timeline
+        const timelineBtn = screen.getByText("View Timeline");
+        await user.click(timelineBtn);
+
+        // Timeline steps should appear
+        expect(screen.getByText("Quote")).toBeInTheDocument();
+        expect(screen.getByText("En Route")).toBeInTheDocument();
+
+        // Button text should now say Hide
+        expect(screen.getByText("Hide Timeline")).toBeInTheDocument();
+
+        // Toggle back
+        await user.click(screen.getByText("Hide Timeline"));
+        expect(screen.getByText("View Timeline")).toBeInTheDocument();
+    });
 });

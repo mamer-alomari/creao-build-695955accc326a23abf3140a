@@ -4,8 +4,9 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { JobORM, JobStatus, type JobModel } from "@/sdk/database/orm/orm_job";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
-import { ArrowLeft, Plus, Camera, Trash2, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, Plus, Camera, Trash2, CheckCircle2, X } from "lucide-react";
 import { toast } from "sonner";
+import { Input } from "@/components/ui/input";
 import { useCreaoAuth } from "@/sdk/core/auth";
 
 export const Route = createFileRoute('/foreman/jobs/$jobId/inventory')({
@@ -20,6 +21,8 @@ export function ForemanInventoryView() {
 
   // Mock local state for items (in real app, this would be complex state/context)
   const [items, setItems] = useState<string[]>([]);
+  const [isAddingItem, setIsAddingItem] = useState(false);
+  const [newItemName, setNewItemName] = useState("");
 
   const { data: job, isLoading } = useQuery({
     queryKey: ["job", jobId],
@@ -57,8 +60,13 @@ export function ForemanInventoryView() {
   });
 
   const handleAddItem = () => {
-    const newItem = `Item #${items.length + 1}`;
-    setItems([...items, newItem]);
+    if (!newItemName.trim()) {
+      toast.error("Please enter an item name");
+      return;
+    }
+    setItems([...items, newItemName.trim()]);
+    setNewItemName("");
+    setIsAddingItem(false);
   };
 
   const handleRemoveItem = (index: number) => {
@@ -103,7 +111,7 @@ export function ForemanInventoryView() {
           <CardTitle className="flex items-center gap-2">
             <Camera className="h-5 w-5" /> Scanned Items ({items.length})
           </CardTitle>
-          <Button size="sm" onClick={handleAddItem}>
+          <Button size="sm" onClick={() => setIsAddingItem(true)}>
             <Plus className="h-4 w-4 mr-1" /> Add Manual
           </Button>
         </CardHeader>
@@ -122,6 +130,29 @@ export function ForemanInventoryView() {
                   </Button>
                 </div>
               ))}
+            </div>
+          )}
+
+          {/* Inline Add Item Input */}
+          {isAddingItem && (
+            <div className="flex items-center gap-2 mt-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
+              <Input
+                autoFocus
+                placeholder="Enter item name (e.g. Sofa, Box of Books)"
+                value={newItemName}
+                onChange={(e) => setNewItemName(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") handleAddItem();
+                  if (e.key === "Escape") { setIsAddingItem(false); setNewItemName(""); }
+                }}
+                className="flex-1"
+              />
+              <Button size="sm" onClick={handleAddItem} disabled={!newItemName.trim()}>
+                <Plus className="h-4 w-4 mr-1" /> Add
+              </Button>
+              <Button size="sm" variant="ghost" onClick={() => { setIsAddingItem(false); setNewItemName(""); }}>
+                <X className="h-4 w-4" />
+              </Button>
             </div>
           )}
         </CardContent>
