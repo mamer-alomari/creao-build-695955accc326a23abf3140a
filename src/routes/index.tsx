@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useCreaoAuth } from "@/sdk/core/auth";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { LayoutDashboard, Calendar, Users, Package, Truck, DollarSign, Clock, AlertTriangle, MapPin, BarChart3, Receipt } from "lucide-react";
+import { LayoutDashboard, Calendar, Users, Package, Truck, DollarSign, Clock, AlertTriangle, MapPin, BarChart3, Receipt, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 import { CompanyORM, type CompanyModel } from "@/sdk/database/orm/orm_company";
@@ -31,6 +31,7 @@ import { IncidentsView } from "@/features/incidents/components/IncidentsView";
 import { InvoiceView } from "@/features/invoicing/InvoiceView";
 import { ForemanDashboard } from "@/features/foreman/ForemanDashboard";
 import { WorkerDashboard } from "@/features/worker/components/WorkerDashboard";
+import { SettingsView } from "@/features/settings/SettingsView";
 import { UserRole } from "@/sdk/core/auth";
 import { DashboardSkeleton } from "@/components/DashboardSkeleton";
 
@@ -302,6 +303,14 @@ function App() {
 						<Receipt className="mr-2 h-4 w-4" />
 						Invoicing
 					</Button>
+					<Button
+						variant={activeTab === "settings" ? "secondary" : "ghost"}
+						className="w-full justify-start"
+						onClick={() => setActiveTab("settings")}
+					>
+						<Settings className="mr-2 h-4 w-4" />
+						Settings
+					</Button>
 				</nav>
 			</aside>
 
@@ -400,6 +409,12 @@ function App() {
 						<InvoiceView
 							jobs={jobs}
 							company={company}
+						/>
+					</TabsContent>
+
+					<TabsContent value="settings" className="m-0">
+						<SettingsView
+							company={company || null}
 						/>
 					</TabsContent>
 				</Tabs>

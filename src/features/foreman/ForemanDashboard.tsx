@@ -2,6 +2,12 @@
 import { useQuery } from "@tanstack/react-query";
 import { useCreaoAuth } from "@/sdk/core/auth";
 import { JobORM, JobStatus } from "@/sdk/database/orm/orm_job";
+import { WorkerORM } from "@/sdk/database/orm/orm_worker";
+import { VehicleORM } from "@/sdk/database/orm/orm_vehicle";
+import { EquipmentORM } from "@/sdk/database/orm/orm_equipment";
+import { JobWorkerAssignmentORM } from "@/sdk/database/orm/orm_job_worker_assignment";
+import { JobVehicleAssignmentORM } from "@/sdk/database/orm/orm_job_vehicle_assignment";
+import { JobEquipmentAllocationORM } from "@/sdk/database/orm/orm_job_equipment_allocation";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -37,7 +43,7 @@ export function ForemanDashboard() {
         enabled: !!companyId,
         queryFn: async () => {
             if (!companyId) return [];
-            return await import("@/sdk/database/orm/orm_worker").then(m => m.WorkerORM.getInstance().getWorkersByCompanyId(companyId));
+            return await WorkerORM.getInstance().getWorkersByCompanyId(companyId);
         }
     });
 
@@ -47,7 +53,7 @@ export function ForemanDashboard() {
         enabled: !!companyId,
         queryFn: async () => {
             if (!companyId) return [];
-            return await import("@/sdk/database/orm/orm_vehicle").then(m => m.VehicleORM.getInstance().getVehiclesByCompanyId(companyId));
+            return await VehicleORM.getInstance().getVehiclesByCompanyId(companyId);
         }
     });
 
@@ -57,7 +63,7 @@ export function ForemanDashboard() {
         enabled: !!companyId,
         queryFn: async () => {
             if (!companyId) return [];
-            return await import("@/sdk/database/orm/orm_equipment").then(m => m.EquipmentORM.getInstance().getEquipmentByCompanyId(companyId));
+            return await EquipmentORM.getInstance().getEquipmentByCompanyId(companyId);
         }
     });
 
@@ -67,7 +73,7 @@ export function ForemanDashboard() {
         enabled: !!companyId,
         queryFn: async () => {
             if (!companyId) return [];
-            return await import("@/sdk/database/orm/orm_job_worker_assignment").then(m => m.JobWorkerAssignmentORM.getInstance().getJobWorkerAssignmentByCompanyId(companyId));
+            return await JobWorkerAssignmentORM.getInstance().getJobWorkerAssignmentByCompanyId(companyId);
         }
     });
 
@@ -77,7 +83,7 @@ export function ForemanDashboard() {
         enabled: !!companyId,
         queryFn: async () => {
             if (!companyId) return [];
-            return await import("@/sdk/database/orm/orm_job_vehicle_assignment").then(m => m.JobVehicleAssignmentORM.getInstance().getJobVehicleAssignmentByCompanyId(companyId));
+            return await JobVehicleAssignmentORM.getInstance().getJobVehicleAssignmentByCompanyId(companyId);
         }
     });
 
@@ -87,7 +93,7 @@ export function ForemanDashboard() {
         enabled: !!companyId,
         queryFn: async () => {
             if (!companyId) return [];
-            return await import("@/sdk/database/orm/orm_job_equipment_allocation").then(m => m.JobEquipmentAllocationORM.getInstance().getJobEquipmentAllocationByCompanyId(companyId));
+            return await JobEquipmentAllocationORM.getInstance().getJobEquipmentAllocationByCompanyId(companyId);
         }
     });
 

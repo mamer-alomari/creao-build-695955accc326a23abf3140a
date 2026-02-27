@@ -26,6 +26,7 @@ export function DashboardView({ jobs, workers, equipment, vehicles, activeWorker
 			[JobStatus.onWayToDropoff]: { variant: "default", label: "Driving" },
 			[JobStatus.Unloading]: { variant: "default", label: "Unloading" },
 			[JobStatus.Completed]: { variant: "outline", label: "Completed" },
+			[JobStatus.ReturningToWarehouse]: { variant: "outline", label: "Returning" },
 			[JobStatus.Canceled]: { variant: "destructive", label: "Canceled" },
 		};
 		const config = variants[status];

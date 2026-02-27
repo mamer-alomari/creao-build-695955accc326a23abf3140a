@@ -17,6 +17,8 @@ import { Plus, Trash2, Clock, Truck, Hammer, Users, Calendar, Box, Repeat, Alert
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
+import { addMonths, subMonths, format, startOfMonth, endOfMonth, startOfWeek, endOfWeek, eachDayOfInterval, isSameMonth, isSameDay } from "date-fns";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 export function SchedulingView({ jobs, workers, equipment, vehicles, jobAssignments, vehicleAssignments, equipmentAllocations, companyId }: {
     jobs: JobModel[];
@@ -36,6 +38,9 @@ export function SchedulingView({ jobs, workers, equipment, vehicles, jobAssignme
     const [selectedVehicleIds, setSelectedVehicleIds] = useState<string[]>([]);
     // Equipment is now a record of ID -> Quantity
     const [selectedEquipment, setSelectedEquipment] = useState<Record<string, number>>({});
+
+    // Calendar State
+    const [currentMonth, setCurrentMonth] = useState(new Date());
 
     const queryClient = useQueryClient();
 
@@ -194,13 +199,36 @@ export function SchedulingView({ jobs, workers, equipment, vehicles, jobAssignme
     const getEquipment = (id: string) => equipment.find(e => e.id === id);
     const getEquipmentName = (id: string) => getEquipment(id)?.name || "Unknown";
 
+    // Calendar Helpers
+    const nextMonth = () => setCurrentMonth(addMonths(currentMonth, 1));
+    const prevMonth = () => setCurrentMonth(subMonths(currentMonth, 1));
+
+    const monthStart = startOfMonth(currentMonth);
+    const monthEnd = endOfMonth(monthStart);
+    const startDate = startOfWeek(monthStart);
+    const endDate = endOfWeek(monthEnd);
+
+    const calendarDays = eachDayOfInterval({
+        start: startDate,
+        end: endDate
+    });
+
+    const parseJobDate = (dateStr: string): Date => {
+        if (!dateStr) return new Date();
+        const parsedInt = parseInt(dateStr, 10);
+        // DB might store Unix timestamps as strings. > 1,000,000,000 means it's > Sep 2001
+        if (!isNaN(parsedInt) && parsedInt > 1000000000) {
+            return new Date(parsedInt * 1000);
+        }
+        // DB might store ISO string dates or "YYYY-MM-DD"
+        const d = new Date(dateStr);
+        if (!isNaN(d.getTime())) return d;
+        return new Date();
+    };
+
     // ─── Conflict Detection ───
     const getJobDate = (job: JobModel) => {
-        try {
-            return new Date(parseInt(job.scheduled_date) * 1000).toDateString();
-        } catch {
-            return job.scheduled_date;
-        }
+        return parseJobDate(job.scheduled_date).toDateString();
     };
 
     const conflicts = useMemo(() => {
@@ -242,115 +270,103 @@ export function SchedulingView({ jobs, workers, equipment, vehicles, jobAssignme
     return (
         <div className="space-y-6">
             <Card>
-                <CardHeader>
-                    <CardTitle>Job Scheduling</CardTitle>
-                    <CardDescription>Manage daily job assignments</CardDescription>
+                <CardHeader className="flex flex-row items-center justify-between pb-4">
+                    <div className="space-y-1">
+                        <CardTitle>Job Scheduling</CardTitle>
+                        <CardDescription>Manage daily job assignments</CardDescription>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                        <Button variant="outline" size="icon" onClick={prevMonth}>
+                            <ChevronLeft className="h-4 w-4" />
+                        </Button>
+                        <h2 className="text-lg font-semibold w-[150px] text-center">
+                            {format(currentMonth, "MMMM yyyy")}
+                        </h2>
+                        <Button variant="outline" size="icon" onClick={nextMonth}>
+                            <ChevronRight className="h-4 w-4" />
+                        </Button>
+                    </div>
                 </CardHeader>
                 <CardContent>
-                    {activeJobs.length === 0 ? (
-                        <div className="text-center py-12">
-                            <Clock className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                            <p className="text-muted-foreground">No active jobs to schedule.</p>
+                    <div className="rounded-md border bg-card">
+                        <div className="grid grid-cols-7 border-b bg-muted/50 text-center text-sm font-medium">
+                            {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day, i) => (
+                                <div key={day} className={`p-2 ${i < 6 ? 'border-r' : ''}`}>
+                                    {day}
+                                </div>
+                            ))}
                         </div>
-                    ) : (
-                        <div className="grid gap-6">
-                            {activeJobs.map(job => {
-                                const myWorkers = jobAssignments.filter(a => a.job_id === job.id);
-                                const myVehicles = vehicleAssignments.filter(a => a.job_id === job.id);
-                                const myEquipment = equipmentAllocations.filter(a => a.job_id === job.id);
+                        <div className="grid grid-cols-7 text-sm auto-rows-fr">
+                            {calendarDays.map((day, dayIdx) => {
+                                const isCurrentMonth = isSameMonth(day, currentMonth);
+                                const isToday = isSameDay(day, new Date());
+
+                                // Find jobs for this day
+                                const dayJobs = activeJobs.filter(j => {
+                                    const jobDate = parseJobDate(j.scheduled_date);
+                                    return isSameDay(jobDate, day);
+                                });
 
                                 return (
-                                    <Card key={job.id} className="overflow-hidden">
-                                        <CardHeader className="bg-muted/30 pb-4">
-                                            <div className="flex items-start justify-between">
-                                                <div className="space-y-1">
-                                                    <CardTitle className="text-lg flex items-center gap-2">
-                                                        {job.customer_name}
-                                                        <Badge variant={job.status === JobStatus.Booked ? "default" : "secondary"}>
-                                                            {job.status === JobStatus.Booked ? "Booked" : "In Progress"}
-                                                        </Badge>
-                                                    </CardTitle>
-                                                    <div className="flex items-center text-sm text-muted-foreground gap-4">
-                                                        <span className="flex items-center gap-1">
-                                                            <Calendar className="h-3 w-3" />
-                                                            {new Date(parseInt(job.scheduled_date) * 1000).toLocaleDateString()}
-                                                        </span>
-                                                        <span>
-                                                            {job.pickup_address} <span className="text-muted-foreground/50">→</span> {job.dropoff_address}
-                                                        </span>
+                                    <div
+                                        key={day.toString()}
+                                        className={`
+                                            min-h-[140px] p-2 border-b last:border-b-0 relative
+                                            ${!isCurrentMonth ? 'bg-muted/30 text-muted-foreground' : 'bg-background'}
+                                            ${dayIdx % 7 !== 6 ? 'border-r' : ''}
+                                            ${dayIdx >= calendarDays.length - 7 ? 'border-b-0' : ''}
+                                        `}
+                                    >
+                                        <div className="flex justify-between items-start mb-2">
+                                            <span className={`
+                                                flex h-6 w-6 items-center justify-center rounded-full text-xs
+                                                ${isToday ? 'bg-primary text-primary-foreground font-semibold' : 'font-medium'}
+                                            `}>
+                                                {format(day, 'd')}
+                                            </span>
+                                            {dayJobs.length > 0 && (
+                                                <Badge variant="secondary" className="text-[10px] h-5 px-1.5 opacity-80">
+                                                    {dayJobs.length} {dayJobs.length === 1 ? 'Job' : 'Jobs'}
+                                                </Badge>
+                                            )}
+                                        </div>
+
+                                        <div className="space-y-1.5 overflow-y-auto max-h-[100px] scrollbar-hide">
+                                            {dayJobs.map(job => {
+                                                const wCount = jobAssignments.filter(a => a.job_id === job.id).length;
+                                                const vCount = vehicleAssignments.filter(a => a.job_id === job.id).length;
+                                                // Simplified conflict check for the calendar pill display (using full conflict object logic could be expensive)
+                                                // Assuming we just want to open the dialog for detailed conflict warnings
+
+                                                return (
+                                                    <div
+                                                        key={job.id}
+                                                        onClick={() => handleOpenDialog(job)}
+                                                        className={`
+                                                            group relative cursor-pointer rounded-md border p-1.5 text-xs transition-colors hover:bg-muted font-medium
+                                                            ${job.status === JobStatus.InProgress ? 'bg-blue-50/50 border-blue-200 hover:bg-blue-100/50 dark:bg-blue-900/10 dark:border-blue-800' : 'bg-card'}
+                                                        `}
+                                                    >
+                                                        <div className="truncate pr-1">
+                                                            {job.customer_name}
+                                                        </div>
+                                                        <div className="flex items-center gap-2 mt-1.5 text-[10px] text-muted-foreground">
+                                                            <span className="flex items-center gap-0.5" title="Workers Assigned">
+                                                                <Users className="h-3 w-3" /> {wCount}
+                                                            </span>
+                                                            <span className="flex items-center gap-0.5" title="Vehicles Assigned">
+                                                                <Truck className="h-3 w-3" /> {vCount}
+                                                            </span>
+                                                        </div>
                                                     </div>
-                                                </div>
-                                                <Button onClick={() => handleOpenDialog(job)}>
-                                                    Manage Resources
-                                                </Button>
-                                            </div>
-                                        </CardHeader>
-                                        <CardContent className="pt-6">
-                                            <div className="grid md:grid-cols-3 gap-6">
-                                                {/* Workers Section */}
-                                                <div>
-                                                    <h4 className="text-sm font-medium mb-2 flex items-center gap-2">
-                                                        <Users className="h-4 w-4 text-muted-foreground" />
-                                                        Workers
-                                                    </h4>
-                                                    {myWorkers.length === 0 ? (
-                                                        <p className="text-sm text-muted-foreground italic">None assigned</p>
-                                                    ) : (
-                                                        <div className="flex flex-wrap gap-2">
-                                                            {myWorkers.map(a => (
-                                                                <Badge key={a.id} variant="outline">{getWorkerName(a.worker_id)}</Badge>
-                                                            ))}
-                                                        </div>
-                                                    )}
-                                                </div>
-
-                                                {/* Vehicles Section */}
-                                                <div>
-                                                    <h4 className="text-sm font-medium mb-2 flex items-center gap-2">
-                                                        <Truck className="h-4 w-4 text-muted-foreground" />
-                                                        Vehicles
-                                                    </h4>
-                                                    {myVehicles.length === 0 ? (
-                                                        <p className="text-sm text-muted-foreground italic">None assigned</p>
-                                                    ) : (
-                                                        <div className="flex flex-wrap gap-2">
-                                                            {myVehicles.map(a => (
-                                                                <Badge key={a.id} variant="secondary">{getVehicleName(a.vehicle_id)}</Badge>
-                                                            ))}
-                                                        </div>
-                                                    )}
-                                                </div>
-
-                                                {/* Equipment Section */}
-                                                <div>
-                                                    <h4 className="text-sm font-medium mb-2 flex items-center gap-2">
-                                                        <Hammer className="h-4 w-4 text-muted-foreground" />
-                                                        Equipment
-                                                    </h4>
-                                                    {myEquipment.length === 0 ? (
-                                                        <p className="text-sm text-muted-foreground italic">None assigned</p>
-                                                    ) : (
-                                                        <div className="flex flex-wrap gap-2">
-                                                            {myEquipment.map(a => {
-                                                                const equip = getEquipment(a.equipment_id);
-                                                                return (
-                                                                    <Badge key={a.id} variant="outline" className="border-dashed gap-1">
-                                                                        {equip?.type === EquipmentType.Consumable ? <Box className="h-3 w-3" /> : <Repeat className="h-3 w-3" />}
-                                                                        {getEquipmentName(a.equipment_id)}
-                                                                        <span className="ml-1 text-muted-foreground border-l pl-1">x{a.quantity_assigned}</span>
-                                                                    </Badge>
-                                                                );
-                                                            })}
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        </CardContent>
-                                    </Card>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
                                 );
                             })}
                         </div>
-                    )}
+                    </div>
                 </CardContent>
             </Card>
 

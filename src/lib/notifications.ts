@@ -52,5 +52,21 @@ export const notifications = {
             subject: "Your Moving Team has Arrived!",
             message: `Hi ${customerName}, your Abadai moving team has arrived at the pickup location. We will be with you shortly!`
         });
+    },
+
+    /**
+     * Notify customer of a price change requiring approval
+     */
+    async notifyPriceChange(customerName: string, oldPrice: number, newPrice: number, customerPhone?: string, customerEmail?: string) {
+        return this.send({
+            type: 'both',
+            recipient: {
+                name: customerName,
+                phone: customerPhone,
+                email: customerEmail
+            },
+            subject: "Action Required: Moving Quote Update",
+            message: `Hi ${customerName}, your moving team has updated the quote based on the final inventory scan. The new total is $${newPrice} (was $${oldPrice}). Please review and approve this change in your customer portal to proceed.`
+        });
     }
 };

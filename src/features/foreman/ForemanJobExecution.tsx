@@ -23,6 +23,7 @@ import { useCreaoAuth } from "@/sdk/core/auth";
 import { notifications } from "@/lib/notifications";
 import { VehicleChecklistDialog } from "./components/VehicleChecklistDialog";
 import { calculateAIQuote, type QuoteBreakdown } from "@/lib/quote-engine";
+import { StripeCheckoutModal } from "@/components/StripeCheckoutModal";
 
 export function ForemanJobExecution() {
     const { user, companyId } = useCreaoAuth(); // Need companyId for path
@@ -35,6 +36,7 @@ export function ForemanJobExecution() {
     const [customerSignature, setCustomerSignature] = useState<string>("");
     const [foremanSignature, setForemanSignature] = useState<string>("");
     const [quoteAmount, setQuoteAmount] = useState<number>(0);
+    const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
 
     // Auto-advance step if returning from inventory
     useEffect(() => {
@@ -191,10 +193,10 @@ export function ForemanJobExecution() {
     };
 
     // 5. Payment
-    const handlePaymentCollect = () => {
+    const handlePaymentSuccess = () => {
         updateJobMutation.mutate({
             payment_status: "deposit_paid",
-            deposit_amount: (job.estimated_cost || 0) * 0.5
+            deposit_amount: (job.final_quote_amount || job.estimated_cost || 0) * 0.5
         });
         setStep("loading");
     };
@@ -205,7 +207,13 @@ export function ForemanJobExecution() {
             status: JobStatus.onWayToDropoff,
             loading_photos: uploadedPhotos.length > 0 ? uploadedPhotos : ["mock_photo_url"]
         });
-        toast.success("Truck Loaded! Customer Notified.");
+        toast.success("Truck Loaded! En route to Dropoff.");
+    };
+
+    // 7. Complete Job & Return to Warehouse
+    const handleReturnToWarehouse = () => {
+        updateJobMutation.mutate({ status: JobStatus.ReturningToWarehouse });
+        toast.success("Job Complete! Returning to Warehouse...");
         navigate({ to: "/foreman" });
     };
 
@@ -239,6 +247,12 @@ export function ForemanJobExecution() {
                 return { title: "Loading is Active", action: "Finish Loading", handler: () => setStep("loading"), variant: "outline" as const };
             case JobStatus.onWayToDropoff:
                 return { title: "Driving to Dropoff", action: "Arrived Dropoff", handler: () => updateJobMutation.mutate({ status: JobStatus.Unloading }), variant: "default" as const };
+            case JobStatus.Unloading:
+                return { title: "Unloading is Active", action: "Finish Unloading", handler: () => updateJobMutation.mutate({ status: JobStatus.Completed }), variant: "outline" as const };
+            case JobStatus.Completed:
+                return { title: "Job Complete", action: "Return to Warehouse", handler: handleReturnToWarehouse, variant: "default" as const };
+            case JobStatus.ReturningToWarehouse:
+                return { title: "Returning to Warehouse", action: "Finish Route", handler: () => navigate({ to: "/foreman" }), variant: "outline" as const };
             default:
                 return null;
         }
@@ -358,6 +372,14 @@ export function ForemanJobExecution() {
                                     if (quoteAmount === 0 && step === "quote") {
                                         setTimeout(() => setQuoteAmount(aiQuote.totalEstimate), 0);
                                     }
+
+                                    // Save ai_quote_amount if not already set
+                                    if (job.ai_quote_amount !== aiQuote.totalEstimate && !updateJobMutation.isPending) {
+                                        setTimeout(() => {
+                                            updateJobMutation.mutate({ ai_quote_amount: aiQuote.totalEstimate });
+                                        }, 100);
+                                    }
+
                                     return (
                                         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 space-y-3">
                                             <div className="flex items-center gap-2 text-blue-800 font-semibold text-sm">
@@ -404,14 +426,50 @@ export function ForemanJobExecution() {
                                     <Input
                                         type="number"
                                         value={quoteAmount || job.estimated_cost || 0}
-                                        onChange={(e) => setQuoteAmount(Number(e.target.value))}
+                                        onChange={(e) => {
+                                            setQuoteAmount(Number(e.target.value));
+                                            if (job.quote_approval_status === "pending" || job.quote_approval_status === "rejected") {
+                                                updateJobMutation.mutate({ quote_approval_status: undefined as any });
+                                            }
+                                        }}
                                         className="w-32 text-right text-lg font-bold h-10"
+                                        disabled={job.quote_approval_status === "pending"}
                                     />
                                 </div>
                             ) : (
                                 <span>${job.final_quote_amount || job.estimated_cost}</span>
                             )}
                         </div>
+
+                        {/* Quote Approval Warnings */}
+                        {step === "quote" && quoteAmount > 0 && Math.abs(quoteAmount - (job.estimated_cost || 0)) > 1 && (
+                            <div className="p-3 bg-amber-50 text-amber-800 rounded-md flex items-start gap-2 text-sm mt-4">
+                                <AlertTriangle className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                                <div>
+                                    <p className="font-semibold">Price Change Requires Approval</p>
+                                    <p>The final quote (${quoteAmount}) differs from the original estimate (${job.estimated_cost}). The customer must approve this new price.</p>
+                                </div>
+                            </div>
+                        )}
+                        {job.quote_approval_status === "pending" && (
+                            <div className="p-3 bg-blue-50 text-blue-800 rounded-md flex items-center gap-2 text-sm mt-2">
+                                <Clock className="h-4 w-4 flex-shrink-0" />
+                                <strong>Waiting for customer approval...</strong>
+                            </div>
+                        )}
+                        {job.quote_approval_status === "approved" && (
+                            <div className="p-3 bg-green-50 text-green-800 rounded-md flex items-center gap-2 text-sm mt-2">
+                                <CheckCircle2 className="h-4 w-4 flex-shrink-0" />
+                                <strong>Customer approved the new price!</strong>
+                            </div>
+                        )}
+                        {job.quote_approval_status === "rejected" && (
+                            <div className="p-3 bg-red-50 text-red-800 rounded-md flex items-center gap-2 text-sm mt-2">
+                                <AlertTriangle className="h-4 w-4 flex-shrink-0" />
+                                <strong>Customer rejected the new price. Please adjust.</strong>
+                            </div>
+                        )}
+
                         <Separator />
                         <SignatureCapture
                             label="Customer Signature"
@@ -427,14 +485,41 @@ export function ForemanJobExecution() {
                         />
                     </CardContent>
                     {step === "quote" && (
-                        <CardFooter>
-                            <Button
-                                onClick={handleQuoteSign}
-                                className="w-full"
-                                disabled={!customerSignature || !foremanSignature}
-                            >
-                                Sign & Accept Contract
-                            </Button>
+                        <CardFooter className="flex-col gap-2">
+                            {quoteAmount > 0 && Math.abs(quoteAmount - (job.estimated_cost || 0)) > 1 && job.quote_approval_status !== "approved" ? (
+                                <Button
+                                    onClick={async () => {
+                                        updateJobMutation.mutate({
+                                            final_quote_amount: quoteAmount,
+                                            quote_approval_status: "pending"
+                                        });
+                                        try {
+                                            await notifications.notifyPriceChange(
+                                                job.customer_name,
+                                                job.estimated_cost || 0,
+                                                quoteAmount,
+                                                "555-0000",
+                                                "customer@example.com"
+                                            );
+                                            toast.success("Customer notified of price update");
+                                        } catch (e) {
+                                            console.error("Failed to notify customer", e);
+                                        }
+                                    }}
+                                    className="w-full bg-amber-500 hover:bg-amber-600 text-white"
+                                    disabled={job.quote_approval_status === "pending" || updateJobMutation.isPending}
+                                >
+                                    {job.quote_approval_status === "pending" ? "Approval Requested..." : "Request Customer Approval"}
+                                </Button>
+                            ) : (
+                                <Button
+                                    onClick={handleQuoteSign}
+                                    className="w-full"
+                                    disabled={!customerSignature || !foremanSignature || updateJobMutation.isPending}
+                                >
+                                    Sign & Accept Contract
+                                </Button>
+                            )}
                         </CardFooter>
                     )}
                 </Card>
@@ -448,13 +533,13 @@ export function ForemanJobExecution() {
                         <div className="p-4 bg-blue-50 text-blue-800 rounded">
                             Please collect 50% Deposit: <strong>${((job.estimated_cost || 0) * 0.5).toFixed(2)}</strong>
                         </div>
-                        <Button variant="outline" className="w-full">
+                        <Button variant="outline" className="w-full" onClick={() => setIsPaymentModalOpen(true)}>
                             <CreditCard className="mr-2 h-4 w-4" /> Charge Card (Stripe)
                         </Button>
                     </CardContent>
                     {step === "payment" && (
                         <CardFooter>
-                            <Button onClick={handlePaymentCollect} className="w-full">Confirm Payment</Button>
+                            <Button onClick={handlePaymentSuccess} variant="ghost" className="w-full">Skip Payment (Cash/Check)</Button>
                         </CardFooter>
                     )}
                 </Card>
@@ -499,6 +584,14 @@ export function ForemanJobExecution() {
                 onClose={() => setShowVehicleCheck(false)}
                 onConfirm={handleChecklistConfirm}
                 vehicleName="Assigned Vehicle" // Could fetch actual vehicle name if needed
+            />
+
+            <StripeCheckoutModal
+                isOpen={isPaymentModalOpen}
+                onClose={() => setIsPaymentModalOpen(false)}
+                onSuccess={handlePaymentSuccess}
+                amount={(job.final_quote_amount || job.estimated_cost || 0) * 0.5}
+                description="50% Deposit for Move"
             />
         </div>
     );

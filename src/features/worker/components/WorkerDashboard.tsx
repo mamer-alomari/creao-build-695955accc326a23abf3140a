@@ -185,6 +185,7 @@ function JobStatusBadge({ status }: { status: JobStatus }) {
         [JobStatus.onWayToDropoff]: "Driving",
         [JobStatus.Unloading]: "Unloading",
         [JobStatus.Completed]: "Done",
+        [JobStatus.ReturningToWarehouse]: "Returning",
         [JobStatus.Canceled]: "Canceled",
     };
     return <Badge>{labels[status] || "Unknown"}</Badge>;

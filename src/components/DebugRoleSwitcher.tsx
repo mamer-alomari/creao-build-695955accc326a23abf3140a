@@ -11,8 +11,9 @@ import { useCreaoAuth, UserRole } from "@/sdk/core/auth";
 import { Bug, UserCog } from "lucide-react";
 import { toast } from "sonner";
 
-import { doc, updateDoc } from "firebase/firestore";
+import { doc, updateDoc, getDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
+import { CompanyORM } from "@/sdk/database/orm/orm_company";
 
 export function DebugRoleSwitcher() {
     const { role, setRole, user, setUser, setStatus } = useCreaoAuth();
@@ -75,7 +76,7 @@ export function DebugRoleSwitcher() {
 
         try {
             const userRef = doc(db, "users", user.uid);
-            const snap = await import("firebase/firestore").then(m => m.getDoc(userRef));
+            const snap = await getDoc(userRef);
 
             if (snap.exists()) {
                 const data = snap.data();
@@ -86,7 +87,7 @@ export function DebugRoleSwitcher() {
                 if (!data.companyId && role !== UserRole.Unspecified) {
                     const companyName = "Acme Moving"; // Default fallback
                     // Try to find company
-                    const companies = await import("@/sdk/database/orm/orm_company").then(m => m.CompanyORM.getInstance().getCompanyByName(companyName));
+                    const companies = await CompanyORM.getInstance().getCompanyByName(companyName);
 
                     if (companies.length > 0) {
                         const targetCompany = companies[0];

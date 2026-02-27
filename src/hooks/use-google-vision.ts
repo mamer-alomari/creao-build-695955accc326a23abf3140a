@@ -65,14 +65,13 @@ export interface RoomInventory {
 /**
  * Convert a File to a base64 string for API submission
  */
-export async function fileToBase64(file: File): Promise<string> {
+export async function fileToBase64(file: File): Promise<{ base64: string; mimeType: string }> {
     return new Promise((resolve, reject) => {
         const reader = new FileReader();
         reader.onload = () => {
             if (typeof reader.result === "string") {
-                // Remove the data URL prefix (e.g., "data:image/jpeg;base64,")
                 const base64String = reader.result.split(",")[1];
-                resolve(base64String);
+                resolve({ base64: base64String, mimeType: file.type || "image/jpeg" });
             } else {
                 reject(new Error("Failed to read file as base64"));
             }
@@ -122,7 +121,7 @@ function validateRoomType(roomType: string): string {
 /**
  * Analyze an image to detect movable items using Gemini
  */
-export async function analyzeImageForItems(base64Image: string, roomType: string): Promise<DetectedItem[]> {
+export async function analyzeImageForItems(base64Image: string, mimeType: string, roomType: string): Promise<DetectedItem[]> {
     // Prefer specific Vision key, fallback to Maps key for backward compatibility
     const apiKey = import.meta.env.VITE_GOOGLE_VISION_API_KEY || import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 
@@ -161,7 +160,7 @@ Example format:
   }
 ]`;
 
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
 
     const requestBody = {
         contents: [
@@ -170,7 +169,7 @@ Example format:
                     { text: prompt },
                     {
                         inline_data: {
-                            mime_type: "image/jpeg", // Assuming JPEG, but Gemini is flexible
+                            mime_type: mimeType,
                             data: base64Image,
                         },
                     },
@@ -189,6 +188,7 @@ Example format:
 
     if (!response.ok) {
         const errorText = await response.text();
+        console.error("Gemini API Error details:", errorText);
         throw new Error(`Gemini API error: ${response.status} - ${errorText}`);
     }
 
@@ -200,17 +200,23 @@ Example format:
 
     const content = data.candidates[0].content.parts[0].text;
 
-    // Parse the JSON response
     try {
         // Clean up potential markdown code blocks
-        const cleanedContent = content.replace(/```json\n|\n```/g, "").replace(/```/g, "").trim();
+        let cleanedContent = content.trim();
+        if (cleanedContent.startsWith("```json")) {
+            cleanedContent = cleanedContent.replace(/^```json\n?/, "").replace(/\n?```$/, "");
+        } else if (cleanedContent.startsWith("```")) {
+            cleanedContent = cleanedContent.replace(/^```\n?/, "").replace(/\n?```$/, "");
+        }
 
-        // Find the JSON array start and end
+        cleanedContent = cleanedContent.trim();
+
+        // Ensure it starts with [ and ends with ]
         const jsonStartIndex = cleanedContent.indexOf('[');
         const jsonEndIndex = cleanedContent.lastIndexOf(']') + 1;
 
         if (jsonStartIndex === -1 || jsonEndIndex === 0) {
-            throw new Error("No JSON array found in response");
+            throw new Error(`No JSON array found in response: ${content}`);
         }
 
         const jsonString = cleanedContent.substring(jsonStartIndex, jsonEndIndex);
@@ -220,7 +226,6 @@ Example format:
         const validatedItems = validateDetectedItems(parsed);
 
         // Add unique IDs to each validated item
-        // Add unique IDs to each validated item
         return validatedItems.map((item: AIResponseItem, index: number) => ({
             ...item,
             id: `item-${Date.now()}-${index}`,
@@ -228,6 +233,7 @@ Example format:
     } catch (parseError) {
         console.error("Failed to parse or validate Gemini response:", content);
         const errorMessage = parseError instanceof Error ? parseError.message : "Unknown error";
+        console.error("Gemini Parse/Validation Error Details:", parseError);
         throw new Error(`Failed to process detected items: ${errorMessage}`);
     }
 }
@@ -266,12 +272,17 @@ export function useAnalyzeRoomImage() {
             roomType: string;
         }): Promise<DetectedItem[]> => {
             let base64Image = "";
+            let resolvedMimeType = "image/jpeg";
 
             if (imageFile) {
-                base64Image = await fileToBase64(imageFile);
+                const res = await fileToBase64(imageFile);
+                base64Image = res.base64;
+                resolvedMimeType = res.mimeType;
             } else if (imageUrl) {
                 // If it's a data URL, strip the prefix
                 if (imageUrl.startsWith("data:")) {
+                    const match = imageUrl.match(/^data:([^;]+);/);
+                    if (match) resolvedMimeType = match[1];
                     base64Image = dataUrlToBase64(imageUrl);
                 } else {
                     // If it's a remote URL, we can't easily fetch it client-side due to CORS to send as base64 
@@ -286,7 +297,7 @@ export function useAnalyzeRoomImage() {
                 throw new Error("No image data available for analysis");
             }
 
-            return analyzeImageForItems(base64Image, roomType);
+            return analyzeImageForItems(base64Image, resolvedMimeType, roomType);
         },
     });
 }

@@ -30,6 +30,8 @@ export interface CompanyModel {
   license_number?: string | null;
   contact_email: string;
   warehouse_locations?: string[];
+  stripe_account_id?: string;
+  stripe_onboarding_complete?: boolean;
 }
 
 // Re-export common types

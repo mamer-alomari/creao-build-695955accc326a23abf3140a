@@ -34,6 +34,7 @@ export enum JobStatus {
   Loading = 8,
   onWayToDropoff = 9,
   Unloading = 10,
+  ReturningToWarehouse = 11,
 }
 
 /**
@@ -74,7 +75,9 @@ export interface JobModel {
 
   // On-Site Updates
   final_inventory_data?: string;
+  ai_quote_amount?: number;
   final_quote_amount?: number;
+  quote_approval_status?: "pending" | "approved" | "rejected";
 
   // Contract & Payment
   signatures?: {

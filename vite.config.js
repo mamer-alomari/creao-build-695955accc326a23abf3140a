@@ -14,6 +14,12 @@ export default defineConfig(({ mode }) => {
 		base: process.env.TENANT_ID ? `/${process.env.TENANT_ID}/` : "/",
 		define: {
 			"import.meta.env.TENANT_ID": JSON.stringify(process.env.TENANT_ID || ""),
+			"import.meta.env.VITE_GOOGLE_VISION_API_KEY": JSON.stringify(
+				env.VITE_GOOGLE_VISION_API_KEY,
+			),
+			"import.meta.env.VITE_GOOGLE_MAPS_API_KEY": JSON.stringify(
+				env.VITE_GOOGLE_MAPS_API_KEY,
+			),
 			"import.meta.env.VITE_FIREBASE_API_KEY": JSON.stringify(
 				env.VITE_FIREBASE_API_KEY,
 			),
@@ -54,7 +60,7 @@ export default defineConfig(({ mode }) => {
 		},
 		server: {
 			host: "0.0.0.0",
-			port: parseInt(process.env.PORT || "3000"),
+			port: parseInt(process.env.PORT || "3000", 10),
 			allowedHosts: true, // respond to *any* Host header
 			watch: {
 				usePolling: true,
@@ -62,7 +68,22 @@ export default defineConfig(({ mode }) => {
 			},
 		},
 		build: {
-			chunkSizeWarningLimit: 1500,
+			chunkSizeWarningLimit: 2500,
+			rollupOptions: {
+				output: {
+					manualChunks: {
+						vendor: ["react", "react-dom"],
+						ui: ["lucide-react", "sonner"],
+						firebase: [
+							"firebase/app",
+							"firebase/auth",
+							"firebase/firestore",
+							"firebase/storage",
+						],
+						router: ["@tanstack/react-router", "@tanstack/react-query"],
+					},
+				},
+			},
 		},
 	};
 });

@@ -16,6 +16,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { ITEM_CATEGORIES } from "@/hooks/use-google-vision";
+import { doc, updateDoc } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 
 // Define a structured item type matching our schema/needs
 interface InventoryItem {
@@ -91,7 +93,9 @@ export function ForemanInventoryView() {
     const updateJobMutation = useMutation({
         mutationFn: async (updates: Partial<JobModel>) => {
             if (!job) return;
-            await JobORM.getInstance().setJobById(job.id, { ...job, ...updates });
+            // Bypass ORM to avoid undefined object property resolution issues with setJobById
+            const jobRef = doc(db, "jobs", jobId);
+            await updateDoc(jobRef, updates);
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["job", jobId] });
@@ -144,7 +148,8 @@ export function ForemanInventoryView() {
             }
         } catch (error) {
             console.error("AI Analysis failed", error);
-            toast.error("AI Scanning Failed", { description: "Connection lost or error. Please input manually." });
+            const errorMessage = error instanceof Error ? error.message : "Connection lost or error. Please input manually.";
+            toast.error("AI Scanning Failed", { description: errorMessage });
             // Fallback: User sees empty form with image
             setCurrentItem(prev => ({ ...prev, imageUrl: objectUrl, name: "", isAiDetected: false }));
         } finally {
@@ -207,7 +212,7 @@ export function ForemanInventoryView() {
                     <ArrowLeft className="h-6 w-6" />
                 </Button>
                 <div>
-                    <h1 className="text-2xl font-bold">Inventory Management</h1>
+                    <h1 className="text-2xl font-bold">Scan Items</h1>
                     <p className="text-muted-foreground">Job: {job.customer_name}</p>
                 </div>
             </div>
@@ -242,7 +247,7 @@ export function ForemanInventoryView() {
                         {isAnalyzing ? (
                             <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Analyzing Image...</>
                         ) : (
-                            <><Camera className="mr-2 h-6 w-6" /> Scan Item with AI</>
+                            <><Camera className="mr-2 h-6 w-6" /> Scan with AI</>
                         )}
                     </Button>
                     <p className="text-xs text-center text-muted-foreground">

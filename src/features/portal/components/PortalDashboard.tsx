@@ -8,7 +8,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { format } from "date-fns";
-import { Package, Truck, Calendar, ArrowRight, CheckCircle2, ChevronDown, ChevronUp } from "lucide-react";
+import { Package, Truck, Calendar, ArrowRight, CheckCircle2, ChevronDown, ChevronUp, AlertTriangle, CreditCard } from "lucide-react";
+import { StripeCheckoutModal } from "@/components/StripeCheckoutModal";
 import { useNavigate } from "@tanstack/react-router";
 import { JobTimeline } from "./JobTimeline";
 import { useState as useReactState } from "react";
@@ -192,6 +193,41 @@ export function PortalDashboard() {
 
 function JobCard({ job }: { job: JobModel }) {
     const [showTimeline, setShowTimeline] = useReactState(false);
+    const queryClient = useQueryClient();
+
+    const updateJobMutation = useMutation({
+        mutationFn: async (updates: Partial<JobModel>) => {
+            await JobORM.getInstance().setJobById(job.id, { ...job, ...updates });
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["customer-jobs"] });
+            toast.success("Job updated successfully");
+        },
+        onError: () => {
+            toast.error("Failed to update job status. Please try again.");
+        }
+    });
+
+    const [isPaymentOpen, setIsPaymentOpen] = useReactState(false);
+
+    // Payment Logic
+    const isDepositDue = job.status === JobStatus.Booked && !job.payment_status;
+    const isBalanceDue = job.status === JobStatus.Completed && job.payment_status === "deposit_paid";
+
+    const paymentAmount = isDepositDue
+        ? (job.final_quote_amount || job.estimated_cost || 0) * 0.5
+        : isBalanceDue
+            ? ((job.final_quote_amount || job.estimated_cost || 0) - (job.deposit_amount || 0))
+            : 0;
+
+    const paymentDesc = isDepositDue ? "50% Move Deposit" : "Final Remaining Balance";
+
+    const handlePaymentSuccess = () => {
+        updateJobMutation.mutate({
+            payment_status: isDepositDue ? "deposit_paid" : "fully_paid",
+            deposit_amount: isDepositDue ? paymentAmount : job.deposit_amount
+        });
+    };
 
     return (
         <Card>
@@ -217,15 +253,102 @@ function JobCard({ job }: { job: JobModel }) {
                         </div>
                     </div>
                     <div className="space-y-1">
-                        <div className="text-sm font-medium text-muted-foreground">Estimated Cost</div>
-                        <div className="text-lg font-bold">${job.estimated_cost}</div>
+                        <div className="text-sm font-medium text-muted-foreground">Original Estimate</div>
+                        <div className={`text-lg font-bold ${job.final_quote_amount ? "line-through text-muted-foreground" : ""}`}>
+                            ${job.estimated_cost}
+                        </div>
                     </div>
+                    {job.final_quote_amount && (
+                        <div className="space-y-1">
+                            <div className="text-sm font-medium text-primary">Final Quote Price</div>
+                            <div className="text-lg font-bold text-primary">${job.final_quote_amount}</div>
+                        </div>
+                    )}
+                    {job.ai_quote_amount && job.quote_approval_status === "pending" && (
+                        <div className="space-y-1">
+                            <div className="text-sm font-medium text-blue-600">AI Suggested Price</div>
+                            <div className="text-lg font-bold text-blue-600">${job.ai_quote_amount}</div>
+                        </div>
+                    )}
                 </div>
+
+                {job.quote_approval_status === "pending" && (
+                    <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mt-4">
+                        <div className="flex items-start gap-3">
+                            <AlertTriangle className="h-5 w-5 text-amber-600 mt-0.5" />
+                            <div className="flex-1">
+                                <h4 className="font-semibold text-amber-900">Price Update Requested</h4>
+                                <p className="text-sm text-amber-800 mt-1">
+                                    The moving team has finalized the inventory scan.
+                                    {job.ai_quote_amount ? ` The AI calculated a suggested price of $${job.ai_quote_amount}, and the foreman has requested a final price of $${job.final_quote_amount}.` : ` The final required price is $${job.final_quote_amount}.`}
+                                    {" "}Please approve this price adjustment to proceed, or reject it and contact dispatch.
+                                </p>
+                                <div className="flex gap-3 mt-4">
+                                    <Button
+                                        size="sm"
+                                        className="bg-green-600 hover:bg-green-700 text-white"
+                                        disabled={updateJobMutation.isPending}
+                                        onClick={() => updateJobMutation.mutate({ quote_approval_status: "approved" })}
+                                    >
+                                        <CheckCircle2 className="h-4 w-4 mr-2" /> Approve
+                                    </Button>
+                                    <Button
+                                        size="sm"
+                                        variant="outline"
+                                        onClick={() => updateJobMutation.mutate({ quote_approval_status: "rejected" })}
+                                        disabled={updateJobMutation.isPending}
+                                        className="text-red-600 border-red-200 hover:bg-red-50"
+                                    >
+                                        Reject
+                                    </Button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
                 {job.company_id === "PENDING_ASSIGNMENT" && (
-                    <div className="text-sm text-amber-600 bg-amber-50 p-2 rounded">
+                    <div className="text-sm text-amber-600 bg-amber-50 p-2 rounded mt-4">
                         Waiting for company assignment.
                     </div>
                 )}
+
+                {/* Payments */}
+                {isDepositDue && job.quote_approval_status !== "pending" && (
+                    <div className="bg-indigo-50 border border-indigo-100 rounded-lg p-4 mt-4 flex items-center justify-between">
+                        <div>
+                            <div className="font-semibold text-indigo-900">Deposit Required</div>
+                            <div className="text-sm text-indigo-700">Please pay the 50% deposit to confirm your move date.</div>
+                        </div>
+                        <Button onClick={() => setIsPaymentOpen(true)} className="bg-indigo-600 hover:bg-indigo-700">
+                            <CreditCard className="mr-2 h-4 w-4" /> Pay ${paymentAmount.toFixed(2)}
+                        </Button>
+                    </div>
+                )}
+                {isBalanceDue && (
+                    <div className="bg-green-50 border border-green-100 rounded-lg p-4 mt-4 flex items-center justify-between">
+                        <div>
+                            <div className="font-semibold text-green-900">Ready for Final Payment</div>
+                            <div className="text-sm text-green-700">Your move is complete! Please settle the remaining balance.</div>
+                        </div>
+                        <Button onClick={() => setIsPaymentOpen(true)} className="bg-green-600 hover:bg-green-700">
+                            <CreditCard className="mr-2 h-4 w-4" /> Pay ${paymentAmount.toFixed(2)}
+                        </Button>
+                    </div>
+                )}
+                {job.payment_status === "fully_paid" && (
+                    <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 mt-4 flex items-center gap-2 text-gray-700">
+                        <CheckCircle2 className="h-5 w-5 text-green-600" />
+                        <span className="font-medium">Paid in Full</span>
+                    </div>
+                )}
+
+                <StripeCheckoutModal
+                    isOpen={isPaymentOpen}
+                    onClose={() => setIsPaymentOpen(false)}
+                    onSuccess={handlePaymentSuccess}
+                    amount={paymentAmount}
+                    description={paymentDesc}
+                />
                 <button
                     onClick={() => setShowTimeline(!showTimeline)}
                     className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800 transition-colors font-medium"
@@ -255,6 +378,7 @@ function JobStatusBadge({ status }: { status: JobStatus }) {
         [JobStatus.onWayToDropoff]: "bg-yellow-100 text-yellow-800",
         [JobStatus.Unloading]: "bg-yellow-100 text-yellow-800",
         [JobStatus.Completed]: "bg-green-100 text-green-800",
+        [JobStatus.ReturningToWarehouse]: "bg-slate-100 text-slate-800",
         [JobStatus.Canceled]: "bg-red-100 text-red-800",
     };
 
