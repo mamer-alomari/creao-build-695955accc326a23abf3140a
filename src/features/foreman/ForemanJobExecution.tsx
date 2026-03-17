@@ -1,7 +1,7 @@
 
 import { useParams, useNavigate } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { JobORM, JobStatus, type JobModel } from "@/sdk/database/orm/orm_job";
+import { JobORM, JobStatus, type JobModel, type JobStop } from "@/sdk/database/orm/orm_job";
 import { type RoomInventory } from "@/hooks/use-google-vision";
 import { useWorkerLocationTracker } from "@/hooks/use-worker-location";
 import { Button } from "@/components/ui/button";
@@ -24,9 +24,18 @@ import { notifications } from "@/lib/notifications";
 import { VehicleChecklistDialog } from "./components/VehicleChecklistDialog";
 import { calculateAIQuote, type QuoteBreakdown } from "@/lib/quote-engine";
 import { StripeCheckoutModal } from "@/components/StripeCheckoutModal";
+import {
+    getStopsFromJob,
+    getCurrentStop,
+    getNextStop,
+    isLastStop,
+    updateStopInJob,
+    advanceToNextStop,
+} from "@/lib/job-stops";
+import { InventoryReconciliation } from "./components/InventoryReconciliation";
 
 export function ForemanJobExecution() {
-    const { user, companyId } = useCreaoAuth(); // Need companyId for path
+    const { user, companyId } = useCreaoAuth();
     const params = useParams({ strict: false });
     const jobId = (params as any).jobId;
     const navigate = useNavigate();
@@ -37,14 +46,7 @@ export function ForemanJobExecution() {
     const [foremanSignature, setForemanSignature] = useState<string>("");
     const [quoteAmount, setQuoteAmount] = useState<number>(0);
     const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
-
-    // Auto-advance step if returning from inventory
-    useEffect(() => {
-        // If we have final inventory but no signatures, we are likely in Quote phase
-        // Accessing 'job' here requires it to be in dependency, but 'job' is fetched below.
-        // We'll handle this in the render/query success if needed, or rely on manual 'actions' if user re-enters.
-        // Actually best to leave default as 'status' -> allowing them to pick up where left off if we added logic.
-    }, []);
+    const [showReconciliation, setShowReconciliation] = useState(false);
 
     // Upload State
     const [isUploading, setIsUploading] = useState(false);
@@ -56,7 +58,6 @@ export function ForemanJobExecution() {
 
         setIsUploading(true);
         try {
-            // Path: gs://abadai-da22b.firebasestorage.app/in-field-jobs
             const storageRef = ref(storage, `in-field-jobs/${companyId}/${jobId}/${Date.now()}_${file.name}`);
             const uploadTask = uploadBytesResumable(storageRef, file);
 
@@ -99,25 +100,29 @@ export function ForemanJobExecution() {
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["job", jobId] });
         },
-        onSettled: () => {
-            // Prevents unhandled rejection if component unmounts before mutation settles
-        },
+        onSettled: () => {},
     });
 
     if (isLoading || !job) return <div>Loading Job...</div>;
 
+    // --- Multi-stop awareness ---
+    const hasMultipleStops = !!job.stops && job.stops.length > 0;
+    const stops = getStopsFromJob(job);
+    const currentStop = getCurrentStop(job);
+    const nextStop = getNextStop(job);
+    const isLast = isLastStop(job);
+
+    // Determine the address to show in the main action card
+    const displayAddress = currentStop?.address || job.pickup_address;
+    const isPickupStop = currentStop?.type === "pickup" || currentStop?.type === "storage";
+    const isDropoffStop = currentStop?.type === "dropoff";
+
     // --- Workflow Steps ---
 
-    // 1. Start Job (En Route)
     const handleStartJobClick = () => {
-        console.log("Start Job Clicked", job.vehicle_checklist);
-        // If checklist is already done, proceed directly (retry case)
         if (job.vehicle_checklist) {
-            console.log("Checklist already done, starting job");
             startJob();
         } else {
-            console.log("Showing vehicle checklist");
-            // Show checklist
             setShowVehicleCheck(true);
         }
     };
@@ -134,15 +139,25 @@ export function ForemanJobExecution() {
     };
 
     const startJob = () => {
-        updateJobMutation.mutate({
+        const updates: Partial<JobModel> = {
             status: JobStatus.EnRoute,
-            actual_start_time: new Date().toISOString()
-        });
+            actual_start_time: new Date().toISOString(),
+        };
+        if (hasMultipleStops && currentStop) {
+            updates.stops = updateStopInJob(job, currentStop.id, { status: "en_route" }).stops;
+        }
+        updateJobMutation.mutate(updates);
     };
 
     const handleArrived = () => {
-        updateJobMutation.mutate({ status: JobStatus.Arrived });
-        // We stay on the "status" step to show the "Notify Customer" action now
+        const updates: Partial<JobModel> = { status: JobStatus.Arrived };
+        if (hasMultipleStops && currentStop) {
+            updates.stops = updateStopInJob(job, currentStop.id, {
+                status: "arrived",
+                actual_arrival_time: new Date().toISOString(),
+            }).stops;
+        }
+        updateJobMutation.mutate(updates);
     };
 
     const handleNotifyCustomer = async () => {
@@ -150,32 +165,36 @@ export function ForemanJobExecution() {
         if (!confirmed) return;
 
         try {
-            await notifications.notifyArrival(job.customer_name, "555-0000", "customer@example.com"); // Mock data for now, ideally from job
+            await notifications.notifyArrival(job.customer_name, "555-0000", "customer@example.com");
             toast("Customer Notified", { description: "SMS and Email sent." });
-            navigate({ to: `/foreman/jobs/${jobId}/inventory` });
+            // Navigate to inventory scan with stop context
+            if (hasMultipleStops && currentStop) {
+                const mode = isPickupStop ? "load" : "unload";
+                navigate({ to: `/foreman/jobs/${jobId}/inventory`, search: { stopId: currentStop.id, mode } });
+            } else {
+                navigate({ to: `/foreman/jobs/${jobId}/inventory` });
+            }
         } catch (err) {
             console.error(err);
             toast("Failed to notify", { description: "Please try again." });
         }
     };
 
-    // 2. Equipment
+    // Equipment
     const handleEquipmentConfirm = () => {
-        // Mock saving equipment
         updateJobMutation.mutate({
-            status: JobStatus.Loading, // Or 'Estimating' if we strictly follow flow
+            status: JobStatus.Loading,
             equipment_ids: ["vehicle-123", "dolly-1", "blankets-10"]
         });
         setStep("inventory");
     };
 
-    // 3. Inventory (Mock AI Scan)
+    // Inventory
     const handleInventoryConfirm = () => {
-        // Mock finalizing inventory
         setStep("quote");
     };
 
-    // 4. Quote & Contract
+    // Quote & Contract
     const handleQuoteSign = () => {
         if (!customerSignature || !foremanSignature) {
             toast.error("Both customer and foreman signatures are required.");
@@ -192,7 +211,7 @@ export function ForemanJobExecution() {
         setStep("payment");
     };
 
-    // 5. Payment
+    // Payment
     const handlePaymentSuccess = () => {
         updateJobMutation.mutate({
             payment_status: "deposit_paid",
@@ -201,16 +220,64 @@ export function ForemanJobExecution() {
         setStep("loading");
     };
 
-    // 6. Loading Complete
+    // Loading Complete — advance to next stop or transit to dropoff
     const handleLoadingComplete = () => {
-        updateJobMutation.mutate({
-            status: JobStatus.onWayToDropoff,
-            loading_photos: uploadedPhotos.length > 0 ? uploadedPhotos : ["mock_photo_url"]
-        });
-        toast.success("Truck Loaded! En route to Dropoff.");
+        const updates: Partial<JobModel> = {
+            loading_photos: uploadedPhotos.length > 0 ? uploadedPhotos : ["mock_photo_url"],
+        };
+
+        if (hasMultipleStops && currentStop) {
+            const advanced = advanceToNextStop(job);
+            updates.stops = advanced.stops;
+            updates.current_stop_index = advanced.current_stop_index;
+            // If next stop exists, set status to transit
+            if (!isLast) {
+                const next = stops[(job.current_stop_index ?? 0) + 1];
+                updates.status = next?.type === "dropoff" ? JobStatus.onWayToDropoff : JobStatus.EnRoute;
+            } else {
+                updates.status = JobStatus.Completed;
+            }
+        } else {
+            updates.status = JobStatus.onWayToDropoff;
+        }
+
+        updateJobMutation.mutate(updates);
+        toast.success(isLast ? "Job Complete!" : "Stop complete! Moving to next stop.");
     };
 
-    // 7. Complete Job & Return to Warehouse
+    // Unloading complete at dropoff — show reconciliation or complete
+    const handleUnloadingComplete = () => {
+        if (hasMultipleStops) {
+            setShowReconciliation(true);
+        } else {
+            updateJobMutation.mutate({ status: JobStatus.Completed });
+        }
+    };
+
+    const handleReconciliationConfirm = (notes: string) => {
+        setShowReconciliation(false);
+        const updates: Partial<JobModel> = {};
+
+        if (hasMultipleStops && currentStop) {
+            const updatedJob = updateStopInJob(job, currentStop.id, { notes });
+            const advanced = advanceToNextStop({ ...job, stops: updatedJob.stops });
+            updates.stops = advanced.stops;
+            updates.current_stop_index = advanced.current_stop_index;
+
+            if (isLast) {
+                updates.status = JobStatus.Completed;
+            } else {
+                updates.status = JobStatus.EnRoute;
+            }
+        } else {
+            updates.status = JobStatus.Completed;
+        }
+
+        updateJobMutation.mutate(updates);
+        toast.success(isLast ? "Job Complete!" : "Stop complete! Moving to next stop.");
+    };
+
+    // Return to Warehouse
     const handleReturnToWarehouse = () => {
         updateJobMutation.mutate({ status: JobStatus.ReturningToWarehouse });
         toast.success("Job Complete! Returning to Warehouse...");
@@ -231,7 +298,7 @@ export function ForemanJobExecution() {
                 };
             case JobStatus.EnRoute:
                 return {
-                    title: "Driving to Pickup...",
+                    title: `Driving to ${isPickupStop ? "Pickup" : "Stop"}...`,
                     action: "Arrived at Location",
                     handler: handleArrived,
                     variant: "default" as const
@@ -246,9 +313,27 @@ export function ForemanJobExecution() {
             case JobStatus.Loading:
                 return { title: "Loading is Active", action: "Finish Loading", handler: () => setStep("loading"), variant: "outline" as const };
             case JobStatus.onWayToDropoff:
-                return { title: "Driving to Dropoff", action: "Arrived Dropoff", handler: () => updateJobMutation.mutate({ status: JobStatus.Unloading }), variant: "default" as const };
+                return { title: "Driving to Dropoff", action: "Arrived Dropoff", handler: () => {
+                    const updates: Partial<JobModel> = { status: JobStatus.Unloading };
+                    if (hasMultipleStops && currentStop) {
+                        updates.stops = updateStopInJob(job, currentStop.id, { status: "unloading" }).stops;
+                    }
+                    updateJobMutation.mutate(updates);
+                }, variant: "default" as const };
             case JobStatus.Unloading:
-                return { title: "Unloading is Active", action: "Finish Unloading", handler: () => updateJobMutation.mutate({ status: JobStatus.Completed }), variant: "outline" as const };
+                return {
+                    title: "Unloading is Active",
+                    action: "Finish Unloading",
+                    handler: () => {
+                        // If multi-stop, go to unload scan first
+                        if (hasMultipleStops && currentStop) {
+                            navigate({ to: `/foreman/jobs/${jobId}/inventory`, search: { stopId: currentStop.id, mode: "unload" } });
+                        } else {
+                            handleUnloadingComplete();
+                        }
+                    },
+                    variant: "outline" as const
+                };
             case JobStatus.Completed:
                 return { title: "Job Complete", action: "Return to Warehouse", handler: handleReturnToWarehouse, variant: "default" as const };
             case JobStatus.ReturningToWarehouse:
@@ -273,6 +358,32 @@ export function ForemanJobExecution() {
                 </div>
             </div>
 
+            {/* Multi-stop progress indicator */}
+            {hasMultipleStops && (
+                <Card className="bg-slate-50">
+                    <CardContent className="py-3">
+                        <div className="flex items-center gap-2 text-sm font-medium mb-2">
+                            <MapPin className="h-4 w-4" />
+                            Stop {(job.current_stop_index ?? 0) + 1} of {stops.length}
+                        </div>
+                        <div className="flex gap-1">
+                            {stops.map((stop, i) => (
+                                <div key={stop.id} className="flex-1">
+                                    <div className={`h-2 rounded-full ${
+                                        stop.status === "completed" ? "bg-green-500" :
+                                        i === (job.current_stop_index ?? 0) ? "bg-primary" :
+                                        "bg-slate-200"
+                                    }`} />
+                                    <p className="text-xs text-muted-foreground mt-1 truncate" title={stop.address}>
+                                        {stop.type === "pickup" ? "P" : stop.type === "dropoff" ? "D" : "S"}: {stop.address.split(",")[0]}
+                                    </p>
+                                </div>
+                            ))}
+                        </div>
+                    </CardContent>
+                </Card>
+            )}
+
             {/* Main Action Card */}
             {statusConfig && (
                 <Card className="bg-slate-900 text-white border-0 shadow-xl">
@@ -282,7 +393,7 @@ export function ForemanJobExecution() {
                     <CardContent>
                         <div className="flex items-center gap-4 text-slate-300 mb-4">
                             <MapPin className="h-5 w-5" />
-                            {job.pickup_address}
+                            {displayAddress}
                         </div>
                         <Button
                             size="lg"
@@ -293,6 +404,14 @@ export function ForemanJobExecution() {
                         </Button>
                     </CardContent>
                 </Card>
+            )}
+
+            {/* Reconciliation view at dropoff */}
+            {showReconciliation && hasMultipleStops && (
+                <InventoryReconciliation
+                    stops={stops}
+                    onConfirm={handleReconciliationConfirm}
+                />
             )}
 
             {/* Workflow Sections */}
@@ -339,7 +458,14 @@ export function ForemanJobExecution() {
                         ) : (
                             <div className="border-2 border-dashed p-8 text-center rounded-lg bg-slate-50">
                                 <p>Manage Inventory in dedicated view</p>
-                                <Button variant="outline" className="mt-4" onClick={() => navigate({ to: `/foreman/jobs/${jobId}/inventory` })}>
+                                <Button variant="outline" className="mt-4" onClick={() => {
+                                    if (hasMultipleStops && currentStop) {
+                                        const mode = isPickupStop ? "load" : "unload";
+                                        navigate({ to: `/foreman/jobs/${jobId}/inventory`, search: { stopId: currentStop.id, mode } });
+                                    } else {
+                                        navigate({ to: `/foreman/jobs/${jobId}/inventory` });
+                                    }
+                                }}>
                                     <Camera className="mr-2 h-4 w-4" /> Go to Scan Items
                                 </Button>
                             </div>
@@ -350,7 +476,6 @@ export function ForemanJobExecution() {
                     </CardContent>
                     {step === "inventory" && (
                         <CardFooter>
-                            {/* If they come back here without finishing, they can go to scan or skip */}
                             <Button onClick={() => setStep("quote")} variant="ghost" className="w-full">Skip to Quote (Debug)</Button>
                         </CardFooter>
                     )}
@@ -368,12 +493,10 @@ export function ForemanJobExecution() {
                                 const items = JSON.parse(job.final_inventory_data);
                                 if (items.length > 0) {
                                     const aiQuote = calculateAIQuote(items, job.distance, job.classification);
-                                    // Auto-set quote amount if not yet set
                                     if (quoteAmount === 0 && step === "quote") {
                                         setTimeout(() => setQuoteAmount(aiQuote.totalEstimate), 0);
                                     }
 
-                                    // Save ai_quote_amount if not already set
                                     if (job.ai_quote_amount !== aiQuote.totalEstimate && !updateJobMutation.isPending) {
                                         setTimeout(() => {
                                             updateJobMutation.mutate({ ai_quote_amount: aiQuote.totalEstimate });
@@ -583,7 +706,7 @@ export function ForemanJobExecution() {
                 isOpen={showVehicleCheck}
                 onClose={() => setShowVehicleCheck(false)}
                 onConfirm={handleChecklistConfirm}
-                vehicleName="Assigned Vehicle" // Could fetch actual vehicle name if needed
+                vehicleName="Assigned Vehicle"
             />
 
             <StripeCheckoutModal

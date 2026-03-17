@@ -118,10 +118,16 @@ function validateRoomType(roomType: string): string {
     return roomTypeObj?.label || normalized;
 }
 
+export type ScanMode = "detect" | "load" | "unload";
+
 /**
- * Analyze an image to detect movable items using Gemini
+ * Analyze an image to detect movable items using Gemini.
+ * Mode controls the prompt behavior:
+ * - "detect": standard item detection (public quote form)
+ * - "load": loading scan with pre-existing damage assessment + confidence
+ * - "unload": unloading scan focused on identifying new damage
  */
-export async function analyzeImageForItems(base64Image: string, mimeType: string, roomType: string): Promise<DetectedItem[]> {
+export async function analyzeImageForItems(base64Image: string, mimeType: string, roomType: string, mode: ScanMode = "detect"): Promise<DetectedItem[]> {
     // Prefer specific Vision key, fallback to Maps key for backward compatibility
     const apiKey = import.meta.env.VITE_GOOGLE_VISION_API_KEY || import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 
@@ -132,7 +138,25 @@ export async function analyzeImageForItems(base64Image: string, mimeType: string
     // Validate room type to prevent prompt injection attacks
     const validatedRoomType = validateRoomType(roomType);
 
-    const prompt = `You are an expert moving company inventory specialist. Analyze this image of a ${validatedRoomType} and identify all movable items that would need to be packed and transported during a home move.
+    const damageFields = mode === "load"
+        ? `
+- conditionNotes: Describe any pre-existing damage, wear, scratches, stains, or defects you can observe (null if none)
+- damageDetected: true if the item has visible pre-existing damage, false otherwise
+- confidenceScore: A number from 0.0 to 1.0 indicating how confident you are in identifying this item and its condition`
+        : mode === "unload"
+        ? `
+- conditionNotes: Describe any NEW damage that may have occurred during transport — dents, scratches, breaks, water damage (null if none visible)
+- damageDetected: true if NEW damage is visible compared to typical loading condition, false otherwise
+- confidenceScore: A number from 0.0 to 1.0 indicating how confident you are in this assessment`
+        : "";
+
+    const modeContext = mode === "load"
+        ? "You are conducting a LOADING inspection before transport. Carefully assess each item's current condition and note any pre-existing damage."
+        : mode === "unload"
+        ? "You are conducting an UNLOADING inspection after transport. Focus on identifying any NEW damage that may have occurred during the move."
+        : "";
+
+    const prompt = `You are an expert moving company inventory specialist. ${modeContext}Analyze this image of a ${validatedRoomType} and identify all movable items that would need to be packed and transported during a home move.
 
 For each item you identify, provide the following information in a valid JSON array format:
 - name: The common name of the item
@@ -142,7 +166,7 @@ For each item you identify, provide the following information in a valid JSON ar
 - estimatedSize: One of "small" (fits in a box), "medium" (needs 2 people), "large" (needs 3+ people), "extra-large" (may need special equipment)
 - estimatedWeight: One of "light" (under 20 lbs), "medium" (20-50 lbs), "heavy" (over 50 lbs)
 - fragile: true if the item is breakable or needs special care
-- specialHandling: Any special notes for movers (e.g., "disassembly required", "keep upright", "temperature sensitive")
+- specialHandling: Any special notes for movers (e.g., "disassembly required", "keep upright", "temperature sensitive")${damageFields}
 
 IMPORTANT: Return ONLY a valid JSON array with the items. No additional text, explanation, or markdown. Start with [ and end with ].
 
@@ -156,7 +180,10 @@ Example format:
     "estimatedSize": "large",
     "estimatedWeight": "heavy",
     "fragile": false,
-    "specialHandling": "may require disassembly for narrow doorways"
+    "specialHandling": "may require disassembly for narrow doorways"${mode !== "detect" ? `,
+    "conditionNotes": null,
+    "damageDetected": false,
+    "confidenceScore": 0.92` : ""}
   }
 ]`;
 
@@ -266,10 +293,12 @@ export function useAnalyzeRoomImage() {
             imageFile,
             imageUrl,
             roomType,
+            mode = "detect",
         }: {
             imageFile?: File;
             imageUrl?: string;
             roomType: string;
+            mode?: ScanMode;
         }): Promise<DetectedItem[]> => {
             let base64Image = "";
             let resolvedMimeType = "image/jpeg";
@@ -297,7 +326,7 @@ export function useAnalyzeRoomImage() {
                 throw new Error("No image data available for analysis");
             }
 
-            return analyzeImageForItems(base64Image, resolvedMimeType, roomType);
+            return analyzeImageForItems(base64Image, resolvedMimeType, roomType, mode);
         },
     });
 }

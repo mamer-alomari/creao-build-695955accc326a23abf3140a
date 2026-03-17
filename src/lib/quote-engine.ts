@@ -8,9 +8,9 @@ export interface InventoryItem {
     name: string;
     quantity: number;
     category?: string;
-    estimatedSize?: "small" | "medium" | "large" | "extra-large" | string;
-    weightLbs?: number;
-    volumeCuFt?: number;
+    estimatedSize?: "small" | "medium" | "large" | "extra-large" | string | null;
+    weightLbs?: number | null;
+    volumeCuFt?: number | null;
 }
 
 export interface RoomInventory {
@@ -68,10 +68,11 @@ function parseDistance(distanceStr?: string): number {
 
 /**
  * Calculate an AI-generated quote estimate based on inventory and job details.
+ * Distance can be a string like "25.3 mi" or a numeric mile value.
  */
 export function calculateAIQuote(
     rooms: RoomInventory[],
-    distanceStr?: string,
+    distanceOrStr?: string | number,
     classification?: string
 ): QuoteBreakdown {
     let totalVolumeCuFt = 0;
@@ -96,7 +97,9 @@ export function calculateAIQuote(
         Math.round(2 + totalVolumeCuFt / 50 + totalWeightLbs / 200)
     );
 
-    const distanceMiles = parseDistance(distanceStr);
+    const distanceMiles = typeof distanceOrStr === "number"
+        ? distanceOrStr
+        : parseDistance(distanceOrStr);
 
     const laborCost = Math.round(estimatedHours * LABOR_RATE_PER_HOUR);
     const fuelCost = Math.round(distanceMiles * FUEL_COST_PER_MILE);

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
@@ -6,7 +6,8 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { ArrowRight, ArrowLeft, Truck, Calendar as CalendarIcon, MapPin, CheckCircle2, User, Mail, Phone } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ArrowRight, ArrowLeft, Truck, Calendar as CalendarIcon, MapPin, CheckCircle2, User, Mail, Phone, Plus, Trash2, Sparkles } from "lucide-react";
 import { format } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -16,6 +17,9 @@ import { type RoomInventory } from "@/hooks/use-google-vision";
 import { QuoteORM } from "@/sdk/database/orm/orm_quote";
 import { AddressAutocomplete } from "@/components/ui/address-autocomplete";
 import { classifyJobType } from "@/lib/address-utils";
+import { useDistanceMatrix } from "@/hooks/use-distance-matrix";
+import { calculateRouteDistance } from "@/lib/route-distance";
+import { calculateAIQuote, type QuoteBreakdown } from "@/lib/quote-engine";
 
 
 export const Route = createFileRoute("/get-quote")({
@@ -24,11 +28,20 @@ export const Route = createFileRoute("/get-quote")({
 
 type QuoteStep = "logistics" | "inventory" | "review" | "success";
 
+interface StopEntry {
+    address: string;
+    type: "pickup" | "dropoff" | "storage";
+}
+
 export function GetQuoteView() {
     const [step, setStep] = useState<QuoteStep>("logistics");
-    // Form State
-    const [pickup, setPickup] = useState("");
-    const [dropoff, setDropoff] = useState("");
+
+    // Multi-stop state
+    const [stops, setStops] = useState<StopEntry[]>([
+        { address: "", type: "pickup" },
+        { address: "", type: "dropoff" },
+    ]);
+
     const [date, setDate] = useState<Date | undefined>(undefined);
 
     // Contact State
@@ -43,8 +56,52 @@ export function GetQuoteView() {
     // Inventory State
     const [rooms, setRooms] = useState<RoomInventory[]>([]);
 
+    // Quote calculation state
+    const [quoteBreakdown, setQuoteBreakdown] = useState<QuoteBreakdown | null>(null);
+    const [isCalculating, setIsCalculating] = useState(false);
+
+    const { calculateDistance } = useDistanceMatrix();
+
     const totalItems = rooms.reduce((acc, room) => acc + room.items.filter(i => i.quantity > 0).length, 0);
-    const estimatedVolume = totalItems * 5; // Rough estimate (cubic feet)
+
+    // Derived values
+    const firstPickup = stops.find(s => s.type === "pickup")?.address || "";
+    const lastDropoff = [...stops].reverse().find(s => s.type === "dropoff")?.address || "";
+
+    const updateStop = (index: number, updates: Partial<StopEntry>) => {
+        setStops(prev => prev.map((s, i) => i === index ? { ...s, ...updates } : s));
+    };
+
+    const addStop = () => {
+        setStops(prev => [...prev.slice(0, -1), { address: "", type: "storage" }, prev[prev.length - 1]]);
+    };
+
+    const removeStop = (index: number) => {
+        if (stops.length <= 2) return;
+        setStops(prev => prev.filter((_, i) => i !== index));
+    };
+
+    const canProceedLogistics = stops.every(s => s.address.trim()) && stops.length >= 2 && date;
+
+    const handleToReview = async () => {
+        setIsCalculating(true);
+        try {
+            const addresses = stops.map(s => s.address);
+            const { totalMiles } = await calculateRouteDistance(addresses, calculateDistance);
+            const classification = classifyJobType(firstPickup, lastDropoff);
+            const breakdown = calculateAIQuote(rooms, totalMiles, classification);
+            setQuoteBreakdown(breakdown);
+        } catch (e) {
+            console.error("Failed to calculate route/quote", e);
+            // Fallback: calculate without distance
+            const classification = classifyJobType(firstPickup, lastDropoff);
+            const breakdown = calculateAIQuote(rooms, 0, classification);
+            setQuoteBreakdown(breakdown);
+        } finally {
+            setIsCalculating(false);
+            setStep("review");
+        }
+    };
 
     const handleBook = async () => {
         if (!date) {
@@ -53,20 +110,25 @@ export function GetQuoteView() {
         }
         setIsSubmitting(true);
         try {
-            const classification = classifyJobType(pickup, dropoff);
+            const expiresAt = new Date();
+            expiresAt.setDate(expiresAt.getDate() + 7);
+
             const quote = await QuoteORM.getInstance().insertQuote({
-                pickup_address: pickup,
-                dropoff_address: dropoff,
+                pickup_address: firstPickup,
+                dropoff_address: lastDropoff,
                 move_date: date.toISOString(),
                 inventory_items: rooms,
-                estimated_volume: estimatedVolume,
-                estimated_price_min: 450, // Logic should be dynamic
-                estimated_price_max: 600,
+                estimated_volume: totalItems * 5,
+                estimated_price_min: quoteBreakdown ? Math.round(quoteBreakdown.totalEstimate * 0.85) : 450,
+                estimated_price_max: quoteBreakdown ? Math.round(quoteBreakdown.totalEstimate * 1.15) : 600,
                 customer_name: contactName,
                 customer_email: contactEmail,
                 customer_phone: contactPhone,
-                company_id: "", // Sent to pure open pool initially
-                status: "PENDING"
+                company_id: "",
+                status: "PENDING",
+                stops: stops.map(s => ({ address: s.address, type: s.type })),
+                quote_breakdown: quoteBreakdown || undefined,
+                expires_at: expiresAt.toISOString(),
             });
             setSubmittedQuoteId(quote.id);
             setStep("success");
@@ -118,31 +180,54 @@ export function GetQuoteView() {
                     <Card className="max-w-3xl mx-auto">
                         <CardHeader>
                             <CardTitle>Where are you moving?</CardTitle>
-                            <CardDescription>Enter your pickup and dropoff locations and select a date.</CardDescription>
+                            <CardDescription>Enter your stops and select a date.</CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-4">
-                            <div className="space-y-2">
-                                <Label htmlFor="pickup">Pickup Address</Label>
-                                <div className="relative">
-                                    <AddressAutocomplete
-                                        id="pickup"
-                                        placeholder="123 Main St, City, State"
-                                        value={pickup}
-                                        onChange={setPickup}
-                                    />
+                            {stops.map((stop, index) => (
+                                <div key={index} className="flex items-start gap-3">
+                                    <div className="flex-1 space-y-2">
+                                        <div className="flex items-center gap-2">
+                                            <Label className="text-sm font-medium">
+                                                Stop {index + 1}
+                                            </Label>
+                                            <Select
+                                                value={stop.type}
+                                                onValueChange={(val) => updateStop(index, { type: val as StopEntry["type"] })}
+                                            >
+                                                <SelectTrigger className="w-32 h-7 text-xs">
+                                                    <SelectValue />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="pickup">Pickup</SelectItem>
+                                                    <SelectItem value="dropoff">Dropoff</SelectItem>
+                                                    <SelectItem value="storage">Storage</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                        <AddressAutocomplete
+                                            id={`stop-${index}`}
+                                            placeholder={`${stop.type === "pickup" ? "Pickup" : stop.type === "dropoff" ? "Dropoff" : "Storage"} address`}
+                                            value={stop.address}
+                                            onChange={(val) => updateStop(index, { address: val })}
+                                        />
+                                    </div>
+                                    {stops.length > 2 && (
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            className="mt-7 text-red-500 hover:text-red-700"
+                                            onClick={() => removeStop(index)}
+                                        >
+                                            <Trash2 className="h-4 w-4" />
+                                        </Button>
+                                    )}
                                 </div>
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="dropoff">Dropoff Address</Label>
-                                <div className="relative">
-                                    <AddressAutocomplete
-                                        id="dropoff"
-                                        placeholder="456 New Home Ave, City, State"
-                                        value={dropoff}
-                                        onChange={setDropoff}
-                                    />
-                                </div>
-                            </div>
+                            ))}
+
+                            <Button variant="outline" size="sm" onClick={addStop} className="w-full">
+                                <Plus className="h-4 w-4 mr-1" /> Add Stop
+                            </Button>
+
                             <div className="space-y-2 flex flex-col">
                                 <Label>Move Date</Label>
                                 <Popover>
@@ -170,7 +255,7 @@ export function GetQuoteView() {
                             </div>
                         </CardContent>
                         <CardFooter className="flex justify-end">
-                            <Button onClick={() => setStep("inventory")} disabled={!pickup || !dropoff || !date}>
+                            <Button onClick={() => setStep("inventory")} disabled={!canProceedLogistics}>
                                 Next Step <ArrowRight className="ml-2 h-4 w-4" />
                             </Button>
                         </CardFooter>
@@ -192,8 +277,9 @@ export function GetQuoteView() {
                                 <div className="text-sm text-muted-foreground hidden sm:block">
                                     Total Items: <strong>{totalItems}</strong>
                                 </div>
-                                <Button onClick={() => setStep("review")}>
-                                    Next Step <ArrowRight className="ml-2 h-4 w-4" />
+                                <Button onClick={handleToReview} disabled={isCalculating}>
+                                    {isCalculating ? "Calculating..." : "Next Step"}
+                                    {!isCalculating && <ArrowRight className="ml-2 h-4 w-4" />}
                                 </Button>
                             </div>
                         </div>
@@ -205,18 +291,19 @@ export function GetQuoteView() {
                         <Card className="h-fit">
                             <CardHeader>
                                 <CardTitle>Review Your Quote</CardTitle>
-                                <CardDescription>Estimated move based on details provided.</CardDescription>
+                                <CardDescription>AI-calculated estimate based on your inventory and route.</CardDescription>
                             </CardHeader>
                             <CardContent className="space-y-6">
                                 <div className="bg-slate-50 p-4 rounded-lg space-y-3">
-                                    <div className="flex justify-between text-sm">
-                                        <span className="text-muted-foreground">From</span>
-                                        <span className="font-medium text-right">{pickup}</span>
-                                    </div>
-                                    <div className="flex justify-between text-sm">
-                                        <span className="text-muted-foreground">To</span>
-                                        <span className="font-medium text-right">{dropoff}</span>
-                                    </div>
+                                    {/* Show all stops */}
+                                    {stops.map((stop, i) => (
+                                        <div key={i} className="flex justify-between text-sm">
+                                            <span className="text-muted-foreground capitalize">
+                                                Stop {i + 1} ({stop.type})
+                                            </span>
+                                            <span className="font-medium text-right max-w-[200px] truncate">{stop.address}</span>
+                                        </div>
+                                    ))}
                                     <div className="flex justify-between text-sm">
                                         <span className="text-muted-foreground">Date</span>
                                         <span className="font-medium">{date ? format(date, "PPP") : ""}</span>
@@ -226,16 +313,54 @@ export function GetQuoteView() {
                                         <span className="text-muted-foreground">Total Items</span>
                                         <span className="font-medium">{totalItems}</span>
                                     </div>
-                                    <div className="flex justify-between text-sm">
-                                        <span className="text-muted-foreground">Est. Volume</span>
-                                        <span className="font-medium">~{estimatedVolume} cu. ft.</span>
-                                    </div>
+                                    {quoteBreakdown && (
+                                        <div className="flex justify-between text-sm">
+                                            <span className="text-muted-foreground">Route Distance</span>
+                                            <span className="font-medium">{quoteBreakdown.details.distanceMiles} mi</span>
+                                        </div>
+                                    )}
                                     <Separator />
-                                    <div className="pt-2">
-                                        <div className="text-sm font-medium mb-1">Estimated Price Range</div>
-                                        <div className="text-3xl font-bold text-primary">$450 - $600</div>
-                                        <div className="text-xs text-muted-foreground mt-1">Final price subject to verification</div>
-                                    </div>
+
+                                    {/* Dynamic AI pricing breakdown */}
+                                    {quoteBreakdown ? (
+                                        <div className="space-y-2">
+                                            <div className="flex items-center gap-2 text-sm font-semibold text-primary">
+                                                <Sparkles className="h-4 w-4" />
+                                                AI-Powered Quote
+                                            </div>
+                                            <div className="grid gap-1 text-sm">
+                                                <div className="flex justify-between">
+                                                    <span className="text-muted-foreground">Labor ({quoteBreakdown.details.estimatedHours}h)</span>
+                                                    <span className="font-medium">${quoteBreakdown.laborCost}</span>
+                                                </div>
+                                                <div className="flex justify-between">
+                                                    <span className="text-muted-foreground">Fuel</span>
+                                                    <span className="font-medium">${quoteBreakdown.fuelCost}</span>
+                                                </div>
+                                                <div className="flex justify-between">
+                                                    <span className="text-muted-foreground">Materials</span>
+                                                    <span className="font-medium">${quoteBreakdown.materialsCost}</span>
+                                                </div>
+                                                <div className="flex justify-between">
+                                                    <span className="text-muted-foreground">Insurance</span>
+                                                    <span className="font-medium">${quoteBreakdown.insuranceCost}</span>
+                                                </div>
+                                            </div>
+                                            <div className="pt-2">
+                                                <div className="text-sm font-medium mb-1">Estimated Price Range</div>
+                                                <div className="text-3xl font-bold text-primary">
+                                                    ${Math.round(quoteBreakdown.totalEstimate * 0.85)} - ${Math.round(quoteBreakdown.totalEstimate * 1.15)}
+                                                </div>
+                                                <div className="text-xs text-muted-foreground mt-1">Final price subject to on-site verification</div>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <div className="pt-2">
+                                            <div className="text-sm font-medium mb-1">Estimated Price Range</div>
+                                            <div className="text-3xl font-bold text-primary">$450 - $600</div>
+                                            <div className="text-xs text-muted-foreground mt-1">Final price subject to verification</div>
+                                        </div>
+                                    )}
                                 </div>
                             </CardContent>
                         </Card>

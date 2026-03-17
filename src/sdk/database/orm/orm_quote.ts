@@ -38,6 +38,24 @@ export interface QuoteModel {
     status: "PENDING" | "BOOKED" | "ARCHIVED";
     company_id: string;
     customer_id?: string; // Optional, linked after signup
+
+    // Multi-stop
+    stops?: Array<{ address: string; type: "pickup" | "dropoff" | "storage" }>;
+    expires_at?: string; // ISO
+    quote_breakdown?: {
+        laborCost: number;
+        fuelCost: number;
+        materialsCost: number;
+        insuranceCost: number;
+        totalEstimate: number;
+        details: {
+            estimatedHours: number;
+            distanceMiles: number;
+            itemCount: number;
+            totalVolumeCuFt: number;
+            totalWeightLbs: number;
+        };
+    };
 }
 
 export class QuoteORM {
@@ -109,5 +127,13 @@ export class QuoteORM {
     async updateStatus(id: string, status: "PENDING" | "BOOKED" | "ARCHIVED"): Promise<void> {
         const docRef = doc(db, this.collectionName, id);
         await setDoc(docRef, { status, update_time: this.getCurrentTime() }, { merge: true });
+    }
+
+    /**
+     * Update Quote with partial data
+     */
+    async updateQuote(id: string, data: Partial<QuoteModel>): Promise<void> {
+        const docRef = doc(db, this.collectionName, id);
+        await setDoc(docRef, { ...data, update_time: this.getCurrentTime() }, { merge: true });
     }
 }

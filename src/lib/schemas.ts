@@ -71,6 +71,9 @@ export const DetectedItemSchema = z.object({
 	estimatedWeight: z.enum(['light', 'medium', 'heavy']).nullable().optional(),
 	fragile: z.boolean().nullable().optional().default(false),
 	specialHandling: z.string().nullable().optional(),
+	conditionNotes: z.string().nullable().optional(),
+	damageDetected: z.boolean().nullable().optional().default(false),
+	confidenceScore: z.number().min(0).max(1).nullable().optional(),
 });
 
 export type DetectedItem = z.infer<typeof DetectedItemSchema>;

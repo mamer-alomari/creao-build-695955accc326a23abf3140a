@@ -2,17 +2,18 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useCreaoAuth } from "@/sdk/core/auth";
 import { QuoteORM, type QuoteModel } from "@/sdk/database/orm/orm_quote";
-import { JobORM, type JobModel, JobStatus } from "@/sdk/database/orm/orm_job";
+import { JobORM, type JobModel, JobStatus, type JobStop } from "@/sdk/database/orm/orm_job";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { format } from "date-fns";
-import { Package, Truck, Calendar, ArrowRight, CheckCircle2, ChevronDown, ChevronUp, AlertTriangle, CreditCard } from "lucide-react";
+import { format, differenceInDays, differenceInHours, isPast } from "date-fns";
+import { Package, Truck, Calendar, ArrowRight, CheckCircle2, ChevronDown, ChevronUp, AlertTriangle, CreditCard, Clock, MapPin, Sparkles } from "lucide-react";
 import { StripeCheckoutModal } from "@/components/StripeCheckoutModal";
 import { useNavigate } from "@tanstack/react-router";
 import { JobTimeline } from "./JobTimeline";
 import { useState as useReactState } from "react";
+import { generateStopId } from "@/lib/job-stops";
 
 export function PortalDashboard() {
     const { user } = useCreaoAuth();
@@ -42,12 +43,10 @@ export function PortalDashboard() {
     // Book Quote Mutation
     const bookQuoteMutation = useMutation({
         mutationFn: async (quote: QuoteModel) => {
-            // Security: Verify customer owns this quote
             if (quote.customer_id && quote.customer_id !== user!.uid) {
                 throw new Error('Unauthorized: You can only book your own quotes');
             }
 
-            // Validate required fields
             if (!quote.customer_name || quote.customer_name.trim().length === 0) {
                 throw new Error('Customer name is required');
             }
@@ -56,27 +55,42 @@ export function PortalDashboard() {
                 throw new Error('Invalid inventory data');
             }
 
-            // 1. Create Job
+            // Check expiration
+            if (quote.expires_at && isPast(new Date(quote.expires_at))) {
+                throw new Error('This quote has expired. Please request a new quote.');
+            }
+
+            // Create Job with stops if available
             const jobData: JobModel = {
-                id: "", // Let ORM generate
+                id: "",
                 data_creator: user!.uid,
                 data_updater: user!.uid,
                 create_time: new Date().toISOString(),
                 update_time: new Date().toISOString(),
-                company_id: quote.company_id || "PENDING_ASSIGNMENT", // If no company, mark for admin assignment
+                company_id: quote.company_id || "PENDING_ASSIGNMENT",
                 customer_name: quote.customer_name.trim(),
                 customer_id: user!.uid,
-                status: JobStatus.Quote, // Initial status as Booked/Quote
+                status: JobStatus.Quote,
                 scheduled_date: quote.move_date,
                 pickup_address: quote.pickup_address,
                 dropoff_address: quote.dropoff_address,
-                estimated_cost: quote.estimated_price_min, // Use min price for now
-                inventory_data: JSON.stringify(quote.inventory_items)
+                estimated_cost: quote.estimated_price_min,
+                inventory_data: JSON.stringify(quote.inventory_items),
             };
 
-            const [newJob] = await JobORM.getInstance().insertJob([jobData]);
+            // Copy multi-stop data if available
+            if (quote.stops && quote.stops.length > 0) {
+                jobData.stops = quote.stops.map((s, i) => ({
+                    id: generateStopId(),
+                    address: s.address,
+                    type: s.type,
+                    sequence: i,
+                    status: "pending" as const,
+                }));
+                jobData.current_stop_index = 0;
+            }
 
-            // 2. Update Quote Status
+            const [newJob] = await JobORM.getInstance().insertJob([jobData]);
             await QuoteORM.getInstance().updateStatus(quote.id, "BOOKED");
 
             return newJob;
@@ -88,7 +102,7 @@ export function PortalDashboard() {
         },
         onError: (error) => {
             console.error("Booking failed:", error);
-            toast.error("Failed to book. Please try again.");
+            toast.error(error instanceof Error ? error.message : "Failed to book. Please try again.");
         }
     });
 
@@ -118,57 +132,12 @@ export function PortalDashboard() {
                         </Card>
                     ) : (
                         quotes.map((quote) => (
-                            <Card key={quote.id}>
-                                <CardHeader>
-                                    <div className="flex justify-between items-start">
-                                        <div>
-                                            <CardTitle className="flex items-center gap-2">
-                                                <Calendar className="h-5 w-5 text-muted-foreground" />
-                                                {format(new Date(quote.move_date), "PPP")}
-                                            </CardTitle>
-                                            <CardDescription>
-                                                Created: {format(new Date(quote.create_time), "PP")}
-                                            </CardDescription>
-                                        </div>
-                                        <Badge variant={quote.status === "BOOKED" ? "secondary" : "default"}>
-                                            {quote.status}
-                                        </Badge>
-                                    </div>
-                                </CardHeader>
-                                <CardContent>
-                                    <div className="grid md:grid-cols-2 gap-4 mb-4">
-                                        <div className="space-y-1">
-                                            <div className="text-sm font-medium text-muted-foreground">Pickup</div>
-                                            <div>{quote.pickup_address}</div>
-                                        </div>
-                                        <div className="space-y-1">
-                                            <div className="text-sm font-medium text-muted-foreground">Dropoff</div>
-                                            <div>{quote.dropoff_address}</div>
-                                        </div>
-                                    </div>
-
-                                    <div className="flex justify-between items-center border-t pt-4">
-                                        <div className="text-lg font-bold">
-                                            ${quote.estimated_price_min} - ${quote.estimated_price_max}
-                                        </div>
-                                        {quote.status === "PENDING" && (
-                                            <Button
-                                                onClick={() => bookQuoteMutation.mutate(quote)}
-                                                disabled={bookQuoteMutation.isPending}
-                                            >
-                                                {bookQuoteMutation.isPending ? "Booking..." : "Book Now"}
-                                                <ArrowRight className="ml-2 h-4 w-4" />
-                                            </Button>
-                                        )}
-                                        {quote.status === "BOOKED" && (
-                                            <div className="flex items-center text-green-600 font-medium">
-                                                <CheckCircle2 className="mr-2 h-5 w-5" />
-                                                Booked
-                                            </div>
-                                        )}
-                                    </div>
-                                </CardContent>
-                            </Card>
+                            <QuoteCard
+                                key={quote.id}
+                                quote={quote}
+                                onBook={() => bookQuoteMutation.mutate(quote)}
+                                isBooking={bookQuoteMutation.isPending}
+                            />
                         ))
                     )}
                 </TabsContent>
@@ -191,6 +160,119 @@ export function PortalDashboard() {
     );
 }
 
+function QuoteCard({ quote, onBook, isBooking }: { quote: QuoteModel; onBook: () => void; isBooking: boolean }) {
+    const isExpired = quote.expires_at ? isPast(new Date(quote.expires_at)) : false;
+
+    const expirationLabel = (() => {
+        if (!quote.expires_at) return null;
+        const expiresDate = new Date(quote.expires_at);
+        if (isExpired) return "Expired";
+        const daysLeft = differenceInDays(expiresDate, new Date());
+        if (daysLeft > 1) return `Expires in ${daysLeft} days`;
+        const hoursLeft = differenceInHours(expiresDate, new Date());
+        if (hoursLeft > 0) return `Expires in ${hoursLeft}h`;
+        return "Expires soon";
+    })();
+
+    return (
+        <Card className={isExpired ? "opacity-70" : ""}>
+            <CardHeader>
+                <div className="flex justify-between items-start">
+                    <div>
+                        <CardTitle className="flex items-center gap-2">
+                            <Calendar className="h-5 w-5 text-muted-foreground" />
+                            {format(new Date(quote.move_date), "PPP")}
+                        </CardTitle>
+                        <CardDescription>
+                            Created: {format(new Date(quote.create_time), "PP")}
+                        </CardDescription>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        {expirationLabel && (
+                            <Badge variant={isExpired ? "destructive" : "outline"} className="text-xs">
+                                <Clock className="h-3 w-3 mr-1" />
+                                {expirationLabel}
+                            </Badge>
+                        )}
+                        <Badge variant={quote.status === "BOOKED" ? "secondary" : "default"}>
+                            {quote.status}
+                        </Badge>
+                    </div>
+                </div>
+            </CardHeader>
+            <CardContent>
+                {/* Show stops if multi-stop, otherwise legacy */}
+                {quote.stops && quote.stops.length > 0 ? (
+                    <div className="space-y-2 mb-4">
+                        {quote.stops.map((stop, i) => (
+                            <div key={i} className="flex items-center gap-2 text-sm">
+                                <Badge variant="outline" className="text-xs capitalize w-16 justify-center">
+                                    {stop.type}
+                                </Badge>
+                                <span>{stop.address}</span>
+                            </div>
+                        ))}
+                    </div>
+                ) : (
+                    <div className="grid md:grid-cols-2 gap-4 mb-4">
+                        <div className="space-y-1">
+                            <div className="text-sm font-medium text-muted-foreground">Pickup</div>
+                            <div>{quote.pickup_address}</div>
+                        </div>
+                        <div className="space-y-1">
+                            <div className="text-sm font-medium text-muted-foreground">Dropoff</div>
+                            <div>{quote.dropoff_address}</div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Quote breakdown if available */}
+                {quote.quote_breakdown && (
+                    <div className="bg-blue-50 border border-blue-100 rounded-lg p-3 mb-4 space-y-2">
+                        <div className="flex items-center gap-1 text-xs font-semibold text-blue-800">
+                            <Sparkles className="h-3 w-3" /> AI Quote Breakdown
+                        </div>
+                        <div className="grid grid-cols-2 gap-1 text-xs">
+                            <span className="text-muted-foreground">Labor ({quote.quote_breakdown.details.estimatedHours}h)</span>
+                            <span className="text-right font-medium">${quote.quote_breakdown.laborCost}</span>
+                            <span className="text-muted-foreground">Fuel ({quote.quote_breakdown.details.distanceMiles}mi)</span>
+                            <span className="text-right font-medium">${quote.quote_breakdown.fuelCost}</span>
+                            <span className="text-muted-foreground">Materials</span>
+                            <span className="text-right font-medium">${quote.quote_breakdown.materialsCost}</span>
+                            <span className="text-muted-foreground">Insurance</span>
+                            <span className="text-right font-medium">${quote.quote_breakdown.insuranceCost}</span>
+                        </div>
+                    </div>
+                )}
+
+                <div className="flex justify-between items-center border-t pt-4">
+                    <div className="text-lg font-bold">
+                        ${quote.estimated_price_min} - ${quote.estimated_price_max}
+                    </div>
+                    {quote.status === "PENDING" && !isExpired && (
+                        <Button
+                            onClick={onBook}
+                            disabled={isBooking}
+                        >
+                            {isBooking ? "Booking..." : "Book Now"}
+                            <ArrowRight className="ml-2 h-4 w-4" />
+                        </Button>
+                    )}
+                    {quote.status === "PENDING" && isExpired && (
+                        <Badge variant="destructive">Expired</Badge>
+                    )}
+                    {quote.status === "BOOKED" && (
+                        <div className="flex items-center text-green-600 font-medium">
+                            <CheckCircle2 className="mr-2 h-5 w-5" />
+                            Booked
+                        </div>
+                    )}
+                </div>
+            </CardContent>
+        </Card>
+    );
+}
+
 function JobCard({ job }: { job: JobModel }) {
     const [showTimeline, setShowTimeline] = useReactState(false);
     const queryClient = useQueryClient();
@@ -210,7 +292,6 @@ function JobCard({ job }: { job: JobModel }) {
 
     const [isPaymentOpen, setIsPaymentOpen] = useReactState(false);
 
-    // Payment Logic
     const isDepositDue = job.status === JobStatus.Booked && !job.payment_status;
     const isBalanceDue = job.status === JobStatus.Completed && job.payment_status === "deposit_paid";
 
@@ -244,14 +325,49 @@ function JobCard({ job }: { job: JobModel }) {
                 </div>
             </CardHeader>
             <CardContent className="space-y-4">
-                <div className="grid md:grid-cols-2 gap-4">
-                    <div className="space-y-1">
-                        <div className="text-sm font-medium text-muted-foreground">Locations</div>
-                        <div className="text-sm">
-                            <span className="text-muted-foreground">From:</span> {job.pickup_address} <br />
-                            <span className="text-muted-foreground">To:</span> {job.dropoff_address}
+                {/* Multi-stop progress or legacy From/To */}
+                {job.stops && job.stops.length > 0 ? (
+                    <div className="space-y-2">
+                        <div className="text-sm font-medium text-muted-foreground">Route Progress</div>
+                        {job.stops.map((stop, i) => (
+                            <div key={stop.id} className="flex items-center gap-3 text-sm">
+                                <div className={`flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold ${
+                                    stop.status === "completed"
+                                        ? "bg-green-500 text-white"
+                                        : i === (job.current_stop_index ?? 0)
+                                        ? "bg-primary text-white"
+                                        : "bg-slate-200 text-slate-500"
+                                }`}>
+                                    {stop.status === "completed" ? <CheckCircle2 className="h-3.5 w-3.5" /> : i + 1}
+                                </div>
+                                <div className="flex-1">
+                                    <span className="font-medium">{stop.address}</span>
+                                </div>
+                                <Badge variant="outline" className="text-xs capitalize">
+                                    {stop.type}
+                                </Badge>
+                                <Badge variant={
+                                    stop.status === "completed" ? "secondary" :
+                                    stop.status === "pending" ? "outline" : "default"
+                                } className="text-xs capitalize">
+                                    {stop.status.replace("_", " ")}
+                                </Badge>
+                            </div>
+                        ))}
+                    </div>
+                ) : (
+                    <div className="grid md:grid-cols-2 gap-4">
+                        <div className="space-y-1">
+                            <div className="text-sm font-medium text-muted-foreground">Locations</div>
+                            <div className="text-sm">
+                                <span className="text-muted-foreground">From:</span> {job.pickup_address} <br />
+                                <span className="text-muted-foreground">To:</span> {job.dropoff_address}
+                            </div>
                         </div>
                     </div>
+                )}
+
+                <div className="grid md:grid-cols-2 gap-4">
                     <div className="space-y-1">
                         <div className="text-sm font-medium text-muted-foreground">Original Estimate</div>
                         <div className={`text-lg font-bold ${job.final_quote_amount ? "line-through text-muted-foreground" : ""}`}>
@@ -358,7 +474,7 @@ function JobCard({ job }: { job: JobModel }) {
                 </button>
                 {showTimeline && (
                     <div className="pt-2 border-t">
-                        <JobTimeline currentStatus={job.status} />
+                        <JobTimeline currentStatus={job.status} stops={job.stops} />
                     </div>
                 )}
             </CardContent>

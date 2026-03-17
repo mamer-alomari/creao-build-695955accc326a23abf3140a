@@ -743,6 +743,7 @@ function AddManualItemDialog({
       estimatedSize: size,
       fragile,
       specialHandling: specialHandling || undefined,
+      damageDetected: false,
     };
     onAdd(item);
     // Reset form

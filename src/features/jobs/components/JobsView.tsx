@@ -2,7 +2,7 @@
 import { useState, useMemo } from "react";
 import { toast } from "sonner";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { JobORM, type JobModel, JobStatus } from "@/sdk/database/orm/orm_job";
+import { JobORM, type JobModel, JobStatus, type JobStop } from "@/sdk/database/orm/orm_job";
 import { type WorkerModel } from "@/sdk/database/orm/orm_worker";
 import { type VehicleModel } from "@/sdk/database/orm/orm_vehicle";
 import { type EquipmentModel } from "@/sdk/database/orm/orm_equipment";
@@ -20,6 +20,12 @@ import QRCode from "react-qr-code";
 import { RoomInventoryManager } from "@/components/room-inventory";
 import { useDistanceMatrix } from "@/hooks/use-distance-matrix";
 import { classifyJobType } from "@/lib/address-utils";
+import { generateStopId } from "@/lib/job-stops";
+
+interface StopEntry {
+    address: string;
+    type: "pickup" | "dropoff" | "storage";
+}
 
 interface JobsViewProps {
     jobs: JobModel[];
@@ -55,6 +61,12 @@ export function JobsView({ jobs, workers, vehicles, equipment, companyId }: Jobs
     });
     const [calculatedDistance, setCalculatedDistance] = useState<{ text: string, value: number } | null>(null);
     const [estimatedCost, setEstimatedCost] = useState<number>(0);
+
+    // Multi-stop state for wizard
+    const [wizardStops, setWizardStops] = useState<StopEntry[]>([
+        { address: "", type: "pickup" },
+        { address: "", type: "dropoff" },
+    ]);
 
     // Job Details State
     const [selectedJob, setSelectedJob] = useState<JobModel | null>(null);
@@ -183,6 +195,10 @@ export function JobsView({ jobs, workers, vehicles, equipment, companyId }: Jobs
         setWizardStep('details');
         setCalculatedDistance(null);
         setEstimatedCost(0);
+        setWizardStops([
+            { address: "", type: "pickup" },
+            { address: "", type: "dropoff" },
+        ]);
     };
 
     const handleWizardNext = async () => {
@@ -523,24 +539,67 @@ export function JobsView({ jobs, workers, vehicles, equipment, companyId }: Jobs
                                         placeholder="John Doe"
                                     />
                                 </div>
-                                <div className="grid gap-2">
-                                    <Label htmlFor="quote-pickup">Pickup Address</Label>
-                                    <Input
-                                        id="quote-pickup"
-                                        value={quoteData.pickup_address}
-                                        onChange={(e) => setQuoteData({ ...quoteData, pickup_address: e.target.value })}
-                                        placeholder="123 Start St"
-                                    />
-                                </div>
-                                <div className="grid gap-2">
-                                    <Label htmlFor="quote-dropoff">Dropoff Address</Label>
-                                    <Input
-                                        id="quote-dropoff"
-                                        value={quoteData.dropoff_address}
-                                        onChange={(e) => setQuoteData({ ...quoteData, dropoff_address: e.target.value })}
-                                        placeholder="456 End Ln"
-                                    />
-                                </div>
+
+                                {/* Multi-stop fields */}
+                                {wizardStops.map((stop, index) => (
+                                    <div key={index} className="flex items-end gap-2">
+                                        <div className="flex-1 grid gap-1">
+                                            <Label className="text-xs">Stop {index + 1} ({stop.type})</Label>
+                                            <Input
+                                                value={stop.address}
+                                                onChange={(e) => {
+                                                    const updated = [...wizardStops];
+                                                    updated[index] = { ...updated[index], address: e.target.value };
+                                                    setWizardStops(updated);
+                                                    // Sync legacy fields
+                                                    const firstPickup = updated.find(s => s.type === "pickup")?.address || "";
+                                                    const lastDropoff = [...updated].reverse().find(s => s.type === "dropoff")?.address || "";
+                                                    setQuoteData(prev => ({ ...prev, pickup_address: firstPickup, dropoff_address: lastDropoff }));
+                                                }}
+                                                placeholder={`${stop.type} address`}
+                                            />
+                                        </div>
+                                        <Select
+                                            value={stop.type}
+                                            onValueChange={(val) => {
+                                                const updated = [...wizardStops];
+                                                updated[index] = { ...updated[index], type: val as StopEntry["type"] };
+                                                setWizardStops(updated);
+                                            }}
+                                        >
+                                            <SelectTrigger className="w-28 h-9">
+                                                <SelectValue />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="pickup">Pickup</SelectItem>
+                                                <SelectItem value="dropoff">Dropoff</SelectItem>
+                                                <SelectItem value="storage">Storage</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                        {wizardStops.length > 2 && (
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                className="h-9 w-9 text-red-500"
+                                                onClick={() => setWizardStops(prev => prev.filter((_, i) => i !== index))}
+                                            >
+                                                <Trash2 className="h-4 w-4" />
+                                            </Button>
+                                        )}
+                                    </div>
+                                ))}
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => setWizardStops(prev => [
+                                        ...prev.slice(0, -1),
+                                        { address: "", type: "storage" },
+                                        prev[prev.length - 1]
+                                    ])}
+                                >
+                                    <Plus className="h-4 w-4 mr-1" /> Add Stop
+                                </Button>
+
                                 <div className="grid gap-2">
                                     <Label htmlFor="quote-date">Preferred Move Date</Label>
                                     <Input
@@ -628,8 +687,18 @@ export function JobsView({ jobs, workers, vehicles, equipment, companyId }: Jobs
                                 <Button variant="outline" onClick={() => setWizardStep('inventory')}>Back</Button>
                                 <Button
                                     onClick={() => {
-                                        // Ensure estimated_cost is synchronized before sending
                                         const finalQuote = { ...quoteData, estimated_cost: estimatedCost };
+                                        // Add multi-stop data if more than 2 stops or any non-default types
+                                        if (wizardStops.length > 0) {
+                                            finalQuote.stops = wizardStops.map((s, i) => ({
+                                                id: generateStopId(),
+                                                address: s.address,
+                                                type: s.type,
+                                                sequence: i,
+                                                status: "pending" as const,
+                                            }));
+                                            finalQuote.current_stop_index = 0;
+                                        }
                                         createJobMutation.mutate(finalQuote);
                                     }}
                                     disabled={!companyId}

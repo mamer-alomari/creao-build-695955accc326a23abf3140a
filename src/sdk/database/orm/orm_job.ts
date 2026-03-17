@@ -20,6 +20,27 @@ import { db, auth } from "@/lib/firebase";
 import { UserRole } from "@/sdk/core/auth"; // Assuming this is where it's exported
 
 /**
+ * Multi-stop types
+ */
+export type JobStopType = "pickup" | "dropoff" | "storage";
+export type JobStopStatus = "pending" | "en_route" | "arrived" | "loading" | "unloading" | "completed";
+
+export interface JobStop {
+  id: string;
+  address: string;
+  type: JobStopType;
+  sequence: number;
+  status: JobStopStatus;
+  actual_arrival_time?: string;
+  actual_departure_time?: string;
+  inventory_loaded?: string;   // JSON of items loaded at this stop
+  inventory_unloaded?: string; // JSON of items unloaded at this stop
+  photos?: string[];
+  signatures?: { customer_sign?: string; foreman_sign?: string; timestamp?: string };
+  notes?: string;
+}
+
+/**
  * Enumeration for JobStatus
  */
 export enum JobStatus {
@@ -91,6 +112,10 @@ export interface JobModel {
   // Proof of Work
   loading_photos?: string[];
   closing_notes?: string;
+
+  // Multi-Stop
+  stops?: JobStop[];
+  current_stop_index?: number;
 }
 
 // Re-export common types for compatibility if needed, though we won't use them internally
