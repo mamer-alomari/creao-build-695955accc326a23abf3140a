@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
-import { MapPin, Navigation, Clock, ChevronRight } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import { useNavigate } from "@tanstack/react-router";
 
 // ... imports
@@ -23,20 +23,27 @@ export function WorkerDashboard() {
     const { user, companyId } = useCreaoAuth();
     const navigate = useNavigate();
 
-    // 1. Fetch Assignments
+    // 1. Fetch Assignments — only jobs scheduled for today
     const { data: jobs = [], isLoading } = useQuery({
         queryKey: ["worker-jobs", user?.uid],
         enabled: !!user?.uid,
         queryFn: async () => {
             if (!user?.uid) return [];
-            // Get assignments
             const assignments = await JobWorkerAssignmentORM.getInstance().getJobWorkerAssignmentByWorkerId(user.uid);
             const jobIds = assignments.map(a => a.job_id);
 
             if (jobIds.length === 0) return [];
 
-            // Get Job Details
-            return await JobORM.getInstance().getJobByIDs(jobIds);
+            const allJobs = await JobORM.getInstance().getJobByIDs(jobIds);
+
+            // Filter to today's jobs only
+            const now = new Date();
+            return allJobs.filter(job => {
+                const jobDate = new Date(job.scheduled_date);
+                return jobDate.getDate() === now.getDate() &&
+                    jobDate.getMonth() === now.getMonth() &&
+                    jobDate.getFullYear() === now.getFullYear();
+            });
         }
     });
 
@@ -59,14 +66,6 @@ export function WorkerDashboard() {
             const res = await WorkerORM.getInstance().getWorkerById(user.uid);
             return res[0] || null;
         }
-    });
-
-    const today = new Date();
-    const todaysJobs = jobs.filter(job => {
-        const jobDate = new Date(job.scheduled_date);
-        return jobDate.getDate() === today.getDate() &&
-            jobDate.getMonth() === today.getMonth() &&
-            jobDate.getFullYear() === today.getFullYear();
     });
 
     if (isLoading) {
@@ -93,16 +92,16 @@ export function WorkerDashboard() {
                 </TabsList>
 
                 <TabsContent value="schedule" className="space-y-4">
-                    {/* Today's Schedule */}
+                    {/* Today's Assigned Jobs */}
                     <div className="space-y-4">
-                        {todaysJobs.length === 0 ? (
+                        {jobs.length === 0 ? (
                             <Card className="bg-slate-50 border-dashed">
                                 <CardContent className="p-8 text-center text-muted-foreground">
-                                    No jobs scheduled for today.
+                                    No jobs assigned to you for today.
                                 </CardContent>
                             </Card>
                         ) : (
-                            todaysJobs.map(job => (
+                            jobs.map(job => (
                                 <Card key={job.id} className="overflow-hidden border-l-4 border-l-primary shadow-sm hover:shadow-md transition-shadow">
                                     <CardHeader className="bg-white pb-2">
                                         <div className="flex justify-between items-start">
@@ -137,26 +136,6 @@ export function WorkerDashboard() {
                             ))
                         )}
                     </div>
-
-                    {/* Future Jobs Preview (Optional) */}
-                    {jobs.length > todaysJobs.length && (
-                        <div className="pt-4">
-                            <h2 className="text-lg font-semibold mb-3">Upcoming</h2>
-                            <div className="space-y-3">
-                                {jobs.filter(j => !todaysJobs.includes(j)).map(job => (
-                                    <Card key={job.id} className="bg-slate-50">
-                                        <CardContent className="p-4 flex justify-between items-center">
-                                            <div>
-                                                <div className="font-medium">{format(new Date(job.scheduled_date), "PPP")}</div>
-                                                <div className="text-sm text-muted-foreground">{job.pickup_address}</div>
-                                            </div>
-                                            <Badge variant="secondary">{JobStatus[job.status]}</Badge>
-                                        </CardContent>
-                                    </Card>
-                                ))}
-                            </div>
-                        </div>
-                    )}
                 </TabsContent>
 
                 <TabsContent value="fleet">

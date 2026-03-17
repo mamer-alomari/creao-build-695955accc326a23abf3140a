@@ -135,16 +135,17 @@ export function OnboardingView() {
                         </div>
 
                         <div className="space-y-2">
-                            <Label>Your Role (for testing)</Label>
+                            <Label>Your Role</Label>
                             <select
                                 className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                                 value={selectedRole}
                                 onChange={(e) => setSelectedRole(e.target.value as UserRole)}
                             >
                                 <option value={UserRole.Manager}>Manager (Full Access)</option>
-                                <option value={UserRole.Foreman}>Foreman (Field App)</option>
-                                <option value={UserRole.Worker}>Worker (Limited View)</option>
                             </select>
+                            <p className="text-xs text-muted-foreground">
+                                Foreman and Worker accounts are created by managers from the admin dashboard.
+                            </p>
                         </div>
                         {error && <p className="text-sm text-red-500">{error}</p>}
                     </CardContent>

@@ -51,8 +51,8 @@ function App() {
 				navigate({ to: "/login" });
 			} else if (role === "customer") {
 				navigate({ to: "/portal" });
-			} else if (!companyId) {
-				// If authenticated but no company, go to onboarding
+			} else if (!companyId && (role === UserRole.Manager || role === UserRole.Unspecified || !role)) {
+				// Only admin/manager roles go through onboarding
 				navigate({ to: "/onboarding" });
 			}
 		}
@@ -175,6 +175,18 @@ function App() {
 
 	// Role-Based Routing
 	if (role === UserRole.Foreman) {
+		if (!companyId) {
+			return (
+				<div className="flex flex-col items-center justify-center min-h-screen gap-4 p-4">
+					<div className="text-center">
+						<h1 className="text-2xl font-bold mb-2">Waiting for Assignment</h1>
+						<p className="text-muted-foreground mb-4">
+							Your account has not been assigned to a company yet. Please contact your manager.
+						</p>
+					</div>
+				</div>
+			);
+		}
 		return (
 			<div className="p-6 min-h-screen bg-background">
 				<ForemanDashboard />
@@ -183,6 +195,18 @@ function App() {
 	}
 
 	if (role === UserRole.Worker) {
+		if (!companyId) {
+			return (
+				<div className="flex flex-col items-center justify-center min-h-screen gap-4 p-4">
+					<div className="text-center">
+						<h1 className="text-2xl font-bold mb-2">Waiting for Assignment</h1>
+						<p className="text-muted-foreground mb-4">
+							Your account has not been assigned to a company yet. Please contact your manager.
+						</p>
+					</div>
+				</div>
+			);
+		}
 		return (
 			<div className="p-6 min-h-screen bg-background">
 				<WorkerDashboard />
