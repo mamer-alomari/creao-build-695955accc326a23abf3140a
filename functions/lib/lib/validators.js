@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.GetUpcomingJobsSchema = exports.DateRangeSchema = exports.GetAvailableWorkersSchema = exports.UpdateCompanySchema = exports.UpdateInvitationStatusSchema = exports.CreateInvitationSchema = exports.UpdatePayrollRecordSchema = exports.CreatePayrollRecordSchema = exports.UpdateIncidentSchema = exports.CreateIncidentSchema = exports.GetScheduleRangeSchema = exports.SetEquipmentScheduleSchema = exports.SetVehicleScheduleSchema = exports.SetWorkerScheduleSchema = exports.DeallocateEquipmentFromJobSchema = exports.AllocateEquipmentToJobSchema = exports.UnassignVehicleFromJobSchema = exports.AssignVehicleToJobSchema = exports.UnassignWorkerFromJobSchema = exports.AssignWorkerToJobSchema = exports.CalculateAIQuoteSchema = exports.UpdateQuoteStatusSchema = exports.UpdateQuoteSchema = exports.CreateQuoteSchema = exports.UpdateEquipmentSchema = exports.CreateEquipmentSchema = exports.UpdateVehicleSchema = exports.CreateVehicleSchema = exports.UpdateWorkerSchema = exports.CreateWorkerSchema = exports.GetJobsByCustomerSchema = exports.GetJobsByDateRangeSchema = exports.GetJobsByStatusSchema = exports.DeleteByIdSchema = exports.GetByIdSchema = exports.ListByCompanySchema = exports.UpdateJobStatusSchema = exports.UpdateJobSchema = exports.CreateJobSchema = void 0;
+exports.RevokeApiKeySchema = exports.CreateApiKeySchema = exports.GetUpcomingJobsSchema = exports.DateRangeSchema = exports.GetAvailableWorkersSchema = exports.UpdateCompanySchema = exports.UpdateInvitationStatusSchema = exports.CreateInvitationSchema = exports.UpdatePayrollRecordSchema = exports.CreatePayrollRecordSchema = exports.UpdateIncidentSchema = exports.CreateIncidentSchema = exports.GetScheduleRangeSchema = exports.SetEquipmentScheduleSchema = exports.SetVehicleScheduleSchema = exports.SetWorkerScheduleSchema = exports.DeallocateEquipmentFromJobSchema = exports.AllocateEquipmentToJobSchema = exports.UnassignVehicleFromJobSchema = exports.AssignVehicleToJobSchema = exports.UnassignWorkerFromJobSchema = exports.AssignWorkerToJobSchema = exports.CalculateAIQuoteSchema = exports.UpdateQuoteStatusSchema = exports.UpdateQuoteSchema = exports.CreateQuoteSchema = exports.UpdateEquipmentSchema = exports.CreateEquipmentSchema = exports.UpdateVehicleSchema = exports.CreateVehicleSchema = exports.UpdateWorkerSchema = exports.CreateWorkerSchema = exports.GetJobsByCustomerSchema = exports.GetJobsByDateRangeSchema = exports.GetJobsByStatusSchema = exports.DeleteByIdSchema = exports.GetByIdSchema = exports.ListByCompanySchema = exports.UpdateJobStatusSchema = exports.UpdateJobSchema = exports.CreateJobSchema = void 0;
 const zod_1 = require("zod");
 const enums_1 = require("../types/enums");
 // --- Jobs ---
@@ -297,5 +297,14 @@ exports.DateRangeSchema = zod_1.z.object({
 exports.GetUpcomingJobsSchema = zod_1.z.object({
     company_id: zod_1.z.string().min(1),
     days: zod_1.z.number().int().min(1).max(90),
+});
+// --- API Keys ---
+exports.CreateApiKeySchema = zod_1.z.object({
+    company_id: zod_1.z.string().min(1),
+    name: zod_1.z.string().min(1).max(100),
+    role: zod_1.z.nativeEnum(enums_1.UserRole),
+});
+exports.RevokeApiKeySchema = zod_1.z.object({
+    id: zod_1.z.string().min(1),
 });
 //# sourceMappingURL=validators.js.map

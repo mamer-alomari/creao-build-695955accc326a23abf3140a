@@ -50,6 +50,11 @@ export function withValidation<TInput, TOutput>(
     if (!result.success) {
       return err(`Validation error: ${result.error.issues.map((i) => i.message).join(", ")}`);
     }
+    // Enforce company scoping: if caller is bound to a company, input.company_id must match
+    const parsed = result.data as any;
+    if (ctx.companyId && parsed?.company_id && parsed.company_id !== ctx.companyId) {
+      return err("Access denied: cannot operate on a different company's data");
+    }
     return fn(ctx, result.data);
   };
 }

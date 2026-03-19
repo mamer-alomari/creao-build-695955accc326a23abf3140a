@@ -38,6 +38,11 @@ function withValidation(schema, fn) {
         if (!result.success) {
             return err(`Validation error: ${result.error.issues.map((i) => i.message).join(", ")}`);
         }
+        // Enforce company scoping: if caller is bound to a company, input.company_id must match
+        const parsed = result.data;
+        if (ctx.companyId && (parsed === null || parsed === void 0 ? void 0 : parsed.company_id) && parsed.company_id !== ctx.companyId) {
+            return err("Access denied: cannot operate on a different company's data");
+        }
         return fn(ctx, result.data);
     };
 }

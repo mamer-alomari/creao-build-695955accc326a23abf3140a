@@ -1,6 +1,7 @@
 import { z } from "zod";
 import {
   JobStatus,
+  UserRole,
   WorkerRole,
   WorkerStatus,
   VehicleType,
@@ -343,4 +344,15 @@ export const DateRangeSchema = z.object({
 export const GetUpcomingJobsSchema = z.object({
   company_id: z.string().min(1),
   days: z.number().int().min(1).max(90),
+});
+
+// --- API Keys ---
+export const CreateApiKeySchema = z.object({
+  company_id: z.string().min(1),
+  name: z.string().min(1).max(100),
+  role: z.nativeEnum(UserRole),
+});
+
+export const RevokeApiKeySchema = z.object({
+  id: z.string().min(1),
 });

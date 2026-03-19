@@ -1,6 +1,6 @@
 // Action input/output types for the orchestration layer
 
-import { JobStatus, WorkerRole, WorkerStatus, VehicleType, EquipmentType, PayrollRecordStatus } from "./enums";
+import { JobStatus, UserRole, WorkerRole, WorkerStatus, VehicleType, EquipmentType, PayrollRecordStatus } from "./enums";
 import { JobStop } from "./models";
 
 // --- Jobs ---
@@ -317,4 +317,15 @@ export interface DateRangeInput {
 export interface GetUpcomingJobsInput {
   company_id: string;
   days: number;
+}
+
+// --- API Keys ---
+export interface CreateApiKeyInput {
+  company_id: string;
+  name: string;
+  role: UserRole;
+}
+
+export interface RevokeApiKeyInput {
+  id: string;
 }

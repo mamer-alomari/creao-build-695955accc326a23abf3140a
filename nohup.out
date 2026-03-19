@@ -1,0 +1,313 @@
+
+
+[2m2026-03-13T21:16:36.127682[0m [[32m[1minfo     [0m] [1mDeleted old log file: /Users/mmioi/.openclaw/cognee-env/lib/python3.12/site-packages/logs/2026-03-13_17-13-48.log[0m [[0m[1m[34mcognee.shared.logging_utils[0m][0m
+
+[2m2026-03-13T21:16:37.164097[0m [[33m[1mwarning  [0m] [1mFrom version 0.5.0 onwards, Cognee will run with multi-user access control mode set to on by default. Data isolation between different users and datasets will be enforced and data created before multi-user access control mode was turned on won't be accessible by default. To disable multi-user access control mode and regain access to old data set the environment variable ENABLE_BACKEND_ACCESS_CONTROL to false before starting Cognee. For more information, please refer to the Cognee documentation.[0m [[0m[1m[34mcognee.shared.logging_utils[0m][0m
+
+[2m2026-03-13T21:16:37.164534[0m [[32m[1minfo     [0m] [1mLog file created at: /Users/mmioi/.openclaw/cognee-env/lib/python3.12/site-packages/logs/2026-03-13_17-16-35.log[0m [[0m[1m[34mcognee.shared.logging_utils[0m][0m [36mlog_file[0m=[35m/Users/mmioi/.openclaw/cognee-env/lib/python3.12/site-packages/logs/2026-03-13_17-16-35.log[0m
+
+[2m2026-03-13T21:16:37.164815[0m [[32m[1minfo     [0m] [1mLogging initialized           [0m [[0m[1m[34mcognee.shared.logging_utils[0m][0m [36mcognee_version[0m=[35m0.5.4[0m [36mdatabase_path[0m=[35m/Users/mmioi/.openclaw/cognee-env/lib/python3.12/site-packages/cognee/.cognee_system/databases[0m [36mgraph_database_name[0m=[35m[0m [36mos_info[0m=[35m'Darwin 25.3.0 (Darwin Kernel Version 25.3.0: Wed Jan 28 20:53:14 PST 2026; root:xnu-12377.81.4~5/RELEASE_X86_64)'[0m [36mpython_version[0m=[35m3.12.8[0m [36mrelational_config[0m=[35mcognee_db[0m [36mstructlog_version[0m=[35m25.5.0[0m [36mvector_config[0m=[35mlancedb[0m
+
+[2m2026-03-13T21:16:37.165255[0m [[32m[1minfo     [0m] [1mDatabase storage: /Users/mmioi/.openclaw/cognee-env/lib/python3.12/site-packages/cognee/.cognee_system/databases[0m [[0m[1m[34mcognee.shared.logging_utils[0m][0m
+
+[2m2026-03-13T21:16:39.109505[0m [[32m[1minfo     [0m] [1mDeleted old log file: /Users/mmioi/.openclaw/cognee-env/lib/python3.12/site-packages/logs/2026-03-13_17-14-02.log[0m [[0m[1m[34mcognee.shared.logging_utils[0m][0m
+
+[2m2026-03-13T21:16:39.109829[0m [[33m[1mwarning  [0m] [1mFrom version 0.5.0 onwards, Cognee will run with multi-user access control mode set to on by default. Data isolation between different users and datasets will be enforced and data created before multi-user access control mode was turned on won't be accessible by default. To disable multi-user access control mode and regain access to old data set the environment variable ENABLE_BACKEND_ACCESS_CONTROL to false before starting Cognee. For more information, please refer to the Cognee documentation.[0m [[0m[1m[34mcognee.shared.logging_utils[0m][0m
+
+[2m2026-03-13T21:16:39.110046[0m [[32m[1minfo     [0m] [1mLog file created at: /Users/mmioi/.openclaw/cognee-env/lib/python3.12/site-packages/logs/2026-03-13_17-16-35.log[0m [[0m[1m[34mcognee.shared.logging_utils[0m][0m [36mlog_file[0m=[35m/Users/mmioi/.openclaw/cognee-env/lib/python3.12/site-packages/logs/2026-03-13_17-16-35.log[0m
+
+[2m2026-03-13T21:16:39.110261[0m [[32m[1minfo     [0m] [1mLogging initialized           [0m [[0m[1m[34mcognee.shared.logging_utils[0m][0m [36mcognee_version[0m=[35m0.5.4[0m [36mdatabase_path[0m=[35m/Users/mmioi/.openclaw/cognee-env/lib/python3.12/site-packages/cognee/.cognee_system/databases[0m [36mgraph_database_name[0m=[35m[0m [36mos_info[0m=[35m'Darwin 25.3.0 (Darwin Kernel Version 25.3.0: Wed Jan 28 20:53:14 PST 2026; root:xnu-12377.81.4~5/RELEASE_X86_64)'[0m [36mpython_version[0m=[35m3.12.8[0m [36mrelational_config[0m=[35mcognee_db[0m [36mstructlog_version[0m=[35m25.5.0[0m [36mvector_config[0m=[35mlancedb[0m
+
+[2m2026-03-13T21:16:39.110512[0m [[32m[1minfo     [0m] [1mDatabase storage: /Users/mmioi/.openclaw/cognee-env/lib/python3.12/site-packages/cognee/.cognee_system/databases[0m [[0m[1m[34mcognee.shared.logging_utils[0m][0m
+
+[2m2026-03-13T21:16:39.110939[0m [[32m[1minfo     [0m] [1mSentry SDK not available. Install with 'pip install cognee"[monitoring]"' to enable error monitoring.[0m [[0m[1m[34mcognee.shared.logging_utils[0m][0m
+/Users/mmioi/.openclaw/cognee-env/lib/python3.12/site-packages/cognee/api/v1/add/routers/get_add_router.py:29: FastAPIDeprecationWarning: `example` has been deprecated, please use `examples` instead
+  node_set: Optional[List[str]] = Form(default=[""], example=[""]),
+/Users/mmioi/.openclaw/cognee-env/lib/python3.12/site-packages/cognee/api/v1/update/routers/get_update_router.py:28: FastAPIDeprecationWarning: `example` has been deprecated, please use `examples` instead
+  node_set: Optional[List[str]] = Form(default=[""], example=[""]),
+INFO:     Started server process [89153]
+INFO:     Waiting for application startup.
+
+[2m2026-03-13T21:16:40.018583[0m [[32m[1minfo     [0m] [1mBackend server has started    [0m [[0m[1m[34mcognee.shared.logging_utils[0m][0m
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
+INFO:     127.0.0.1:55254 - "GET / HTTP/1.1" 200 OK
+/Users/mmioi/.openclaw/cognee-env/lib/python3.12/site-packages/jwt/api_jwt.py:147: InsecureKeyLengthWarning: The HMAC key is 12 bytes long, which is below the minimum recommended length of 32 bytes for SHA256. See RFC 7518 Section 3.2.
+  return self._jws.encode(
+INFO:     127.0.0.1:55265 - "POST /api/v1/auth/login HTTP/1.1" 200 OK
+/Users/mmioi/.openclaw/cognee-env/lib/python3.12/site-packages/jwt/api_jwt.py:365: InsecureKeyLengthWarning: The HMAC key is 12 bytes long, which is below the minimum recommended length of 32 bytes for SHA256. See RFC 7518 Section 3.2.
+  decoded = self.decode_complete(
+
+[2m2026-03-13T21:17:14.917359[0m [[32m[1minfo     [0m] [1mTesting connection to LLM endpoint...[0m [[0m[1m[34mcognee.shared.logging_utils[0m][0m
+
+[2m2026-03-13T21:17:14.917810[0m [[31m[1merror    [0m] [1mLLMAPIKeyNotSetError: LLM API key is not set. (Status code: 422)[0m [[0m[1m[34mcognee.shared.logging_utils[0m][0m
+
+[2m2026-03-13T21:17:14.918021[0m [[31m[1merror    [0m] [1mLLMAPIKeyNotSetError: LLM API key is not set. (Status code: 422)[0m [[0m[1m[34mcognee.shared.logging_utils[0m][0m
+
+[2m2026-03-13T21:17:14.918208[0m [[31m[1merror    [0m] [1mConnection to LLM could not be established.[0m [[0m[1m[34mcognee.shared.logging_utils[0m][0m
+INFO:     127.0.0.1:55284 - "POST /api/v1/add HTTP/1.1" 409 Conflict
+/Users/mmioi/.openclaw/cognee-env/lib/python3.12/site-packages/jwt/api_jwt.py:365: InsecureKeyLengthWarning: The HMAC key is 12 bytes long, which is below the minimum recommended length of 32 bytes for SHA256. See RFC 7518 Section 3.2.
+  decoded = self.decode_complete(
+
+[2m2026-03-13T21:17:36.091963[0m [[32m[1minfo     [0m] [1mTesting connection to LLM endpoint...[0m [[0m[1m[34mcognee.shared.logging_utils[0m][0m
+
+[2m2026-03-13T21:17:36.092349[0m [[31m[1merror    [0m] [1mLLMAPIKeyNotSetError: LLM API key is not set. (Status code: 422)[0m [[0m[1m[34mcognee.shared.logging_utils[0m][0m
+
+[2m2026-03-13T21:17:36.092534[0m [[31m[1merror    [0m] [1mLLMAPIKeyNotSetError: LLM API key is not set. (Status code: 422)[0m [[0m[1m[34mcognee.shared.logging_utils[0m][0m
+
+[2m2026-03-13T21:17:36.092713[0m [[31m[1merror    [0m] [1mConnection to LLM could not be established.[0m [[0m[1m[34mcognee.shared.logging_utils[0m][0m
+INFO:     127.0.0.1:55329 - "POST /api/v1/add HTTP/1.1" 409 Conflict
+
+[2m2026-03-13T21:17:36.323082[0m [[32m[1minfo     [0m] [1mTesting connection to LLM endpoint...[0m [[0m[1m[34mcognee.shared.logging_utils[0m][0m
+
+[2m2026-03-13T21:17:36.323482[0m [[31m[1merror    [0m] [1mLLMAPIKeyNotSetError: LLM API key is not set. (Status code: 422)[0m [[0m[1m[34mcognee.shared.logging_utils[0m][0m
+
+[2m2026-03-13T21:17:36.323676[0m [[31m[1merror    [0m] [1mLLMAPIKeyNotSetError: LLM API key is not set. (Status code: 422)[0m [[0m[1m[34mcognee.shared.logging_utils[0m][0m
+
+[2m2026-03-13T21:17:36.323894[0m [[31m[1merror    [0m] [1mConnection to LLM could not be established.[0m [[0m[1m[34mcognee.shared.logging_utils[0m][0m
+INFO:     127.0.0.1:55331 - "POST /api/v1/add HTTP/1.1" 409 Conflict
+
+[2m2026-03-13T21:17:36.887554[0m [[32m[1minfo     [0m] [1mTesting connection to LLM endpoint...[0m [[0m[1m[34mcognee.shared.logging_utils[0m][0m
+
+[2m2026-03-13T21:17:36.888020[0m [[31m[1merror    [0m] [1mLLMAPIKeyNotSetError: LLM API key is not set. (Status code: 422)[0m [[0m[1m[34mcognee.shared.logging_utils[0m][0m
+
+[2m2026-03-13T21:17:36.888249[0m [[31m[1merror    [0m] [1mLLMAPIKeyNotSetError: LLM API key is not set. (Status code: 422)[0m [[0m[1m[34mcognee.shared.logging_utils[0m][0m
+
+[2m2026-03-13T21:17:36.888453[0m [[31m[1merror    [0m] [1mConnection to LLM could not be established.[0m [[0m[1m[34mcognee.shared.logging_utils[0m][0m
+INFO:     127.0.0.1:55329 - "POST /api/v1/add HTTP/1.1" 409 Conflict
+
+[2m2026-03-13T21:17:37.123423[0m [[32m[1minfo     [0m] [1mTesting connection to LLM endpoint...[0m [[0m[1m[34mcognee.shared.logging_utils[0m][0m
+
+[2m2026-03-13T21:17:37.123767[0m [[31m[1merror    [0m] [1mLLMAPIKeyNotSetError: LLM API key is not set. (Status code: 422)[0m [[0m[1m[34mcognee.shared.logging_utils[0m][0m
+
+[2m2026-03-13T21:17:37.123932[0m [[31m[1merror    [0m] [1mLLMAPIKeyNotSetError: LLM API key is not set. (Status code: 422)[0m [[0m[1m[34mcognee.shared.logging_utils[0m][0m
+
+[2m2026-03-13T21:17:37.124089[0m [[31m[1merror    [0m] [1mConnection to LLM could not be established.[0m [[0m[1m[34mcognee.shared.logging_utils[0m][0m
+INFO:     127.0.0.1:55331 - "POST /api/v1/add HTTP/1.1" 409 Conflict
+
+[2m2026-03-13T21:17:37.352152[0m [[32m[1minfo     [0m] [1mTesting connection to LLM endpoint...[0m [[0m[1m[34mcognee.shared.logging_utils[0m][0m
+
+[2m2026-03-13T21:17:37.352618[0m [[31m[1merror    [0m] [1mLLMAPIKeyNotSetError: LLM API key is not set. (Status code: 422)[0m [[0m[1m[34mcognee.shared.logging_utils[0m][0m
+
+[2m2026-03-13T21:17:37.352816[0m [[31m[1merror    [0m] [1mLLMAPIKeyNotSetError: LLM API key is not set. (Status code: 422)[0m [[0m[1m[34mcognee.shared.logging_utils[0m][0m
+
+[2m2026-03-13T21:17:37.353007[0m [[31m[1merror    [0m] [1mConnection to LLM could not be established.[0m [[0m[1m[34mcognee.shared.logging_utils[0m][0m
+INFO:     127.0.0.1:55329 - "POST /api/v1/add HTTP/1.1" 409 Conflict
+
+[2m2026-03-13T21:17:37.589120[0m [[32m[1minfo     [0m] [1mTesting connection to LLM endpoint...[0m [[0m[1m[34mcognee.shared.logging_utils[0m][0m
+
+[2m2026-03-13T21:17:37.589445[0m [[31m[1merror    [0m] [1mLLMAPIKeyNotSetError: LLM API key is not set. (Status code: 422)[0m [[0m[1m[34mcognee.shared.logging_utils[0m][0m
+
+[2m2026-03-13T21:17:37.589606[0m [[31m[1merror    [0m] [1mLLMAPIKeyNotSetError: LLM API key is not set. (Status code: 422)[0m [[0m[1m[34mcognee.shared.logging_utils[0m][0m
+
+[2m2026-03-13T21:17:37.589762[0m [[31m[1merror    [0m] [1mConnection to LLM could not be established.[0m [[0m[1m[34mcognee.shared.logging_utils[0m][0m
+INFO:     127.0.0.1:55331 - "POST /api/v1/add HTTP/1.1" 409 Conflict
+
+[2m2026-03-13T21:17:37.838254[0m [[32m[1minfo     [0m] [1mTesting connection to LLM endpoint...[0m [[0m[1m[34mcognee.shared.logging_utils[0m][0m
+
+[2m2026-03-13T21:17:37.838654[0m [[31m[1merror    [0m] [1mLLMAPIKeyNotSetError: LLM API key is not set. (Status code: 422)[0m [[0m[1m[34mcognee.shared.logging_utils[0m][0m
+
+[2m2026-03-13T21:17:37.838849[0m [[31m[1merror    [0m] [1mLLMAPIKeyNotSetError: LLM API key is not set. (Status code: 422)[0m [[0m[1m[34mcognee.shared.logging_utils[0m][0m
+
+[2m2026-03-13T21:17:37.839051[0m [[31m[1merror    [0m] [1mConnection to LLM could not be established.[0m [[0m[1m[34mcognee.shared.logging_utils[0m][0m
+INFO:     127.0.0.1:55329 - "POST /api/v1/add HTTP/1.1" 409 Conflict
+
+[2m2026-03-13T21:17:38.074015[0m [[32m[1minfo     [0m] [1mTesting connection to LLM endpoint...[0m [[0m[1m[34mcognee.shared.logging_utils[0m][0m
+
+[2m2026-03-13T21:17:38.074424[0m [[31m[1merror    [0m] [1mLLMAPIKeyNotSetError: LLM API key is not set. (Status code: 422)[0m [[0m[1m[34mcognee.shared.logging_utils[0m][0m
+
+[2m2026-03-13T21:17:38.074629[0m [[31m[1merror    [0m] [1mLLMAPIKeyNotSetError: LLM API key is not set. (Status code: 422)[0m [[0m[1m[34mcognee.shared.logging_utils[0m][0m
+
+[2m2026-03-13T21:17:38.074816[0m [[31m[1merror    [0m] [1mConnection to LLM could not be established.[0m [[0m[1m[34mcognee.shared.logging_utils[0m][0m
+INFO:     127.0.0.1:55331 - "POST /api/v1/add HTTP/1.1" 409 Conflict
+
+[2m2026-03-13T21:17:38.314972[0m [[32m[1minfo     [0m] [1mTesting connection to LLM endpoint...[0m [[0m[1m[34mcognee.shared.logging_utils[0m][0m
+
+[2m2026-03-13T21:17:38.315395[0m [[31m[1merror    [0m] [1mLLMAPIKeyNotSetError: LLM API key is not set. (Status code: 422)[0m [[0m[1m[34mcognee.shared.logging_utils[0m][0m
+
+[2m2026-03-13T21:17:38.315598[0m [[31m[1merror    [0m] [1mLLMAPIKeyNotSetError: LLM API key is not set. (Status code: 422)[0m [[0m[1m[34mcognee.shared.logging_utils[0m][0m
+
+[2m2026-03-13T21:17:38.315794[0m [[31m[1merror    [0m] [1mConnection to LLM could not be established.[0m [[0m[1m[34mcognee.shared.logging_utils[0m][0m
+INFO:     127.0.0.1:55329 - "POST /api/v1/add HTTP/1.1" 409 Conflict
+
+[2m2026-03-13T21:17:42.049348[0m [[32m[1minfo     [0m] [1mTesting connection to LLM endpoint...[0m [[0m[1m[34mcognee.shared.logging_utils[0m][0m
+
+[2m2026-03-13T21:17:42.049835[0m [[31m[1merror    [0m] [1mLLMAPIKeyNotSetError: LLM API key is not set. (Status code: 422)[0m [[0m[1m[34mcognee.shared.logging_utils[0m][0m
+
+[2m2026-03-13T21:17:42.050055[0m [[31m[1merror    [0m] [1mLLMAPIKeyNotSetError: LLM API key is not set. (Status code: 422)[0m [[0m[1m[34mcognee.shared.logging_utils[0m][0m
+
+[2m2026-03-13T21:17:42.050249[0m [[31m[1merror    [0m] [1mConnection to LLM could not be established.[0m [[0m[1m[34mcognee.shared.logging_utils[0m][0m
+INFO:     127.0.0.1:55329 - "POST /api/v1/add HTTP/1.1" 409 Conflict
+
+[2m2026-03-13T21:17:42.292510[0m [[32m[1minfo     [0m] [1mTesting connection to LLM endpoint...[0m [[0m[1m[34mcognee.shared.logging_utils[0m][0m
+
+[2m2026-03-13T21:17:42.292848[0m [[31m[1merror    [0m] [1mLLMAPIKeyNotSetError: LLM API key is not set. (Status code: 422)[0m [[0m[1m[34mcognee.shared.logging_utils[0m][0m
+
+[2m2026-03-13T21:17:42.293003[0m [[31m[1merror    [0m] [1mLLMAPIKeyNotSetError: LLM API key is not set. (Status code: 422)[0m [[0m[1m[34mcognee.shared.logging_utils[0m][0m
+
+[2m2026-03-13T21:17:42.293151[0m [[31m[1merror    [0m] [1mConnection to LLM could not be established.[0m [[0m[1m[34mcognee.shared.logging_utils[0m][0m
+INFO:     127.0.0.1:55331 - "POST /api/v1/add HTTP/1.1" 409 Conflict
+
+[2m2026-03-13T21:17:42.566537[0m [[32m[1minfo     [0m] [1mTesting connection to LLM endpoint...[0m [[0m[1m[34mcognee.shared.logging_utils[0m][0m
+
+[2m2026-03-13T21:17:42.566925[0m [[31m[1merror    [0m] [1mLLMAPIKeyNotSetError: LLM API key is not set. (Status code: 422)[0m [[0m[1m[34mcognee.shared.logging_utils[0m][0m
+
+[2m2026-03-13T21:17:42.567105[0m [[31m[1merror    [0m] [1mLLMAPIKeyNotSetError: LLM API key is not set. (Status code: 422)[0m [[0m[1m[34mcognee.shared.logging_utils[0m][0m
+
+[2m2026-03-13T21:17:42.567280[0m [[31m[1merror    [0m] [1mConnection to LLM could not be established.[0m [[0m[1m[34mcognee.shared.logging_utils[0m][0m
+INFO:     127.0.0.1:55329 - "POST /api/v1/add HTTP/1.1" 409 Conflict
+
+[2m2026-03-13T21:17:42.811850[0m [[32m[1minfo     [0m] [1mTesting connection to LLM endpoint...[0m [[0m[1m[34mcognee.shared.logging_utils[0m][0m
+
+[2m2026-03-13T21:17:42.812279[0m [[31m[1merror    [0m] [1mLLMAPIKeyNotSetError: LLM API key is not set. (Status code: 422)[0m [[0m[1m[34mcognee.shared.logging_utils[0m][0m
+
+[2m2026-03-13T21:17:42.812516[0m [[31m[1merror    [0m] [1mLLMAPIKeyNotSetError: LLM API key is not set. (Status code: 422)[0m [[0m[1m[34mcognee.shared.logging_utils[0m][0m
+
+[2m2026-03-13T21:17:42.812704[0m [[31m[1merror    [0m] [1mConnection to LLM could not be established.[0m [[0m[1m[34mcognee.shared.logging_utils[0m][0m
+INFO:     127.0.0.1:55331 - "POST /api/v1/add HTTP/1.1" 409 Conflict
+
+[2m2026-03-13T21:17:43.070135[0m [[32m[1minfo     [0m] [1mTesting connection to LLM endpoint...[0m [[0m[1m[34mcognee.shared.logging_utils[0m][0m
+
+[2m2026-03-13T21:17:43.070631[0m [[31m[1merror    [0m] [1mLLMAPIKeyNotSetError: LLM API key is not set. (Status code: 422)[0m [[0m[1m[34mcognee.shared.logging_utils[0m][0m
+
+[2m2026-03-13T21:17:43.070864[0m [[31m[1merror    [0m] [1mLLMAPIKeyNotSetError: LLM API key is not set. (Status code: 422)[0m [[0m[1m[34mcognee.shared.logging_utils[0m][0m
+
+[2m2026-03-13T21:17:43.071077[0m [[31m[1merror    [0m] [1mConnection to LLM could not be established.[0m [[0m[1m[34mcognee.shared.logging_utils[0m][0m
+INFO:     127.0.0.1:55329 - "POST /api/v1/add HTTP/1.1" 409 Conflict
+
+[2m2026-03-13T21:17:43.330332[0m [[32m[1minfo     [0m] [1mTesting connection to LLM endpoint...[0m [[0m[1m[34mcognee.shared.logging_utils[0m][0m
+
+[2m2026-03-13T21:17:43.330719[0m [[31m[1merror    [0m] [1mLLMAPIKeyNotSetError: LLM API key is not set. (Status code: 422)[0m [[0m[1m[34mcognee.shared.logging_utils[0m][0m
+
+[2m2026-03-13T21:17:43.330904[0m [[31m[1merror    [0m] [1mLLMAPIKeyNotSetError: LLM API key is not set. (Status code: 422)[0m [[0m[1m[34mcognee.shared.logging_utils[0m][0m
+
+[2m2026-03-13T21:17:43.331084[0m [[31m[1merror    [0m] [1mConnection to LLM could not be established.[0m [[0m[1m[34mcognee.shared.logging_utils[0m][0m
+INFO:     127.0.0.1:55331 - "POST /api/v1/add HTTP/1.1" 409 Conflict
+
+[2m2026-03-13T21:17:43.571473[0m [[32m[1minfo     [0m] [1mTesting connection to LLM endpoint...[0m [[0m[1m[34mcognee.shared.logging_utils[0m][0m
+
+[2m2026-03-13T21:17:43.571877[0m [[31m[1merror    [0m] [1mLLMAPIKeyNotSetError: LLM API key is not set. (Status code: 422)[0m [[0m[1m[34mcognee.shared.logging_utils[0m][0m
+
+[2m2026-03-13T21:17:43.572049[0m [[31m[1merror    [0m] [1mLLMAPIKeyNotSetError: LLM API key is not set. (Status code: 422)[0m [[0m[1m[34mcognee.shared.logging_utils[0m][0m
+
+[2m2026-03-13T21:17:43.572199[0m [[31m[1merror    [0m] [1mConnection to LLM could not be established.[0m [[0m[1m[34mcognee.shared.logging_utils[0m][0m
+INFO:     127.0.0.1:55329 - "POST /api/v1/add HTTP/1.1" 409 Conflict
+
+[2m2026-03-13T21:17:43.816616[0m [[32m[1minfo     [0m] [1mTesting connection to LLM endpoint...[0m [[0m[1m[34mcognee.shared.logging_utils[0m][0m
+
+[2m2026-03-13T21:17:43.816961[0m [[31m[1merror    [0m] [1mLLMAPIKeyNotSetError: LLM API key is not set. (Status code: 422)[0m [[0m[1m[34mcognee.shared.logging_utils[0m][0m
+
+[2m2026-03-13T21:17:43.817140[0m [[31m[1merror    [0m] [1mLLMAPIKeyNotSetError: LLM API key is not set. (Status code: 422)[0m [[0m[1m[34mcognee.shared.logging_utils[0m][0m
+
+[2m2026-03-13T21:17:43.817330[0m [[31m[1merror    [0m] [1mConnection to LLM could not be established.[0m [[0m[1m[34mcognee.shared.logging_utils[0m][0m
+INFO:     127.0.0.1:55331 - "POST /api/v1/add HTTP/1.1" 409 Conflict
+
+[2m2026-03-13T21:17:44.038354[0m [[32m[1minfo     [0m] [1mTesting connection to LLM endpoint...[0m [[0m[1m[34mcognee.shared.logging_utils[0m][0m
+
+[2m2026-03-13T21:17:44.038778[0m [[31m[1merror    [0m] [1mLLMAPIKeyNotSetError: LLM API key is not set. (Status code: 422)[0m [[0m[1m[34mcognee.shared.logging_utils[0m][0m
+
+[2m2026-03-13T21:17:44.038980[0m [[31m[1merror    [0m] [1mLLMAPIKeyNotSetError: LLM API key is not set. (Status code: 422)[0m [[0m[1m[34mcognee.shared.logging_utils[0m][0m
+
+[2m2026-03-13T21:17:44.039173[0m [[31m[1merror    [0m] [1mConnection to LLM could not be established.[0m [[0m[1m[34mcognee.shared.logging_utils[0m][0m
+INFO:     127.0.0.1:55329 - "POST /api/v1/add HTTP/1.1" 409 Conflict
+/Users/mmioi/.openclaw/cognee-env/lib/python3.12/site-packages/pydantic/json_schema.py:2448: PydanticJsonSchemaWarning: Default value (Form(PydanticUndefined),) is not JSON serializable; excluding default from JSON schema [non-serializable-default]
+  warnings.warn(message, PydanticJsonSchemaWarning)
+INFO:     127.0.0.1:55371 - "GET /openapi.json HTTP/1.1" 200 OK
+/Users/mmioi/.openclaw/cognee-env/lib/python3.12/site-packages/jwt/api_jwt.py:365: InsecureKeyLengthWarning: The HMAC key is 12 bytes long, which is below the minimum recommended length of 32 bytes for SHA256. See RFC 7518 Section 3.2.
+  decoded = self.decode_complete(
+
+[2m2026-03-13T21:17:53.586057[0m [[32m[1minfo     [0m] [1mTesting connection to LLM endpoint...[0m [[0m[1m[34mcognee.shared.logging_utils[0m][0m
+
+[2m2026-03-13T21:17:53.586435[0m [[31m[1merror    [0m] [1mLLMAPIKeyNotSetError: LLM API key is not set. (Status code: 422)[0m [[0m[1m[34mcognee.shared.logging_utils[0m][0m
+
+[2m2026-03-13T21:17:53.586619[0m [[31m[1merror    [0m] [1mLLMAPIKeyNotSetError: LLM API key is not set. (Status code: 422)[0m [[0m[1m[34mcognee.shared.logging_utils[0m][0m
+
+[2m2026-03-13T21:17:53.586792[0m [[31m[1merror    [0m] [1mConnection to LLM could not be established.[0m [[0m[1m[34mcognee.shared.logging_utils[0m][0m
+INFO:     127.0.0.1:55379 - "POST /api/v1/add HTTP/1.1" 409 Conflict
+
+[2m2026-03-13T21:17:53.843230[0m [[32m[1minfo     [0m] [1mTesting connection to LLM endpoint...[0m [[0m[1m[34mcognee.shared.logging_utils[0m][0m
+
+[2m2026-03-13T21:17:53.843604[0m [[31m[1merror    [0m] [1mLLMAPIKeyNotSetError: LLM API key is not set. (Status code: 422)[0m [[0m[1m[34mcognee.shared.logging_utils[0m][0m
+
+[2m2026-03-13T21:17:53.843787[0m [[31m[1merror    [0m] [1mLLMAPIKeyNotSetError: LLM API key is not set. (Status code: 422)[0m [[0m[1m[34mcognee.shared.logging_utils[0m][0m
+
+[2m2026-03-13T21:17:53.843960[0m [[31m[1merror    [0m] [1mConnection to LLM could not be established.[0m [[0m[1m[34mcognee.shared.logging_utils[0m][0m
+INFO:     127.0.0.1:55383 - "POST /api/v1/add HTTP/1.1" 409 Conflict
+
+[2m2026-03-13T21:17:54.073846[0m [[32m[1minfo     [0m] [1mTesting connection to LLM endpoint...[0m [[0m[1m[34mcognee.shared.logging_utils[0m][0m
+
+[2m2026-03-13T21:17:54.074239[0m [[31m[1merror    [0m] [1mLLMAPIKeyNotSetError: LLM API key is not set. (Status code: 422)[0m [[0m[1m[34mcognee.shared.logging_utils[0m][0m
+
+[2m2026-03-13T21:17:54.074436[0m [[31m[1merror    [0m] [1mLLMAPIKeyNotSetError: LLM API key is not set. (Status code: 422)[0m [[0m[1m[34mcognee.shared.logging_utils[0m][0m
+
+[2m2026-03-13T21:17:54.074624[0m [[31m[1merror    [0m] [1mConnection to LLM could not be established.[0m [[0m[1m[34mcognee.shared.logging_utils[0m][0m
+INFO:     127.0.0.1:55379 - "POST /api/v1/add HTTP/1.1" 409 Conflict
+
+[2m2026-03-13T21:17:54.318752[0m [[32m[1minfo     [0m] [1mTesting connection to LLM endpoint...[0m [[0m[1m[34mcognee.shared.logging_utils[0m][0m
+
+[2m2026-03-13T21:17:54.319174[0m [[31m[1merror    [0m] [1mLLMAPIKeyNotSetError: LLM API key is not set. (Status code: 422)[0m [[0m[1m[34mcognee.shared.logging_utils[0m][0m
+
+[2m2026-03-13T21:17:54.319377[0m [[31m[1merror    [0m] [1mLLMAPIKeyNotSetError: LLM API key is not set. (Status code: 422)[0m [[0m[1m[34mcognee.shared.logging_utils[0m][0m
+
+[2m2026-03-13T21:17:54.319570[0m [[31m[1merror    [0m] [1mConnection to LLM could not be established.[0m [[0m[1m[34mcognee.shared.logging_utils[0m][0m
+INFO:     127.0.0.1:55383 - "POST /api/v1/add HTTP/1.1" 409 Conflict
+
+[2m2026-03-13T21:17:54.789009[0m [[32m[1minfo     [0m] [1mTesting connection to LLM endpoint...[0m [[0m[1m[34mcognee.shared.logging_utils[0m][0m
+
+[2m2026-03-13T21:17:54.789451[0m [[31m[1merror    [0m] [1mLLMAPIKeyNotSetError: LLM API key is not set. (Status code: 422)[0m [[0m[1m[34mcognee.shared.logging_utils[0m][0m
+
+[2m2026-03-13T21:17:54.789692[0m [[31m[1merror    [0m] [1mLLMAPIKeyNotSetError: LLM API key is not set. (Status code: 422)[0m [[0m[1m[34mcognee.shared.logging_utils[0m][0m
+
+[2m2026-03-13T21:17:54.789902[0m [[31m[1merror    [0m] [1mConnection to LLM could not be established.[0m [[0m[1m[34mcognee.shared.logging_utils[0m][0m
+INFO:     127.0.0.1:55379 - "POST /api/v1/add HTTP/1.1" 409 Conflict
+
+[2m2026-03-13T21:17:55.062583[0m [[32m[1minfo     [0m] [1mTesting connection to LLM endpoint...[0m [[0m[1m[34mcognee.shared.logging_utils[0m][0m
+
+[2m2026-03-13T21:17:55.063160[0m [[31m[1merror    [0m] [1mLLMAPIKeyNotSetError: LLM API key is not set. (Status code: 422)[0m [[0m[1m[34mcognee.shared.logging_utils[0m][0m
+
+[2m2026-03-13T21:17:55.063438[0m [[31m[1merror    [0m] [1mLLMAPIKeyNotSetError: LLM API key is not set. (Status code: 422)[0m [[0m[1m[34mcognee.shared.logging_utils[0m][0m
+
+[2m2026-03-13T21:17:55.063684[0m [[31m[1merror    [0m] [1mConnection to LLM could not be established.[0m [[0m[1m[34mcognee.shared.logging_utils[0m][0m
+INFO:     127.0.0.1:55383 - "POST /api/v1/add HTTP/1.1" 409 Conflict
+INFO:     127.0.0.1:55394 - "POST /api/v1/configuration/store_user_configuration HTTP/1.1" 200 OK
+
+[2m2026-03-13T21:17:55.429705[0m [[32m[1minfo     [0m] [1mTesting connection to LLM endpoint...[0m [[0m[1m[34mcognee.shared.logging_utils[0m][0m
+
+[2m2026-03-13T21:17:55.430253[0m [[31m[1merror    [0m] [1mLLMAPIKeyNotSetError: LLM API key is not set. (Status code: 422)[0m [[0m[1m[34mcognee.shared.logging_utils[0m][0m
+
+[2m2026-03-13T21:17:55.430469[0m [[31m[1merror    [0m] [1mLLMAPIKeyNotSetError: LLM API key is not set. (Status code: 422)[0m [[0m[1m[34mcognee.shared.logging_utils[0m][0m
+
+[2m2026-03-13T21:17:55.430672[0m [[31m[1merror    [0m] [1mConnection to LLM could not be established.[0m [[0m[1m[34mcognee.shared.logging_utils[0m][0m
+INFO:     127.0.0.1:55379 - "POST /api/v1/add HTTP/1.1" 409 Conflict
+
+[2m2026-03-13T21:17:55.705543[0m [[32m[1minfo     [0m] [1mTesting connection to LLM endpoint...[0m [[0m[1m[34mcognee.shared.logging_utils[0m][0m
+
+[2m2026-03-13T21:17:55.705942[0m [[31m[1merror    [0m] [1mLLMAPIKeyNotSetError: LLM API key is not set. (Status code: 422)[0m [[0m[1m[34mcognee.shared.logging_utils[0m][0m
+
+[2m2026-03-13T21:17:55.706136[0m [[31m[1merror    [0m] [1mLLMAPIKeyNotSetError: LLM API key is not set. (Status code: 422)[0m [[0m[1m[34mcognee.shared.logging_utils[0m][0m
+
+[2m2026-03-13T21:17:55.706323[0m [[31m[1merror    [0m] [1mConnection to LLM could not be established.[0m [[0m[1m[34mcognee.shared.logging_utils[0m][0m
+INFO:     127.0.0.1:55383 - "POST /api/v1/add HTTP/1.1" 409 Conflict
+
+[2m2026-03-13T21:17:55.966321[0m [[32m[1minfo     [0m] [1mTesting connection to LLM endpoint...[0m [[0m[1m[34mcognee.shared.logging_utils[0m][0m
+
+[2m2026-03-13T21:17:55.966754[0m [[31m[1merror    [0m] [1mLLMAPIKeyNotSetError: LLM API key is not set. (Status code: 422)[0m [[0m[1m[34mcognee.shared.logging_utils[0m][0m
+
+[2m2026-03-13T21:17:55.966967[0m [[31m[1merror    [0m] [1mLLMAPIKeyNotSetError: LLM API key is not set. (Status code: 422)[0m [[0m[1m[34mcognee.shared.logging_utils[0m][0m
+
+[2m2026-03-13T21:17:55.967166[0m [[31m[1merror    [0m] [1mConnection to LLM could not be established.[0m [[0m[1m[34mcognee.shared.logging_utils[0m][0m
+INFO:     127.0.0.1:55379 - "POST /api/v1/add HTTP/1.1" 409 Conflict
+
+[2m2026-03-13T21:18:04.332003[0m [[32m[1minfo     [0m] [1mTesting connection to LLM endpoint...[0m [[0m[1m[34mcognee.shared.logging_utils[0m][0m
+
+[2m2026-03-13T21:18:04.332562[0m [[31m[1merror    [0m] [1mLLMAPIKeyNotSetError: LLM API key is not set. (Status code: 422)[0m [[0m[1m[34mcognee.shared.logging_utils[0m][0m
+
+[2m2026-03-13T21:18:04.332782[0m [[31m[1merror    [0m] [1mLLMAPIKeyNotSetError: LLM API key is not set. (Status code: 422)[0m [[0m[1m[34mcognee.shared.logging_utils[0m][0m
+
+[2m2026-03-13T21:18:04.332999[0m [[31m[1merror    [0m] [1mConnection to LLM could not be established.[0m [[0m[1m[34mcognee.shared.logging_utils[0m][0m
+INFO:     127.0.0.1:55409 - "POST /api/v1/add HTTP/1.1" 409 Conflict
+INFO:     127.0.0.1:55445 - "GET / HTTP/1.1" 200 OK
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [89153]

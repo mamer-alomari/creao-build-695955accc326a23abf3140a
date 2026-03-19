@@ -26,9 +26,9 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.extractAuthContext = extractAuthContext;
 const functions = __importStar(require("firebase-functions"));
 const auth_context_1 = require("../lib/auth-context");
+const api_keys_1 = require("../actions/api-keys");
 /**
- * Service-account secret. In production, set CREAO_SA_SECRET in Cloud Functions config.
- * Requests using `sa:<secret>` must provide this exact value.
+ * Service-account secret. Set CREAO_SA_SECRET in .env or Cloud Functions env vars.
  */
 function getSaSecret() {
     var _a;
@@ -53,6 +53,17 @@ async function extractAuthContext(req) {
             return null;
         return (0, auth_context_1.serviceAccountContext)(companyId);
     }
+    // Company API key mode: Bearer ak_<key>
+    if (token.startsWith("ak_")) {
+        try {
+            return await (0, api_keys_1.authContextFromApiKey)(token);
+        }
+        catch (e) {
+            functions.logger.warn("Failed to verify API key", e);
+            return null;
+        }
+    }
+    // Firebase ID token
     try {
         return await (0, auth_context_1.authContextFromToken)(token);
     }

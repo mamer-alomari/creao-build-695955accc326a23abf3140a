@@ -5,7 +5,7 @@ import {
   JobStopType,
   JobStopStatus,
   WorkerRole,
-
+  UserRole,
   WorkerStatus,
   VehicleType,
   EquipmentType,
@@ -339,4 +339,17 @@ export interface WorkerLocationModel {
   longitude: number;
   timestamp: string;
   status: "active" | "inactive";
+}
+
+export interface ApiKeyModel {
+  id: string;
+  key_hash: string;
+  key_prefix: string;
+  company_id: string;
+  name: string;
+  role: UserRole;
+  created_by: string;
+  created_at: string;
+  last_used_at: string | null;
+  is_active: boolean;
 }

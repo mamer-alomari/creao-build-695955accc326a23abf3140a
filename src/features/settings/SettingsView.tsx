@@ -3,9 +3,10 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { type CompanyModel, CompanyORM } from "@/sdk/database/orm/orm_company";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Building2, CreditCard, ExternalLink, Loader2, CheckCircle2 } from "lucide-react";
+import { Building2, CreditCard, ExternalLink, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { useCreaoAuth } from "@/sdk/core/auth";
+import { ApiKeysSection } from "./ApiKeysSection";
 
 export function SettingsView({ company }: { company: CompanyModel | null }) {
     const { companyId } = useCreaoAuth();
@@ -136,6 +137,8 @@ export function SettingsView({ company }: { company: CompanyModel | null }) {
                         </div>
                     </CardContent>
                 </Card>
+
+                <ApiKeysSection />
             </div>
         </div>
     );

@@ -110,6 +110,11 @@ const routes: Route[] = [
   { method: "POST", pattern: /^\/scheduling\/vehicle-schedule-range\/?$/, action: actions.getVehicleScheduleRange, extractInput: bodyWithCompany },
   { method: "POST", pattern: /^\/scheduling\/equipment-schedule-range\/?$/, action: actions.getEquipmentScheduleRange, extractInput: bodyWithCompany },
 
+  // API Keys
+  { method: "POST", pattern: /^\/api-keys\/?$/, action: actions.createApiKey, extractInput: bodyWithCompany },
+  { method: "GET", pattern: /^\/api-keys\/?$/, action: actions.listApiKeysByCompany, extractInput: companyFromQuery },
+  { method: "DELETE", pattern: /^\/api-keys\/([^/]+)$/, action: actions.revokeApiKey, extractInput: idFromPath },
+
   // Analytics
   { method: "POST", pattern: /^\/analytics\/available-workers\/?$/, action: actions.getAvailableWorkersForDate, extractInput: bodyWithCompany },
   { method: "POST", pattern: /^\/analytics\/jobs-by-status\/?$/, action: actions.getJobsByStatusThisWeek, extractInput: bodyWithCompany },
@@ -122,7 +127,7 @@ const routes: Route[] = [
 export async function handleRequest(req: functions.https.Request, res: functions.Response): Promise<void> {
   corsHandler(req, res, async () => {
     // Strip /api prefix if present
-    const path = req.path.replace(/^\/api/, "") || "/";
+    const path = req.path.replace(/^\/api(?=\/|$)/, "") || "/";
     const method = req.method.toUpperCase();
 
     // Auth
