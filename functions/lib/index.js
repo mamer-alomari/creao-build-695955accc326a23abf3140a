@@ -23,11 +23,16 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.quoteExpirationReminder = exports.onWorkerCreate = void 0;
+exports.quoteExpirationReminder = exports.onWorkerCreate = exports.api = void 0;
 const functions = __importStar(require("firebase-functions"));
 const admin = __importStar(require("firebase-admin"));
 const notifications_1 = require("./notifications");
-admin.initializeApp();
+const router_1 = require("./api/router");
+if (!admin.apps.length) {
+    admin.initializeApp();
+}
+// --- REST API (Cloud Function) ---
+exports.api = functions.https.onRequest(router_1.handleRequest);
 exports.onWorkerCreate = functions.firestore
     .document("workers/{workerId}")
     .onCreate(async (snap, context) => {

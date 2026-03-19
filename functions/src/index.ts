@@ -2,8 +2,14 @@
 import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
 import { sendEmail, sendSms } from "./notifications";
+import { handleRequest } from "./api/router";
 
-admin.initializeApp();
+if (!admin.apps.length) {
+  admin.initializeApp();
+}
+
+// --- REST API (Cloud Function) ---
+export const api = functions.https.onRequest(handleRequest);
 
 export const onWorkerCreate = functions.firestore
     .document("workers/{workerId}")

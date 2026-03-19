@@ -24,7 +24,8 @@ var __importStar = (this && this.__importStar) || function (mod) {
 };
 var _a, _b, _c, _d;
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.sendSms = exports.sendEmail = void 0;
+exports.sendEmail = sendEmail;
+exports.sendSms = sendSms;
 const sgMail = __importStar(require("@sendgrid/mail"));
 const functions = __importStar(require("firebase-functions"));
 const twilio_1 = require("twilio");
@@ -54,7 +55,7 @@ async function sendEmail(to, subject, text, html) {
     }
     const msg = {
         to,
-        from: "noreply@creao.app",
+        from: "noreply@creao.app", // Replace with verified sender
         subject,
         text,
         html: html || text,
@@ -68,7 +69,6 @@ async function sendEmail(to, subject, text, html) {
         throw error;
     }
 }
-exports.sendEmail = sendEmail;
 async function sendSms(to, body) {
     if (!twilioClient || !twilioPhone) {
         functions.logger.error("Cannot send SMS: Twilio credentials or phone missing");
@@ -87,5 +87,4 @@ async function sendSms(to, body) {
         throw error;
     }
 }
-exports.sendSms = sendSms;
 //# sourceMappingURL=notifications.js.map
