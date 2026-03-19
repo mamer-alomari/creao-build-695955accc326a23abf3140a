@@ -47,10 +47,13 @@ async function _createJob(ctx, input) {
     await ref.set(job);
     return (0, _base_1.ok)(job);
 }
-async function _getJob(_ctx, input) {
+async function _getJob(ctx, input) {
     const doc = await (0, admin_db_1.getDb)().collection(COLLECTION).doc(input.id).get();
     if (!doc.exists)
         return (0, _base_1.err)("Job not found");
+    const ownerErr = (0, _base_1.assertCompanyOwnership)(doc.data(), ctx);
+    if (ownerErr)
+        return (0, _base_1.err)(ownerErr);
     return (0, _base_1.ok)(Object.assign({ id: doc.id }, doc.data()));
 }
 async function _updateJob(ctx, input) {
@@ -59,6 +62,9 @@ async function _updateJob(ctx, input) {
     const doc = await ref.get();
     if (!doc.exists)
         return (0, _base_1.err)("Job not found");
+    const ownerErr = (0, _base_1.assertCompanyOwnership)(doc.data(), ctx);
+    if (ownerErr)
+        return (0, _base_1.err)(ownerErr);
     const { id } = input, updates = __rest(input, ["id"]);
     const filtered = Object.fromEntries(Object.entries(updates).filter(([, v]) => v !== undefined));
     filtered.data_updater = ctx.userId;
@@ -75,8 +81,14 @@ async function _updateJob(ctx, input) {
     const updated = await ref.get();
     return (0, _base_1.ok)(Object.assign({ id: updated.id }, updated.data()));
 }
-async function _deleteJob(_ctx, input) {
-    await (0, admin_db_1.getDb)().collection(COLLECTION).doc(input.id).delete();
+async function _deleteJob(ctx, input) {
+    const doc = await (0, admin_db_1.getDb)().collection(COLLECTION).doc(input.id).get();
+    if (!doc.exists)
+        return (0, _base_1.err)("Job not found");
+    const ownerErr = (0, _base_1.assertCompanyOwnership)(doc.data(), ctx);
+    if (ownerErr)
+        return (0, _base_1.err)(ownerErr);
+    await doc.ref.delete();
     return (0, _base_1.ok)({ deleted: true });
 }
 async function _listJobsByCompany(_ctx, input) {
@@ -85,8 +97,7 @@ async function _listJobsByCompany(_ctx, input) {
         .where("company_id", "==", input.company_id)
         .orderBy("scheduled_date", "desc")
         .get();
-    const jobs = snap.docs.map((d) => (Object.assign({ id: d.id }, d.data())));
-    return (0, _base_1.ok)(jobs);
+    return (0, _base_1.ok)(snap.docs.map((d) => (Object.assign({ id: d.id }, d.data()))));
 }
 async function _getJobsByStatus(_ctx, input) {
     const snap = await (0, admin_db_1.getDb)()
@@ -112,6 +123,9 @@ async function _updateJobStatus(ctx, input) {
     const doc = await ref.get();
     if (!doc.exists)
         return (0, _base_1.err)("Job not found");
+    const ownerErr = (0, _base_1.assertCompanyOwnership)(doc.data(), ctx);
+    if (ownerErr)
+        return (0, _base_1.err)(ownerErr);
     await ref.update({ status: input.status, data_updater: ctx.userId, update_time: (0, _base_1.nowISO)() });
     const updated = await ref.get();
     return (0, _base_1.ok)(Object.assign({ id: updated.id }, updated.data()));
@@ -124,12 +138,12 @@ async function _getJobsByCustomer(_ctx, input) {
         .get();
     return (0, _base_1.ok)(snap.docs.map((d) => (Object.assign({ id: d.id }, d.data()))));
 }
-const WRITE_ROLES = [enums_1.WorkerRole.Foreman, enums_1.WorkerRole.Manager, enums_1.WorkerRole.Admin];
-const READ_ROLES = [enums_1.WorkerRole.Worker, enums_1.WorkerRole.Foreman, enums_1.WorkerRole.Manager, enums_1.WorkerRole.Admin];
+const WRITE_ROLES = [enums_1.UserRole.Foreman, enums_1.UserRole.Manager, enums_1.UserRole.Admin];
+const READ_ROLES = [enums_1.UserRole.Worker, enums_1.UserRole.Foreman, enums_1.UserRole.Manager, enums_1.UserRole.Admin];
 exports.createJob = (0, _base_1.withValidation)(validators_1.CreateJobSchema, (0, _base_1.withAuth)(WRITE_ROLES, _createJob));
 exports.getJob = (0, _base_1.withValidation)(validators_1.GetByIdSchema, (0, _base_1.withAuth)(READ_ROLES, _getJob));
 exports.updateJob = (0, _base_1.withValidation)(validators_1.UpdateJobSchema, (0, _base_1.withAuth)(WRITE_ROLES, _updateJob));
-exports.deleteJob = (0, _base_1.withValidation)(validators_1.DeleteByIdSchema, (0, _base_1.withAuth)([enums_1.WorkerRole.Manager, enums_1.WorkerRole.Admin], _deleteJob));
+exports.deleteJob = (0, _base_1.withValidation)(validators_1.DeleteByIdSchema, (0, _base_1.withAuth)([enums_1.UserRole.Manager, enums_1.UserRole.Admin], _deleteJob));
 exports.listJobsByCompany = (0, _base_1.withValidation)(validators_1.ListByCompanySchema, (0, _base_1.withAuth)(READ_ROLES, _listJobsByCompany));
 exports.getJobsByStatus = (0, _base_1.withValidation)(validators_1.GetJobsByStatusSchema, (0, _base_1.withAuth)(READ_ROLES, _getJobsByStatus));
 exports.getJobsByDateRange = (0, _base_1.withValidation)(validators_1.GetJobsByDateRangeSchema, (0, _base_1.withAuth)(READ_ROLES, _getJobsByDateRange));

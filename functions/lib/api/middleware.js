@@ -26,14 +26,28 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.extractAuthContext = extractAuthContext;
 const functions = __importStar(require("firebase-functions"));
 const auth_context_1 = require("../lib/auth-context");
+/**
+ * Service-account secret. In production, set CREAO_SA_SECRET in Cloud Functions config.
+ * Requests using `sa:<secret>` must provide this exact value.
+ */
+function getSaSecret() {
+    var _a;
+    return process.env.CREAO_SA_SECRET || ((_a = functions.config().creao) === null || _a === void 0 ? void 0 : _a.sa_secret);
+}
 async function extractAuthContext(req) {
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
         return null;
     }
     const token = authHeader.slice(7);
-    // Support service-account mode with a special prefix
+    // Service-account mode: Bearer sa:<secret>
     if (token.startsWith("sa:")) {
+        const secret = token.slice(3);
+        const expected = getSaSecret();
+        if (!expected || secret !== expected) {
+            functions.logger.warn("Invalid service-account secret");
+            return null;
+        }
         const companyId = req.headers["x-company-id"];
         if (!companyId)
             return null;

@@ -1,8 +1,8 @@
 import { getDb } from "../lib/admin-db";
 import { calculateAIQuote } from "../lib/quote-engine";
 
-import { ActionResult, AuthContext, ok, err, nowISO, withAuth, withValidation } from "./_base";
-import { WorkerRole } from "../types/enums";
+import { ActionResult, AuthContext, ok, err, nowISO, withAuth, withValidation, assertCompanyOwnership } from "./_base";
+import { UserRole } from "../types/enums";
 import { QuoteModel } from "../types/models";
 import {
   CreateQuoteInput,
@@ -50,24 +50,30 @@ async function _createQuote(ctx: AuthContext, input: CreateQuoteInput): Promise<
     expires_at: input.expires_at,
   };
 
-  await ref.set(quote);
+  // Store audit-compatible data alongside the quote
+  await ref.set({ ...quote, data_creator: ctx.userId, data_updater: ctx.userId });
   return ok(quote);
 }
 
-async function _getQuote(_ctx: AuthContext, input: GetByIdInput): Promise<ActionResult<QuoteModel>> {
+async function _getQuote(ctx: AuthContext, input: GetByIdInput): Promise<ActionResult<QuoteModel>> {
   const doc = await getDb().collection(COLLECTION).doc(input.id).get();
   if (!doc.exists) return err("Quote not found");
+  const ownerErr = assertCompanyOwnership(doc.data()!, ctx);
+  if (ownerErr) return err(ownerErr);
   return ok({ id: doc.id, ...doc.data() } as QuoteModel);
 }
 
-async function _updateQuote(_ctx: AuthContext, input: UpdateQuoteInput): Promise<ActionResult<QuoteModel>> {
+async function _updateQuote(ctx: AuthContext, input: UpdateQuoteInput): Promise<ActionResult<QuoteModel>> {
   const ref = getDb().collection(COLLECTION).doc(input.id);
   const doc = await ref.get();
   if (!doc.exists) return err("Quote not found");
+  const ownerErr = assertCompanyOwnership(doc.data()!, ctx);
+  if (ownerErr) return err(ownerErr);
 
   const { id, ...updates } = input;
   const filtered = Object.fromEntries(Object.entries(updates).filter(([, v]) => v !== undefined));
   filtered.update_time = nowISO();
+  filtered.data_updater = ctx.userId;
 
   await ref.update(filtered);
   const updated = await ref.get();
@@ -83,12 +89,14 @@ async function _listQuotesByCompany(_ctx: AuthContext, input: ListByCompanyInput
   return ok(snap.docs.map((d) => ({ id: d.id, ...d.data() } as QuoteModel)));
 }
 
-async function _updateQuoteStatus(_ctx: AuthContext, input: UpdateQuoteStatusInput): Promise<ActionResult<QuoteModel>> {
+async function _updateQuoteStatus(ctx: AuthContext, input: UpdateQuoteStatusInput): Promise<ActionResult<QuoteModel>> {
   const ref = getDb().collection(COLLECTION).doc(input.id);
   const doc = await ref.get();
   if (!doc.exists) return err("Quote not found");
+  const ownerErr = assertCompanyOwnership(doc.data()!, ctx);
+  if (ownerErr) return err(ownerErr);
 
-  await ref.update({ status: input.status, update_time: nowISO() });
+  await ref.update({ status: input.status, update_time: nowISO(), data_updater: ctx.userId });
   const updated = await ref.get();
   return ok({ id: updated.id, ...updated.data() } as QuoteModel);
 }
@@ -98,8 +106,8 @@ async function _calculateAIQuote(_ctx: AuthContext, input: CalculateAIQuoteInput
   return ok(breakdown);
 }
 
-const WRITE = [WorkerRole.Foreman, WorkerRole.Manager, WorkerRole.Admin];
-const READ = [WorkerRole.Worker, WorkerRole.Foreman, WorkerRole.Manager, WorkerRole.Admin, WorkerRole.Customer];
+const WRITE = [UserRole.Foreman, UserRole.Manager, UserRole.Admin];
+const READ = [UserRole.Worker, UserRole.Foreman, UserRole.Manager, UserRole.Admin, UserRole.Customer];
 
 export const createQuote = withValidation(CreateQuoteSchema, withAuth(WRITE, _createQuote));
 export const getQuote = withValidation(GetByIdSchema, withAuth(READ, _getQuote));

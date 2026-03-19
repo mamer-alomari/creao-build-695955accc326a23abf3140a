@@ -20,6 +20,14 @@ exports.CreateJobSchema = zod_1.z.object({
         sequence: zod_1.z.number(),
         actual_arrival_time: zod_1.z.string().optional(),
         actual_departure_time: zod_1.z.string().optional(),
+        inventory_loaded: zod_1.z.string().optional(),
+        inventory_unloaded: zod_1.z.string().optional(),
+        photos: zod_1.z.array(zod_1.z.string()).optional(),
+        signatures: zod_1.z.object({
+            customer_sign: zod_1.z.string().optional(),
+            foreman_sign: zod_1.z.string().optional(),
+            timestamp: zod_1.z.string().optional(),
+        }).optional(),
         notes: zod_1.z.string().optional(),
     })).optional(),
 });
@@ -211,14 +219,14 @@ exports.SetVehicleScheduleSchema = zod_1.z.object({
     vehicle_id: zod_1.z.string().min(1),
     company_id: zod_1.z.string().min(1),
     schedule_date: zod_1.z.string().min(1),
-    status: zod_1.z.number().int(),
-    maintenance_type: zod_1.z.number().int().optional(),
+    status: zod_1.z.nativeEnum(enums_1.VehicleScheduleStatus),
+    maintenance_type: zod_1.z.nativeEnum(enums_1.VehicleScheduleMaintenanceType).optional(),
 });
 exports.SetEquipmentScheduleSchema = zod_1.z.object({
     equipment_id: zod_1.z.string().min(1),
     company_id: zod_1.z.string().min(1),
     schedule_date: zod_1.z.string().min(1),
-    status: zod_1.z.number().int(),
+    status: zod_1.z.nativeEnum(enums_1.EquipmentScheduleStatus),
     reason: zod_1.z.string().optional(),
 });
 exports.GetScheduleRangeSchema = zod_1.z.object({

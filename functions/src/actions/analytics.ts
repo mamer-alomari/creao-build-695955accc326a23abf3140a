@@ -1,6 +1,6 @@
 import { getDb } from "../lib/admin-db";
 import { ActionResult, AuthContext, ok, withAuth, withValidation } from "./_base";
-import { JobStatus, WorkerRole } from "../types/enums";
+import { JobStatus, UserRole, WorkerStatus } from "../types/enums";
 import { WorkerModel, JobModel } from "../types/models";
 import {
   GetAvailableWorkersInput,
@@ -15,7 +15,7 @@ import {
   GetUpcomingJobsSchema,
 } from "../lib/validators";
 
-const READ = [WorkerRole.Foreman, WorkerRole.Manager, WorkerRole.Admin];
+const READ = [UserRole.Foreman, UserRole.Manager, UserRole.Admin];
 
 // --- Available workers for a date ---
 interface AvailableWorkerResult {
@@ -33,48 +33,53 @@ async function _getAvailableWorkersForDate(
   // Get all active workers
   const workersSnap = await db.collection("workers")
     .where("company_id", "==", input.company_id)
-    .where("status", "==", 1) // Active
+    .where("status", "==", WorkerStatus.Active)
     .get();
 
-  const results: AvailableWorkerResult[] = [];
+  if (workersSnap.empty) return ok([]);
 
-  for (const wDoc of workersSnap.docs) {
-    const worker = { id: wDoc.id, ...wDoc.data() } as WorkerModel;
+  const workers = workersSnap.docs.map((d) => ({ id: d.id, ...d.data() } as WorkerModel));
+  const workerIds = workers.map((w) => w.id);
 
-    // Check schedule
+  // Batch-fetch schedules for all workers on this date
+  const scheduleMap: Record<string, boolean> = {};
+  for (let i = 0; i < workerIds.length; i += 30) {
+    const chunk = workerIds.slice(i, i + 30);
     const schedSnap = await db.collection("worker_schedules")
-      .where("worker_id", "==", worker.id)
+      .where("worker_id", "in", chunk)
       .where("date", "==", input.date)
-      .limit(1)
       .get();
-    const isAvailable = schedSnap.empty || schedSnap.docs[0].data().is_available;
+    for (const doc of schedSnap.docs) {
+      scheduleMap[doc.data().worker_id] = doc.data().is_available;
+    }
+  }
 
-    // Check active assignments for jobs on that date
-    const jobsOnDate = await db.collection("jobs")
-      .where("company_id", "==", input.company_id)
-      .where("scheduled_date", "==", input.date)
-      .get();
+  // Get jobs on this date, then batch-fetch assignments
+  const jobsOnDate = await db.collection("jobs")
+    .where("company_id", "==", input.company_id)
+    .where("scheduled_date", "==", input.date)
+    .get();
 
-    let activeAssignments = 0;
-    if (!jobsOnDate.empty) {
-      const jobIds = jobsOnDate.docs.map((d) => d.id);
-      // Firestore 'in' supports up to 30 values
-      for (let i = 0; i < jobIds.length; i += 30) {
-        const chunk = jobIds.slice(i, i + 30);
-        const assignSnap = await db.collection("job_worker_assignments")
-          .where("worker_id", "==", worker.id)
-          .where("job_id", "in", chunk)
-          .get();
-        activeAssignments += assignSnap.size;
+  const assignmentCounts: Record<string, number> = {};
+  if (!jobsOnDate.empty) {
+    const jobIds = jobsOnDate.docs.map((d) => d.id);
+    for (let i = 0; i < jobIds.length; i += 30) {
+      const chunk = jobIds.slice(i, i + 30);
+      const assignSnap = await db.collection("job_worker_assignments")
+        .where("job_id", "in", chunk)
+        .get();
+      for (const doc of assignSnap.docs) {
+        const wid = doc.data().worker_id;
+        assignmentCounts[wid] = (assignmentCounts[wid] || 0) + 1;
       }
     }
-
-    results.push({
-      worker,
-      is_scheduled_available: isAvailable,
-      active_assignments: activeAssignments,
-    });
   }
+
+  const results: AvailableWorkerResult[] = workers.map((worker) => ({
+    worker,
+    is_scheduled_available: scheduleMap[worker.id] ?? true, // default available if no schedule entry
+    active_assignments: assignmentCounts[worker.id] || 0,
+  }));
 
   return ok(results);
 }
@@ -183,7 +188,7 @@ async function _getCompanyDashboardStats(
     active_jobs: jobs.filter((j) => activeStatuses.includes(j.status)).length,
     completed_jobs: jobs.filter((j) => j.status === JobStatus.Completed).length,
     total_workers: workersSnap.size,
-    active_workers: workersSnap.docs.filter((d) => d.data().status === 1).length,
+    active_workers: workersSnap.docs.filter((d) => d.data().status === WorkerStatus.Active).length,
     total_vehicles: vehiclesSnap.size,
     pending_quotes: quotesSnap.size,
     open_incidents: incidentsSnap.size,
@@ -203,7 +208,6 @@ async function _getWorkerUtilization(
 ): Promise<ActionResult<WorkerUtilization[]>> {
   const db = getDb();
 
-  // Get jobs in range
   const jobsSnap = await db.collection("jobs")
     .where("company_id", "==", input.company_id)
     .where("scheduled_date", ">=", input.start_date)
@@ -226,26 +230,19 @@ async function _getWorkerUtilization(
     }
   }
 
-  // Get worker names
+  // Batch-fetch worker names by document ID
   const workerIds = Object.keys(assignmentCounts);
-  const results: WorkerUtilization[] = [];
-
-  for (let i = 0; i < workerIds.length; i += 30) {
-    const chunk = workerIds.slice(i, i + 30);
-    const workersSnap = await db.collection("workers")
-      .where("id", "in", chunk)
-      .get();
-    const nameMap: Record<string, string> = {};
-    for (const d of workersSnap.docs) nameMap[d.data().id] = d.data().full_name;
-
-    for (const wid of chunk) {
-      results.push({
-        worker_id: wid,
-        worker_name: nameMap[wid] || "Unknown",
-        assignment_count: assignmentCounts[wid],
-      });
-    }
+  const nameMap: Record<string, string> = {};
+  for (const wid of workerIds) {
+    const wDoc = await db.collection("workers").doc(wid).get();
+    if (wDoc.exists) nameMap[wid] = wDoc.data()!.full_name;
   }
+
+  const results: WorkerUtilization[] = workerIds.map((wid) => ({
+    worker_id: wid,
+    worker_name: nameMap[wid] || "Unknown",
+    assignment_count: assignmentCounts[wid],
+  }));
 
   return ok(results.sort((a, b) => b.assignment_count - a.assignment_count));
 }

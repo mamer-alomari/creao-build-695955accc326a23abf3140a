@@ -1,6 +1,6 @@
 import { getDb } from "../lib/admin-db";
 import { ActionResult, AuthContext, ok, err, nowISO, withAuth, withValidation } from "./_base";
-import { WorkerRole } from "../types/enums";
+import { UserRole } from "../types/enums";
 import {
   JobWorkerAssignmentModel,
   JobVehicleAssignmentModel,
@@ -34,14 +34,37 @@ import {
   GetScheduleRangeSchema,
 } from "../lib/validators";
 
-const SCHED_ROLES = [WorkerRole.Foreman, WorkerRole.Manager, WorkerRole.Admin];
-const READ_ROLES = [WorkerRole.Worker, WorkerRole.Foreman, WorkerRole.Manager, WorkerRole.Admin];
+const SCHED_ROLES = [UserRole.Foreman, UserRole.Manager, UserRole.Admin];
+const READ_ROLES = [UserRole.Worker, UserRole.Foreman, UserRole.Manager, UserRole.Admin];
+
+/**
+ * Verify a resource belongs to the expected company before assignment.
+ */
+async function verifyResourceCompany(
+  collection: string,
+  resourceId: string,
+  expectedCompanyId: string,
+  resourceLabel: string
+): Promise<string | null> {
+  const doc = await getDb().collection(collection).doc(resourceId).get();
+  if (!doc.exists) return `${resourceLabel} not found`;
+  const data = doc.data()!;
+  if (data.company_id && data.company_id !== expectedCompanyId) {
+    return `${resourceLabel} belongs to a different company`;
+  }
+  return null;
+}
 
 // --- Worker assignments ---
 async function _assignWorkerToJob(ctx: AuthContext, input: AssignWorkerToJobInput): Promise<ActionResult<JobWorkerAssignmentModel>> {
   const db = getDb();
 
-  // Check for existing assignment
+  // Cross-company validation
+  const workerErr = await verifyResourceCompany("workers", input.worker_id, input.company_id, "Worker");
+  if (workerErr) return err(workerErr);
+  const jobErr = await verifyResourceCompany("jobs", input.job_id, input.company_id, "Job");
+  if (jobErr) return err(jobErr);
+
   const existing = await db.collection("job_worker_assignments")
     .where("job_id", "==", input.job_id)
     .where("worker_id", "==", input.worker_id)
@@ -81,6 +104,12 @@ async function _unassignWorkerFromJob(_ctx: AuthContext, input: UnassignWorkerFr
 // --- Vehicle assignments ---
 async function _assignVehicleToJob(ctx: AuthContext, input: AssignVehicleToJobInput): Promise<ActionResult<JobVehicleAssignmentModel>> {
   const db = getDb();
+
+  const vehicleErr = await verifyResourceCompany("vehicles", input.vehicle_id, input.company_id, "Vehicle");
+  if (vehicleErr) return err(vehicleErr);
+  const jobErr = await verifyResourceCompany("jobs", input.job_id, input.company_id, "Job");
+  if (jobErr) return err(jobErr);
+
   const existing = await db.collection("job_vehicle_assignments")
     .where("job_id", "==", input.job_id)
     .where("vehicle_id", "==", input.vehicle_id)
@@ -121,12 +150,14 @@ async function _unassignVehicleFromJob(_ctx: AuthContext, input: UnassignVehicle
 async function _allocateEquipmentToJob(ctx: AuthContext, input: AllocateEquipmentToJobInput): Promise<ActionResult<JobEquipmentAllocationModel>> {
   const db = getDb();
 
-  // Check available quantity
+  const equipErr = await verifyResourceCompany("equipment", input.equipment_id, input.company_id, "Equipment");
+  if (equipErr) return err(equipErr);
+  const jobErr = await verifyResourceCompany("jobs", input.job_id, input.company_id, "Job");
+  if (jobErr) return err(jobErr);
+
   const equipDoc = await db.collection("equipment").doc(input.equipment_id).get();
-  if (!equipDoc.exists) return err("Equipment not found");
   const totalQty = equipDoc.data()!.total_quantity || 0;
 
-  // Sum currently allocated
   const allocSnap = await db.collection("job_equipment_allocations")
     .where("equipment_id", "==", input.equipment_id)
     .get();
@@ -171,7 +202,6 @@ async function _setWorkerSchedule(ctx: AuthContext, input: SetWorkerScheduleInpu
   const db = getDb();
   const now = nowISO();
 
-  // Upsert by worker_id + date
   const existing = await db.collection("worker_schedules")
     .where("worker_id", "==", input.worker_id)
     .where("date", "==", input.date)
@@ -180,6 +210,8 @@ async function _setWorkerSchedule(ctx: AuthContext, input: SetWorkerScheduleInpu
 
   const schedule: WorkerScheduleModel = {
     id: existing.empty ? db.collection("worker_schedules").doc().id : existing.docs[0].id,
+    data_creator: existing.empty ? ctx.userId : existing.docs[0].data().data_creator,
+    data_updater: ctx.userId,
     worker_id: input.worker_id,
     company_id: input.company_id,
     date: input.date,

@@ -1,6 +1,6 @@
 import { getDb } from "../lib/admin-db";
-import { ActionResult, AuthContext, ok, err, nowISO, withAuth, withValidation } from "./_base";
-import { WorkerRole, PayrollRecordStatus } from "../types/enums";
+import { ActionResult, AuthContext, ok, err, nowISO, withAuth, withValidation, assertCompanyOwnership } from "./_base";
+import { UserRole, PayrollRecordStatus } from "../types/enums";
 import { PayrollRecordModel } from "../types/models";
 import { CreatePayrollRecordInput, UpdatePayrollRecordInput, ListByCompanyInput, GetByIdInput, DeleteByIdInput } from "../types/action-types";
 import { CreatePayrollRecordSchema, UpdatePayrollRecordSchema, ListByCompanySchema, GetByIdSchema, DeleteByIdSchema } from "../lib/validators";
@@ -32,9 +32,11 @@ async function _createPayrollRecord(ctx: AuthContext, input: CreatePayrollRecord
   return ok(record);
 }
 
-async function _getPayrollRecord(_ctx: AuthContext, input: GetByIdInput): Promise<ActionResult<PayrollRecordModel>> {
+async function _getPayrollRecord(ctx: AuthContext, input: GetByIdInput): Promise<ActionResult<PayrollRecordModel>> {
   const doc = await getDb().collection(COLLECTION).doc(input.id).get();
   if (!doc.exists) return err("Payroll record not found");
+  const ownerErr = assertCompanyOwnership(doc.data()!, ctx);
+  if (ownerErr) return err(ownerErr);
   return ok({ id: doc.id, ...doc.data() } as PayrollRecordModel);
 }
 
@@ -42,6 +44,8 @@ async function _updatePayrollRecord(ctx: AuthContext, input: UpdatePayrollRecord
   const ref = getDb().collection(COLLECTION).doc(input.id);
   const doc = await ref.get();
   if (!doc.exists) return err("Payroll record not found");
+  const ownerErr = assertCompanyOwnership(doc.data()!, ctx);
+  if (ownerErr) return err(ownerErr);
 
   const existing = doc.data()!;
   const { id, ...updates } = input;
@@ -51,7 +55,6 @@ async function _updatePayrollRecord(ctx: AuthContext, input: UpdatePayrollRecord
   filtered.data_updater = ctx.userId;
   filtered.update_time = nowISO();
 
-  // Recalculate total_pay if wage or hours changed
   const wage = (filtered.hourly_wage as number) ?? existing.hourly_wage;
   const hours = (filtered.hours_worked as number) ?? existing.hours_worked;
   filtered.total_pay = Math.round(wage * hours * 100) / 100;
@@ -61,8 +64,12 @@ async function _updatePayrollRecord(ctx: AuthContext, input: UpdatePayrollRecord
   return ok({ id: updated.id, ...updated.data() } as PayrollRecordModel);
 }
 
-async function _deletePayrollRecord(_ctx: AuthContext, input: DeleteByIdInput): Promise<ActionResult<{ deleted: boolean }>> {
-  await getDb().collection(COLLECTION).doc(input.id).delete();
+async function _deletePayrollRecord(ctx: AuthContext, input: DeleteByIdInput): Promise<ActionResult<{ deleted: boolean }>> {
+  const doc = await getDb().collection(COLLECTION).doc(input.id).get();
+  if (!doc.exists) return err("Payroll record not found");
+  const ownerErr = assertCompanyOwnership(doc.data()!, ctx);
+  if (ownerErr) return err(ownerErr);
+  await doc.ref.delete();
   return ok({ deleted: true });
 }
 
@@ -75,7 +82,7 @@ async function _listPayrollByCompany(_ctx: AuthContext, input: ListByCompanyInpu
   return ok(snap.docs.map((d) => ({ id: d.id, ...d.data() } as PayrollRecordModel)));
 }
 
-const MGMT = [WorkerRole.Manager, WorkerRole.Admin];
+const MGMT = [UserRole.Manager, UserRole.Admin];
 
 export const createPayrollRecord = withValidation(CreatePayrollRecordSchema, withAuth(MGMT, _createPayrollRecord));
 export const getPayrollRecord = withValidation(GetByIdSchema, withAuth(MGMT, _getPayrollRecord));

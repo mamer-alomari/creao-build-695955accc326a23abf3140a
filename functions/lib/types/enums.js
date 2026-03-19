@@ -1,7 +1,7 @@
 "use strict";
 // Pure enum definitions — no runtime imports, shared by client and server
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.MaintenanceType = exports.EquipmentScheduleStatus = exports.VehicleScheduleMaintenanceType = exports.VehicleScheduleStatus = exports.PayrollRecordStatus = exports.EquipmentType = exports.VehicleType = exports.WorkerStatus = exports.WorkerRole = exports.JobStatus = void 0;
+exports.MaintenanceType = exports.EquipmentScheduleStatus = exports.VehicleScheduleMaintenanceType = exports.VehicleScheduleStatus = exports.PayrollRecordStatus = exports.EquipmentType = exports.VehicleType = exports.WorkerStatus = exports.UserRole = exports.WorkerRole = exports.JobStatus = void 0;
 var JobStatus;
 (function (JobStatus) {
     JobStatus[JobStatus["Unspecified"] = 0] = "Unspecified";
@@ -17,15 +17,24 @@ var JobStatus;
     JobStatus[JobStatus["Unloading"] = 10] = "Unloading";
     JobStatus[JobStatus["ReturningToWarehouse"] = 11] = "ReturningToWarehouse";
 })(JobStatus || (exports.JobStatus = JobStatus = {}));
+// ORM WorkerRole — describes the worker's job function (stored on worker documents)
 var WorkerRole;
 (function (WorkerRole) {
-    WorkerRole["Unspecified"] = "unspecified";
-    WorkerRole["Customer"] = "customer";
-    WorkerRole["Worker"] = "worker";
-    WorkerRole["Foreman"] = "foreman";
-    WorkerRole["Manager"] = "manager";
-    WorkerRole["Admin"] = "admin";
+    WorkerRole[WorkerRole["Unspecified"] = 0] = "Unspecified";
+    WorkerRole[WorkerRole["Mover"] = 1] = "Mover";
+    WorkerRole[WorkerRole["Driver"] = 2] = "Driver";
+    WorkerRole[WorkerRole["Supervisor"] = 3] = "Supervisor";
 })(WorkerRole || (exports.WorkerRole = WorkerRole = {}));
+// Auth UserRole — describes the user's permission level (stored on auth/user profile)
+var UserRole;
+(function (UserRole) {
+    UserRole["Unspecified"] = "unspecified";
+    UserRole["Customer"] = "customer";
+    UserRole["Worker"] = "worker";
+    UserRole["Foreman"] = "foreman";
+    UserRole["Manager"] = "manager";
+    UserRole["Admin"] = "admin";
+})(UserRole || (exports.UserRole = UserRole = {}));
 var WorkerStatus;
 (function (WorkerStatus) {
     WorkerStatus[WorkerStatus["Unspecified"] = 0] = "Unspecified";

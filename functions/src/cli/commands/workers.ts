@@ -17,7 +17,7 @@ export async function create(ctx: AuthContext, flags: Record<string, string>) {
   print(await actions.createWorker(ctx, {
     company_id: flags.company_id || ctx.companyId,
     full_name: flags.full_name,
-    role: flags.role as any,
+    role: Number(flags.role) || 0,
     email: flags.email,
     phone_number: flags.phone_number,
     hourly_rate: flags.hourly_rate ? Number(flags.hourly_rate) : undefined,

@@ -37,10 +37,13 @@ async function _createVehicle(ctx, input) {
     await ref.set(vehicle);
     return (0, _base_1.ok)(vehicle);
 }
-async function _getVehicle(_ctx, input) {
+async function _getVehicle(ctx, input) {
     const doc = await (0, admin_db_1.getDb)().collection(COLLECTION).doc(input.id).get();
     if (!doc.exists)
         return (0, _base_1.err)("Vehicle not found");
+    const ownerErr = (0, _base_1.assertCompanyOwnership)(doc.data(), ctx);
+    if (ownerErr)
+        return (0, _base_1.err)(ownerErr);
     return (0, _base_1.ok)(Object.assign({ id: doc.id }, doc.data()));
 }
 async function _updateVehicle(ctx, input) {
@@ -48,6 +51,9 @@ async function _updateVehicle(ctx, input) {
     const doc = await ref.get();
     if (!doc.exists)
         return (0, _base_1.err)("Vehicle not found");
+    const ownerErr = (0, _base_1.assertCompanyOwnership)(doc.data(), ctx);
+    if (ownerErr)
+        return (0, _base_1.err)(ownerErr);
     const { id } = input, updates = __rest(input, ["id"]);
     const filtered = Object.fromEntries(Object.entries(updates).filter(([, v]) => v !== undefined));
     filtered.data_updater = ctx.userId;
@@ -56,8 +62,14 @@ async function _updateVehicle(ctx, input) {
     const updated = await ref.get();
     return (0, _base_1.ok)(Object.assign({ id: updated.id }, updated.data()));
 }
-async function _deleteVehicle(_ctx, input) {
-    await (0, admin_db_1.getDb)().collection(COLLECTION).doc(input.id).delete();
+async function _deleteVehicle(ctx, input) {
+    const doc = await (0, admin_db_1.getDb)().collection(COLLECTION).doc(input.id).get();
+    if (!doc.exists)
+        return (0, _base_1.err)("Vehicle not found");
+    const ownerErr = (0, _base_1.assertCompanyOwnership)(doc.data(), ctx);
+    if (ownerErr)
+        return (0, _base_1.err)(ownerErr);
+    await doc.ref.delete();
     return (0, _base_1.ok)({ deleted: true });
 }
 async function _listVehiclesByCompany(_ctx, input) {
@@ -67,8 +79,8 @@ async function _listVehiclesByCompany(_ctx, input) {
         .get();
     return (0, _base_1.ok)(snap.docs.map((d) => (Object.assign({ id: d.id }, d.data()))));
 }
-const MGMT = [enums_1.WorkerRole.Manager, enums_1.WorkerRole.Admin];
-const READ = [enums_1.WorkerRole.Foreman, enums_1.WorkerRole.Manager, enums_1.WorkerRole.Admin];
+const MGMT = [enums_1.UserRole.Manager, enums_1.UserRole.Admin];
+const READ = [enums_1.UserRole.Foreman, enums_1.UserRole.Manager, enums_1.UserRole.Admin];
 exports.createVehicle = (0, _base_1.withValidation)(validators_1.CreateVehicleSchema, (0, _base_1.withAuth)(MGMT, _createVehicle));
 exports.getVehicle = (0, _base_1.withValidation)(validators_1.GetByIdSchema, (0, _base_1.withAuth)(READ, _getVehicle));
 exports.updateVehicle = (0, _base_1.withValidation)(validators_1.UpdateVehicleSchema, (0, _base_1.withAuth)(MGMT, _updateVehicle));

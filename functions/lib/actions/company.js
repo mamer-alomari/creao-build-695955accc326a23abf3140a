@@ -17,10 +17,14 @@ const _base_1 = require("./_base");
 const enums_1 = require("../types/enums");
 const validators_1 = require("../lib/validators");
 const COLLECTION = "companies";
-async function _getCompany(_ctx, input) {
+async function _getCompany(ctx, input) {
     const doc = await (0, admin_db_1.getDb)().collection(COLLECTION).doc(input.id).get();
     if (!doc.exists)
         return (0, _base_1.err)("Company not found");
+    // Company docs: the doc id IS the company_id, so check ctx.companyId against doc id
+    if (ctx.companyId && ctx.companyId !== doc.id) {
+        return (0, _base_1.err)("Access denied: resource belongs to a different company");
+    }
     return (0, _base_1.ok)(Object.assign({ id: doc.id }, doc.data()));
 }
 async function _updateCompany(ctx, input) {
@@ -28,6 +32,9 @@ async function _updateCompany(ctx, input) {
     const doc = await ref.get();
     if (!doc.exists)
         return (0, _base_1.err)("Company not found");
+    if (ctx.companyId && ctx.companyId !== doc.id) {
+        return (0, _base_1.err)("Access denied: resource belongs to a different company");
+    }
     const { id } = input, updates = __rest(input, ["id"]);
     const filtered = Object.fromEntries(Object.entries(updates).filter(([, v]) => v !== undefined));
     filtered.data_updater = ctx.userId;
@@ -36,8 +43,8 @@ async function _updateCompany(ctx, input) {
     const updated = await ref.get();
     return (0, _base_1.ok)(Object.assign({ id: updated.id }, updated.data()));
 }
-const MGMT = [enums_1.WorkerRole.Manager, enums_1.WorkerRole.Admin];
-const READ = [enums_1.WorkerRole.Worker, enums_1.WorkerRole.Foreman, enums_1.WorkerRole.Manager, enums_1.WorkerRole.Admin];
+const MGMT = [enums_1.UserRole.Manager, enums_1.UserRole.Admin];
+const READ = [enums_1.UserRole.Worker, enums_1.UserRole.Foreman, enums_1.UserRole.Manager, enums_1.UserRole.Admin];
 exports.getCompany = (0, _base_1.withValidation)(validators_1.GetByIdSchema, (0, _base_1.withAuth)(READ, _getCompany));
 exports.updateCompany = (0, _base_1.withValidation)(validators_1.UpdateCompanySchema, (0, _base_1.withAuth)(MGMT, _updateCompany));
 //# sourceMappingURL=company.js.map

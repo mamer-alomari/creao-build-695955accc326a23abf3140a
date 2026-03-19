@@ -19,7 +19,7 @@ async function _createWorker(ctx: AuthContext, input: CreateWorkerInput): Promis
     create_time: now,
     update_time: now,
     full_name: input.full_name,
-    role: input.role as any,
+    role: input.role,
     status: input.status ?? WorkerStatus.Active,
     company_id: input.company_id,
     hourly_rate: input.hourly_rate,

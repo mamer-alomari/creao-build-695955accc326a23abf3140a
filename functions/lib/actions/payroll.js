@@ -39,10 +39,13 @@ async function _createPayrollRecord(ctx, input) {
     await ref.set(record);
     return (0, _base_1.ok)(record);
 }
-async function _getPayrollRecord(_ctx, input) {
+async function _getPayrollRecord(ctx, input) {
     const doc = await (0, admin_db_1.getDb)().collection(COLLECTION).doc(input.id).get();
     if (!doc.exists)
         return (0, _base_1.err)("Payroll record not found");
+    const ownerErr = (0, _base_1.assertCompanyOwnership)(doc.data(), ctx);
+    if (ownerErr)
+        return (0, _base_1.err)(ownerErr);
     return (0, _base_1.ok)(Object.assign({ id: doc.id }, doc.data()));
 }
 async function _updatePayrollRecord(ctx, input) {
@@ -51,12 +54,14 @@ async function _updatePayrollRecord(ctx, input) {
     const doc = await ref.get();
     if (!doc.exists)
         return (0, _base_1.err)("Payroll record not found");
+    const ownerErr = (0, _base_1.assertCompanyOwnership)(doc.data(), ctx);
+    if (ownerErr)
+        return (0, _base_1.err)(ownerErr);
     const existing = doc.data();
     const { id } = input, updates = __rest(input, ["id"]);
     const filtered = Object.fromEntries(Object.entries(updates).filter(([, v]) => v !== undefined));
     filtered.data_updater = ctx.userId;
     filtered.update_time = (0, _base_1.nowISO)();
-    // Recalculate total_pay if wage or hours changed
     const wage = (_a = filtered.hourly_wage) !== null && _a !== void 0 ? _a : existing.hourly_wage;
     const hours = (_b = filtered.hours_worked) !== null && _b !== void 0 ? _b : existing.hours_worked;
     filtered.total_pay = Math.round(wage * hours * 100) / 100;
@@ -64,8 +69,14 @@ async function _updatePayrollRecord(ctx, input) {
     const updated = await ref.get();
     return (0, _base_1.ok)(Object.assign({ id: updated.id }, updated.data()));
 }
-async function _deletePayrollRecord(_ctx, input) {
-    await (0, admin_db_1.getDb)().collection(COLLECTION).doc(input.id).delete();
+async function _deletePayrollRecord(ctx, input) {
+    const doc = await (0, admin_db_1.getDb)().collection(COLLECTION).doc(input.id).get();
+    if (!doc.exists)
+        return (0, _base_1.err)("Payroll record not found");
+    const ownerErr = (0, _base_1.assertCompanyOwnership)(doc.data(), ctx);
+    if (ownerErr)
+        return (0, _base_1.err)(ownerErr);
+    await doc.ref.delete();
     return (0, _base_1.ok)({ deleted: true });
 }
 async function _listPayrollByCompany(_ctx, input) {
@@ -76,7 +87,7 @@ async function _listPayrollByCompany(_ctx, input) {
         .get();
     return (0, _base_1.ok)(snap.docs.map((d) => (Object.assign({ id: d.id }, d.data()))));
 }
-const MGMT = [enums_1.WorkerRole.Manager, enums_1.WorkerRole.Admin];
+const MGMT = [enums_1.UserRole.Manager, enums_1.UserRole.Admin];
 exports.createPayrollRecord = (0, _base_1.withValidation)(validators_1.CreatePayrollRecordSchema, (0, _base_1.withAuth)(MGMT, _createPayrollRecord));
 exports.getPayrollRecord = (0, _base_1.withValidation)(validators_1.GetByIdSchema, (0, _base_1.withAuth)(MGMT, _getPayrollRecord));
 exports.updatePayrollRecord = (0, _base_1.withValidation)(validators_1.UpdatePayrollRecordSchema, (0, _base_1.withAuth)(MGMT, _updatePayrollRecord));

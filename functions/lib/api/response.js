@@ -10,13 +10,17 @@ function jsonError(message, status = 400) {
     return { status, body: { success: false, error: message } };
 }
 function actionToResponse(result) {
-    var _a, _b;
     if (result.success) {
         return jsonSuccess(result.data);
     }
-    const status = ((_a = result.error) === null || _a === void 0 ? void 0 : _a.includes("not found")) ? 404
-        : ((_b = result.error) === null || _b === void 0 ? void 0 : _b.includes("Insufficient permissions")) ? 403
-            : 400;
-    return jsonError(result.error || "Unknown error", status);
+    const msg = result.error || "Unknown error";
+    let status = 400;
+    if (msg.includes("not found"))
+        status = 404;
+    else if (msg.includes("Insufficient permissions") || msg.includes("Access denied"))
+        status = 403;
+    else if (msg.includes("Validation error"))
+        status = 422;
+    return jsonError(msg, status);
 }
 //# sourceMappingURL=response.js.map

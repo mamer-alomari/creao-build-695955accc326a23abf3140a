@@ -5,12 +5,31 @@ const admin_db_1 = require("../lib/admin-db");
 const _base_1 = require("./_base");
 const enums_1 = require("../types/enums");
 const validators_1 = require("../lib/validators");
-const SCHED_ROLES = [enums_1.WorkerRole.Foreman, enums_1.WorkerRole.Manager, enums_1.WorkerRole.Admin];
-const READ_ROLES = [enums_1.WorkerRole.Worker, enums_1.WorkerRole.Foreman, enums_1.WorkerRole.Manager, enums_1.WorkerRole.Admin];
+const SCHED_ROLES = [enums_1.UserRole.Foreman, enums_1.UserRole.Manager, enums_1.UserRole.Admin];
+const READ_ROLES = [enums_1.UserRole.Worker, enums_1.UserRole.Foreman, enums_1.UserRole.Manager, enums_1.UserRole.Admin];
+/**
+ * Verify a resource belongs to the expected company before assignment.
+ */
+async function verifyResourceCompany(collection, resourceId, expectedCompanyId, resourceLabel) {
+    const doc = await (0, admin_db_1.getDb)().collection(collection).doc(resourceId).get();
+    if (!doc.exists)
+        return `${resourceLabel} not found`;
+    const data = doc.data();
+    if (data.company_id && data.company_id !== expectedCompanyId) {
+        return `${resourceLabel} belongs to a different company`;
+    }
+    return null;
+}
 // --- Worker assignments ---
 async function _assignWorkerToJob(ctx, input) {
     const db = (0, admin_db_1.getDb)();
-    // Check for existing assignment
+    // Cross-company validation
+    const workerErr = await verifyResourceCompany("workers", input.worker_id, input.company_id, "Worker");
+    if (workerErr)
+        return (0, _base_1.err)(workerErr);
+    const jobErr = await verifyResourceCompany("jobs", input.job_id, input.company_id, "Job");
+    if (jobErr)
+        return (0, _base_1.err)(jobErr);
     const existing = await db.collection("job_worker_assignments")
         .where("job_id", "==", input.job_id)
         .where("worker_id", "==", input.worker_id)
@@ -48,6 +67,12 @@ async function _unassignWorkerFromJob(_ctx, input) {
 // --- Vehicle assignments ---
 async function _assignVehicleToJob(ctx, input) {
     const db = (0, admin_db_1.getDb)();
+    const vehicleErr = await verifyResourceCompany("vehicles", input.vehicle_id, input.company_id, "Vehicle");
+    if (vehicleErr)
+        return (0, _base_1.err)(vehicleErr);
+    const jobErr = await verifyResourceCompany("jobs", input.job_id, input.company_id, "Job");
+    if (jobErr)
+        return (0, _base_1.err)(jobErr);
     const existing = await db.collection("job_vehicle_assignments")
         .where("job_id", "==", input.job_id)
         .where("vehicle_id", "==", input.vehicle_id)
@@ -85,12 +110,14 @@ async function _unassignVehicleFromJob(_ctx, input) {
 // --- Equipment allocations ---
 async function _allocateEquipmentToJob(ctx, input) {
     const db = (0, admin_db_1.getDb)();
-    // Check available quantity
+    const equipErr = await verifyResourceCompany("equipment", input.equipment_id, input.company_id, "Equipment");
+    if (equipErr)
+        return (0, _base_1.err)(equipErr);
+    const jobErr = await verifyResourceCompany("jobs", input.job_id, input.company_id, "Job");
+    if (jobErr)
+        return (0, _base_1.err)(jobErr);
     const equipDoc = await db.collection("equipment").doc(input.equipment_id).get();
-    if (!equipDoc.exists)
-        return (0, _base_1.err)("Equipment not found");
     const totalQty = equipDoc.data().total_quantity || 0;
-    // Sum currently allocated
     const allocSnap = await db.collection("job_equipment_allocations")
         .where("equipment_id", "==", input.equipment_id)
         .get();
@@ -130,7 +157,6 @@ async function _deallocateEquipmentFromJob(_ctx, input) {
 async function _setWorkerSchedule(ctx, input) {
     const db = (0, admin_db_1.getDb)();
     const now = (0, _base_1.nowISO)();
-    // Upsert by worker_id + date
     const existing = await db.collection("worker_schedules")
         .where("worker_id", "==", input.worker_id)
         .where("date", "==", input.date)
@@ -138,6 +164,8 @@ async function _setWorkerSchedule(ctx, input) {
         .get();
     const schedule = {
         id: existing.empty ? db.collection("worker_schedules").doc().id : existing.docs[0].id,
+        data_creator: existing.empty ? ctx.userId : existing.docs[0].data().data_creator,
+        data_updater: ctx.userId,
         worker_id: input.worker_id,
         company_id: input.company_id,
         date: input.date,

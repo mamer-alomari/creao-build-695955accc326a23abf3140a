@@ -1,7 +1,7 @@
 import { z } from "zod";
 import {
   JobStatus,
-  UserRole,
+  WorkerRole,
   WorkerStatus,
   VehicleType,
   EquipmentType,
@@ -92,7 +92,7 @@ export const GetJobsByCustomerSchema = z.object({
 export const CreateWorkerSchema = z.object({
   company_id: z.string().min(1),
   full_name: z.string().min(1),
-  role: z.nativeEnum(UserRole),
+  role: z.nativeEnum(WorkerRole),
   status: z.nativeEnum(WorkerStatus).optional(),
   hourly_rate: z.number().optional(),
   email: z.string().email().optional(),
@@ -103,7 +103,7 @@ export const CreateWorkerSchema = z.object({
 export const UpdateWorkerSchema = z.object({
   id: z.string().min(1),
   full_name: z.string().optional(),
-  role: z.nativeEnum(UserRole).optional(),
+  role: z.nativeEnum(WorkerRole).optional(),
   status: z.nativeEnum(WorkerStatus).optional(),
   hourly_rate: z.number().optional(),
   email: z.string().email().optional(),

@@ -5,7 +5,7 @@ import {
   JobStopType,
   JobStopStatus,
   WorkerRole,
-  UserRole,
+
   WorkerStatus,
   VehicleType,
   EquipmentType,
@@ -140,6 +140,8 @@ export interface CompanyModel {
 
 export interface QuoteModel {
   id: string;
+  data_creator?: string;
+  data_updater?: string;
   create_time: string;
   update_time: string;
   pickup_address: string;
@@ -175,7 +177,10 @@ export interface QuoteModel {
 
 export interface IncidentModel {
   id: string;
+  data_creator?: string;
+  data_updater?: string;
   create_time: string;
+  update_time?: string;
   type: "injury" | "damage" | "vehicle_issue" | "other";
   description: string;
   job_id?: string;
@@ -238,6 +243,8 @@ export interface JobEquipmentAllocationModel {
 
 export interface WorkerScheduleModel {
   id: string;
+  data_creator?: string;
+  data_updater?: string;
   worker_id: string;
   company_id: string;
   date: string;
@@ -302,6 +309,7 @@ export interface InvitationModel {
   company_id: string;
   status: "pending" | "accepted";
   create_time: string;
+  update_time?: string;
   expires_at: string;
   created_by: string;
 }

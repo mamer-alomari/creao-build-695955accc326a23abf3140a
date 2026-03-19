@@ -32,37 +32,74 @@ const auth_context_1 = require("../lib/auth-context");
 const tools_1 = require("./tools");
 const validators = __importStar(require("../lib/validators"));
 const validatorMap = validators;
+/**
+ * Recursively convert a JSON Schema property to a Zod schema,
+ * preserving nested objects, arrays of objects, and unions.
+ */
+function jsonSchemaPropertyToZod(prop, isRequired) {
+    if (!prop)
+        return zod_1.z.any().optional();
+    // Handle oneOf / anyOf (unions like string | number)
+    if (prop.oneOf || prop.anyOf) {
+        const variants = (prop.oneOf || prop.anyOf).map((v) => jsonSchemaPropertyToZod(v, true));
+        if (variants.length === 2) {
+            const base = zod_1.z.union([variants[0], variants[1]]);
+            return isRequired ? base : base.optional();
+        }
+        return isRequired ? zod_1.z.any() : zod_1.z.any().optional();
+    }
+    if (prop.type === "string") {
+        if (prop.enum) {
+            const base = zod_1.z.enum(prop.enum);
+            return isRequired ? base : base.optional();
+        }
+        return isRequired ? zod_1.z.string() : zod_1.z.string().optional();
+    }
+    if (prop.type === "number" || prop.type === "integer") {
+        return isRequired ? zod_1.z.number() : zod_1.z.number().optional();
+    }
+    if (prop.type === "boolean") {
+        return isRequired ? zod_1.z.boolean() : zod_1.z.boolean().optional();
+    }
+    if (prop.type === "array") {
+        let itemSchema = zod_1.z.any();
+        if (prop.items) {
+            itemSchema = jsonSchemaPropertyToZod(prop.items, true);
+        }
+        const base = zod_1.z.array(itemSchema);
+        return isRequired ? base : base.optional();
+    }
+    if (prop.type === "object" && prop.properties) {
+        const shape = {};
+        const reqFields = prop.required || [];
+        for (const [k, v] of Object.entries(prop.properties)) {
+            shape[k] = jsonSchemaPropertyToZod(v, reqFields.includes(k));
+        }
+        const base = zod_1.z.object(shape);
+        return isRequired ? base : base.optional();
+    }
+    // Fallback for anything we can't parse
+    return isRequired ? zod_1.z.any() : zod_1.z.any().optional();
+}
 function createMcpServer(companyId) {
     const server = new mcp_js_1.McpServer({
         name: "creao",
         version: "1.0.0",
     });
     const ctx = (0, auth_context_1.serviceAccountContext)(companyId);
+    let registeredCount = 0;
     for (const tool of tools_1.toolDefinitions) {
         const schema = validatorMap[tool.schema];
-        if (!schema)
+        if (!schema) {
+            console.warn(`[MCP] WARNING: Missing validator "${tool.schema}" for tool "${tool.name}" — skipping`);
             continue;
+        }
         const jsonSchema = (0, zod_to_json_schema_1.zodToJsonSchema)(schema, { target: "openApi3" });
         const properties = jsonSchema.properties || {};
         const required = jsonSchema.required || [];
-        // Build zod shape for MCP tool registration
         const shape = {};
         for (const [key, prop] of Object.entries(properties)) {
-            if (prop.type === "string") {
-                shape[key] = required.includes(key) ? zod_1.z.string() : zod_1.z.string().optional();
-            }
-            else if (prop.type === "number" || prop.type === "integer") {
-                shape[key] = required.includes(key) ? zod_1.z.number() : zod_1.z.number().optional();
-            }
-            else if (prop.type === "boolean") {
-                shape[key] = required.includes(key) ? zod_1.z.boolean() : zod_1.z.boolean().optional();
-            }
-            else if (prop.type === "array") {
-                shape[key] = required.includes(key) ? zod_1.z.array(zod_1.z.any()) : zod_1.z.array(zod_1.z.any()).optional();
-            }
-            else {
-                shape[key] = zod_1.z.any().optional();
-            }
+            shape[key] = jsonSchemaPropertyToZod(prop, required.includes(key));
         }
         server.tool(tool.name, tool.description, shape, async (params) => {
             const result = await tool.action(ctx, params);
@@ -75,7 +112,9 @@ function createMcpServer(companyId) {
                 ],
             };
         });
+        registeredCount++;
     }
+    console.log(`[MCP] Registered ${registeredCount}/${tools_1.toolDefinitions.length} tools`);
     return server;
 }
 // Stdio entry point for local usage

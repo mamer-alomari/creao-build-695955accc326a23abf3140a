@@ -1,6 +1,6 @@
 import { getDb } from "../lib/admin-db";
-import { ActionResult, AuthContext, ok, err, nowISO, withAuth, withValidation } from "./_base";
-import { WorkerRole } from "../types/enums";
+import { ActionResult, AuthContext, ok, err, nowISO, withAuth, withValidation, assertCompanyOwnership } from "./_base";
+import { UserRole } from "../types/enums";
 import { InvitationModel } from "../types/models";
 import { CreateInvitationInput, UpdateInvitationStatusInput, ListByCompanyInput } from "../types/action-types";
 import { CreateInvitationSchema, UpdateInvitationStatusSchema, ListByCompanySchema } from "../lib/validators";
@@ -12,7 +12,6 @@ async function _createInvitation(ctx: AuthContext, input: CreateInvitationInput)
   const now = nowISO();
   const ref = db.collection(COLLECTION).doc();
 
-  // Default expiry: 7 days from now
   const defaultExpiry = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
 
   const invitation: InvitationModel = {
@@ -32,12 +31,14 @@ async function _createInvitation(ctx: AuthContext, input: CreateInvitationInput)
   return ok(invitation);
 }
 
-async function _updateInvitationStatus(_ctx: AuthContext, input: UpdateInvitationStatusInput): Promise<ActionResult<InvitationModel>> {
+async function _updateInvitationStatus(ctx: AuthContext, input: UpdateInvitationStatusInput): Promise<ActionResult<InvitationModel>> {
   const ref = getDb().collection(COLLECTION).doc(input.id);
   const doc = await ref.get();
   if (!doc.exists) return err("Invitation not found");
+  const ownerErr = assertCompanyOwnership(doc.data()!, ctx);
+  if (ownerErr) return err(ownerErr);
 
-  await ref.update({ status: input.status });
+  await ref.update({ status: input.status, update_time: nowISO() });
   const updated = await ref.get();
   return ok({ id: updated.id, ...updated.data() } as InvitationModel);
 }
@@ -51,7 +52,7 @@ async function _listInvitationsByCompany(_ctx: AuthContext, input: ListByCompany
   return ok(snap.docs.map((d) => ({ id: d.id, ...d.data() } as InvitationModel)));
 }
 
-const MGMT = [WorkerRole.Manager, WorkerRole.Admin];
+const MGMT = [UserRole.Manager, UserRole.Admin];
 
 export const createInvitation = withValidation(CreateInvitationSchema, withAuth(MGMT, _createInvitation));
 export const updateInvitationStatus = withValidation(UpdateInvitationStatusSchema, withAuth(MGMT, _updateInvitationStatus));

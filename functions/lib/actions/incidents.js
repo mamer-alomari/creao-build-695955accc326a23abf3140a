@@ -31,22 +31,31 @@ async function _createIncident(ctx, input) {
         company_id: input.company_id,
         status: "open",
     };
-    await ref.set(incident);
+    // Store with audit fields
+    await ref.set(Object.assign(Object.assign({}, incident), { data_creator: ctx.userId, data_updater: ctx.userId, update_time: now }));
     return (0, _base_1.ok)(incident);
 }
-async function _getIncident(_ctx, input) {
+async function _getIncident(ctx, input) {
     const doc = await (0, admin_db_1.getDb)().collection(COLLECTION).doc(input.id).get();
     if (!doc.exists)
         return (0, _base_1.err)("Incident not found");
+    const ownerErr = (0, _base_1.assertCompanyOwnership)(doc.data(), ctx);
+    if (ownerErr)
+        return (0, _base_1.err)(ownerErr);
     return (0, _base_1.ok)(Object.assign({ id: doc.id }, doc.data()));
 }
-async function _updateIncident(_ctx, input) {
+async function _updateIncident(ctx, input) {
     const ref = (0, admin_db_1.getDb)().collection(COLLECTION).doc(input.id);
     const doc = await ref.get();
     if (!doc.exists)
         return (0, _base_1.err)("Incident not found");
+    const ownerErr = (0, _base_1.assertCompanyOwnership)(doc.data(), ctx);
+    if (ownerErr)
+        return (0, _base_1.err)(ownerErr);
     const { id } = input, updates = __rest(input, ["id"]);
     const filtered = Object.fromEntries(Object.entries(updates).filter(([, v]) => v !== undefined));
+    filtered.data_updater = ctx.userId;
+    filtered.update_time = (0, _base_1.nowISO)();
     await ref.update(filtered);
     const updated = await ref.get();
     return (0, _base_1.ok)(Object.assign({ id: updated.id }, updated.data()));
@@ -59,8 +68,8 @@ async function _listIncidentsByCompany(_ctx, input) {
         .get();
     return (0, _base_1.ok)(snap.docs.map((d) => (Object.assign({ id: d.id }, d.data()))));
 }
-const WRITE = [enums_1.WorkerRole.Worker, enums_1.WorkerRole.Foreman, enums_1.WorkerRole.Manager, enums_1.WorkerRole.Admin];
-const READ = [enums_1.WorkerRole.Foreman, enums_1.WorkerRole.Manager, enums_1.WorkerRole.Admin];
+const WRITE = [enums_1.UserRole.Worker, enums_1.UserRole.Foreman, enums_1.UserRole.Manager, enums_1.UserRole.Admin];
+const READ = [enums_1.UserRole.Foreman, enums_1.UserRole.Manager, enums_1.UserRole.Admin];
 exports.createIncident = (0, _base_1.withValidation)(validators_1.CreateIncidentSchema, (0, _base_1.withAuth)(WRITE, _createIncident));
 exports.getIncident = (0, _base_1.withValidation)(validators_1.GetByIdSchema, (0, _base_1.withAuth)(READ, _getIncident));
 exports.updateIncident = (0, _base_1.withValidation)(validators_1.UpdateIncidentSchema, (0, _base_1.withAuth)(READ, _updateIncident));

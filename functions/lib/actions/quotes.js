@@ -42,23 +42,31 @@ async function _createQuote(ctx, input) {
         stops: input.stops,
         expires_at: input.expires_at,
     };
-    await ref.set(quote);
+    // Store audit-compatible data alongside the quote
+    await ref.set(Object.assign(Object.assign({}, quote), { data_creator: ctx.userId, data_updater: ctx.userId }));
     return (0, _base_1.ok)(quote);
 }
-async function _getQuote(_ctx, input) {
+async function _getQuote(ctx, input) {
     const doc = await (0, admin_db_1.getDb)().collection(COLLECTION).doc(input.id).get();
     if (!doc.exists)
         return (0, _base_1.err)("Quote not found");
+    const ownerErr = (0, _base_1.assertCompanyOwnership)(doc.data(), ctx);
+    if (ownerErr)
+        return (0, _base_1.err)(ownerErr);
     return (0, _base_1.ok)(Object.assign({ id: doc.id }, doc.data()));
 }
-async function _updateQuote(_ctx, input) {
+async function _updateQuote(ctx, input) {
     const ref = (0, admin_db_1.getDb)().collection(COLLECTION).doc(input.id);
     const doc = await ref.get();
     if (!doc.exists)
         return (0, _base_1.err)("Quote not found");
+    const ownerErr = (0, _base_1.assertCompanyOwnership)(doc.data(), ctx);
+    if (ownerErr)
+        return (0, _base_1.err)(ownerErr);
     const { id } = input, updates = __rest(input, ["id"]);
     const filtered = Object.fromEntries(Object.entries(updates).filter(([, v]) => v !== undefined));
     filtered.update_time = (0, _base_1.nowISO)();
+    filtered.data_updater = ctx.userId;
     await ref.update(filtered);
     const updated = await ref.get();
     return (0, _base_1.ok)(Object.assign({ id: updated.id }, updated.data()));
@@ -71,12 +79,15 @@ async function _listQuotesByCompany(_ctx, input) {
         .get();
     return (0, _base_1.ok)(snap.docs.map((d) => (Object.assign({ id: d.id }, d.data()))));
 }
-async function _updateQuoteStatus(_ctx, input) {
+async function _updateQuoteStatus(ctx, input) {
     const ref = (0, admin_db_1.getDb)().collection(COLLECTION).doc(input.id);
     const doc = await ref.get();
     if (!doc.exists)
         return (0, _base_1.err)("Quote not found");
-    await ref.update({ status: input.status, update_time: (0, _base_1.nowISO)() });
+    const ownerErr = (0, _base_1.assertCompanyOwnership)(doc.data(), ctx);
+    if (ownerErr)
+        return (0, _base_1.err)(ownerErr);
+    await ref.update({ status: input.status, update_time: (0, _base_1.nowISO)(), data_updater: ctx.userId });
     const updated = await ref.get();
     return (0, _base_1.ok)(Object.assign({ id: updated.id }, updated.data()));
 }
@@ -84,8 +95,8 @@ async function _calculateAIQuote(_ctx, input) {
     const breakdown = (0, quote_engine_1.calculateAIQuote)(input.rooms, input.distance, input.classification);
     return (0, _base_1.ok)(breakdown);
 }
-const WRITE = [enums_1.WorkerRole.Foreman, enums_1.WorkerRole.Manager, enums_1.WorkerRole.Admin];
-const READ = [enums_1.WorkerRole.Worker, enums_1.WorkerRole.Foreman, enums_1.WorkerRole.Manager, enums_1.WorkerRole.Admin, enums_1.WorkerRole.Customer];
+const WRITE = [enums_1.UserRole.Foreman, enums_1.UserRole.Manager, enums_1.UserRole.Admin];
+const READ = [enums_1.UserRole.Worker, enums_1.UserRole.Foreman, enums_1.UserRole.Manager, enums_1.UserRole.Admin, enums_1.UserRole.Customer];
 exports.createQuote = (0, _base_1.withValidation)(validators_1.CreateQuoteSchema, (0, _base_1.withAuth)(WRITE, _createQuote));
 exports.getQuote = (0, _base_1.withValidation)(validators_1.GetByIdSchema, (0, _base_1.withAuth)(READ, _getQuote));
 exports.updateQuote = (0, _base_1.withValidation)(validators_1.UpdateQuoteSchema, (0, _base_1.withAuth)(WRITE, _updateQuote));
