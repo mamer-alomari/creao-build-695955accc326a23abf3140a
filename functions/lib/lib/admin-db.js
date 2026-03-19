@@ -30,6 +30,7 @@ const admin = __importStar(require("firebase-admin"));
 exports.admin = admin;
 if (!admin.apps.length) {
     admin.initializeApp();
+    admin.firestore().settings({ ignoreUndefinedProperties: true });
 }
 function getDb() {
     return admin.firestore();
